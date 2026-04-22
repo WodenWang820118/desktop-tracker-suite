@@ -91,6 +91,7 @@
     "review:approve-pre-implementation": "node --experimental-strip-types scripts/review-gate/approve-pre-implementation.ts",
     "review:reset": "node --experimental-strip-types scripts/review-gate/reset.ts",
     "review:checkpoint": "node --experimental-strip-types scripts/review/run-checkpoint-review.ts",
+    "review:providers:doctor": "node --experimental-strip-types scripts/review/provider-doctor.ts",
     "review:plan": "node --experimental-strip-types scripts/review/run-checkpoint-review.ts --checkpoint plan --provider auto --focus general",
     "review:plan:risky": "node --experimental-strip-types scripts/review/run-checkpoint-review.ts --checkpoint plan --provider gemini --model gemini-2.5-pro --focus general",
     "review:implementation": "node --experimental-strip-types scripts/review/run-checkpoint-review.ts --checkpoint implementation --provider auto --focus general",
