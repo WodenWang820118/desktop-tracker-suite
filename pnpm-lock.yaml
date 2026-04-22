@@ -38,6 +38,9 @@ importers:
       '@tailwindcss/postcss':
         specifier: ^4.1.18
         version: 4.1.18
+      '@tauri-apps/plugin-updater':
+        specifier: 2.10.1
+        version: 2.10.1
       axios:
         specifier: ^1.13.4
         version: 1.13.4
@@ -46,7 +49,7 @@ importers:
         version: 2.8.6
       elec-ng-nest:
         specifier: 'file:'
-        version: electron-tracker-suite@file:(9927d00ee35179a9c77c80d2dec88f5d)
+        version: tracker-suite@file:(9927d00ee35179a9c77c80d2dec88f5d)
       electron-log:
         specifier: ^5.4.3
         version: 5.4.3
@@ -4228,6 +4231,9 @@ packages:
   '@tailwindcss/postcss@4.1.18':
     resolution: {integrity: sha512-Ce0GFnzAOuPyfV5SxjXGn0CubwGcuDB0zcdaPuCSzAa/2vII24JTkH+I6jcbXLb1ctjZMZZI6OjDaLPJQL1S0g==}
 
+  '@tauri-apps/api@2.10.1':
+    resolution: {integrity: sha512-hKL/jWf293UDSUN09rR69hrToyIXBb8CjGaWC7gfinvnQrBVvnLr08FeFi38gxtugAVyVcTa5/FD/Xnkb1siBw==}
+
   '@tauri-apps/cli-darwin-arm64@2.10.1':
     resolution: {integrity: sha512-Z2OjCXiZ+fbYZy7PmP3WRnOpM9+Fy+oonKDEmUE6MwN4IGaYqgceTjwHucc/kEEYZos5GICve35f7ZiizgqEnQ==}
     engines: {node: '>= 10'}
@@ -4303,6 +4309,9 @@ packages:
     resolution: {integrity: sha512-jQNGF/5quwORdZSSLtTluyKQ+o6SMa/AUICfhf4egCGFdMHqWssApVgYSbg+jmrZoc8e1DscNvjTnXtlHLS11g==}
     engines: {node: '>= 10'}
     hasBin: true
+
+  '@tauri-apps/plugin-updater@2.10.1':
+    resolution: {integrity: sha512-NFYMg+tWOZPJdzE/PpFj2qfqwAWwNS3kXrb1tm1gnBJ9mYzZ4WDRrwy8udzWoAnfGCHLuePNLY1WVCNHnh3eRA==}
 
   '@testing-library/dom@10.4.1':
     resolution: {integrity: sha512-o4PXJQidqJl82ckFaXUeoAW+XysPLauYI43Abki5hABd853iMhitooc6znOnczgbTYmEP6U6/y1ZyKAIsvMKGg==}
@@ -6408,10 +6417,6 @@ packages:
 
   electron-to-chromium@1.5.283:
     resolution: {integrity: sha512-3vifjt1HgrGW/h76UEeny+adYApveS9dH2h3p57JYzBSXJIKUJAvtmIytDKjcSCt9xHfrNCFJ7gts6vkhuq++w==}
-
-  'electron-tracker-suite@file:':
-    resolution: {directory: '', type: directory}
-    engines: {node: '>=24.0.0'}
 
   electron-winstaller@5.4.0:
     resolution: {integrity: sha512-bO3y10YikuUwUuDUQRM4KfwNkKhnpVO7IPdbsrejwN9/AABJzzTQ4GeHwyzNSrVO+tEH3/Np255a3sVZpZDjvg==}
@@ -10798,6 +10803,10 @@ packages:
   tr46@6.0.0:
     resolution: {integrity: sha512-bLVMLPtstlZ4iMQHpFHTR7GAGj2jxi8Dg0s2h2MafAE4uSWF98FC/3MomU51iQAMf8/qDUbKWf5GxuvvVcXEhw==}
     engines: {node: '>=20'}
+
+  'tracker-suite@file:':
+    resolution: {directory: '', type: directory}
+    engines: {node: '>=24.0.0'}
 
   tree-dump@1.1.0:
     resolution: {integrity: sha512-rMuvhU4MCDbcbnleZTFezWsaZXRFemSqAM+7jPnzUl1fo9w3YEKOxAeui0fz3OI4EU4hf23iyA7uQRVko+UaBA==}
@@ -16584,6 +16593,8 @@ snapshots:
       postcss: 8.5.6
       tailwindcss: 4.1.18
 
+  '@tauri-apps/api@2.10.1': {}
+
   '@tauri-apps/cli-darwin-arm64@2.10.1':
     optional: true
 
@@ -16630,6 +16641,10 @@ snapshots:
       '@tauri-apps/cli-win32-arm64-msvc': 2.10.1
       '@tauri-apps/cli-win32-ia32-msvc': 2.10.1
       '@tauri-apps/cli-win32-x64-msvc': 2.10.1
+
+  '@tauri-apps/plugin-updater@2.10.1':
+    dependencies:
+      '@tauri-apps/api': 2.10.1
 
   '@testing-library/dom@10.4.1':
     dependencies:
@@ -19081,86 +19096,6 @@ snapshots:
   electron-to-chromium@1.5.250: {}
 
   electron-to-chromium@1.5.283: {}
-
-  electron-tracker-suite@file:(9927d00ee35179a9c77c80d2dec88f5d):
-    dependencies:
-      '@nestjs/common': 11.1.12(reflect-metadata@0.2.2)(rxjs@7.8.2)
-      '@nestjs/config': 4.0.2(@nestjs/common@11.1.12(reflect-metadata@0.2.2)(rxjs@7.8.2))(rxjs@7.8.2)
-      '@nestjs/core': 11.1.12(@nestjs/common@11.1.12(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/platform-express@11.1.12)(reflect-metadata@0.2.2)(rxjs@7.8.2)
-      '@nestjs/platform-express': 11.1.12(@nestjs/common@11.1.12(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.12)
-      '@nestjs/sequelize': 11.0.1(@nestjs/common@11.1.12(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.12)(reflect-metadata@0.2.2)(rxjs@7.8.2)(sequelize-typescript@2.1.6(@types/node@25.2.0)(@types/validator@13.15.8)(reflect-metadata@0.2.2)(sequelize@6.37.7(sqlite3@5.1.7)))(sequelize@6.37.7(sqlite3@5.1.7))
-      '@nestjs/swagger': 11.2.5(@nestjs/common@11.1.12(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.12)(reflect-metadata@0.2.2)
-      '@nestjs/typeorm': 11.0.0(@nestjs/common@11.1.12(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.12)(reflect-metadata@0.2.2)(rxjs@7.8.2)(typeorm@0.3.28(babel-plugin-macros@3.1.0)(ioredis@5.8.2)(sqlite3@5.1.7)(ts-node@10.9.2(@swc/core@1.15.11(@swc/helpers@0.5.18))(@types/node@25.2.0)(typescript@5.9.3)))
-      '@primeuix/themes': 2.0.3
-      '@primevue/themes': 4.5.4
-      '@tailwindcss/postcss': 4.1.18
-      axios: 1.13.4
-      cors: 2.8.6
-      electron-log: 5.4.3
-      express: 5.2.1
-      primeicons: 7.0.0
-      primeng: 21.1.1(b1bcf5f5fc24f82ad1a039ef8815c169)
-      primereact: 10.9.7(@types/react@19.2.10)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
-      primevue: 4.5.4(vue@3.5.27(typescript@5.9.3))
-      react: 19.2.4
-      react-dom: 19.2.4(react@19.2.4)
-      react-router-dom: 7.13.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
-      reflect-metadata: 0.2.2
-      rxjs: 7.8.2
-      sequelize: 6.37.7(sqlite3@5.1.7)
-      sequelize-typescript: 2.1.6(@types/node@25.2.0)(@types/validator@13.15.8)(reflect-metadata@0.2.2)(sequelize@6.37.7(sqlite3@5.1.7))
-      sqlite3: 5.1.7
-      tailwindcss-primeui: 0.6.1(tailwindcss@4.1.18)
-      tslib: 2.8.1
-      typeorm: 0.3.28(babel-plugin-macros@3.1.0)(ioredis@5.8.2)(sqlite3@5.1.7)(ts-node@10.9.2(@swc/core@1.15.11(@swc/helpers@0.5.18))(@types/node@25.2.0)(typescript@5.9.3))
-      update-electron-app: 3.1.2
-      uuid: 13.0.0
-      vue: 3.5.27(typescript@5.9.3)
-      vue-router: 5.0.2(@vue/compiler-sfc@3.5.27)(vue@3.5.27(typescript@5.9.3))
-    transitivePeerDependencies:
-      - '@angular/cdk'
-      - '@angular/common'
-      - '@angular/core'
-      - '@angular/forms'
-      - '@angular/platform-browser'
-      - '@angular/router'
-      - '@fastify/static'
-      - '@google-cloud/spanner'
-      - '@nestjs/microservices'
-      - '@nestjs/websockets'
-      - '@pinia/colada'
-      - '@sap/hana-client'
-      - '@types/node'
-      - '@types/react'
-      - '@types/validator'
-      - '@vue/compiler-sfc'
-      - babel-plugin-macros
-      - better-sqlite3
-      - bluebird
-      - class-transformer
-      - class-validator
-      - debug
-      - ibm_db
-      - ioredis
-      - mariadb
-      - mongodb
-      - mssql
-      - mysql2
-      - oracledb
-      - pg
-      - pg-hstore
-      - pg-native
-      - pg-query-stream
-      - pinia
-      - redis
-      - snowflake-sdk
-      - sql.js
-      - supports-color
-      - tailwindcss
-      - tedious
-      - ts-node
-      - typeorm-aurora-data-api-driver
-      - typescript
 
   electron-winstaller@5.4.0:
     dependencies:
@@ -24467,6 +24402,87 @@ snapshots:
   tr46@6.0.0:
     dependencies:
       punycode: 2.3.1
+
+  tracker-suite@file:(9927d00ee35179a9c77c80d2dec88f5d):
+    dependencies:
+      '@nestjs/common': 11.1.12(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@nestjs/config': 4.0.2(@nestjs/common@11.1.12(reflect-metadata@0.2.2)(rxjs@7.8.2))(rxjs@7.8.2)
+      '@nestjs/core': 11.1.12(@nestjs/common@11.1.12(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/platform-express@11.1.12)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@nestjs/platform-express': 11.1.12(@nestjs/common@11.1.12(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.12)
+      '@nestjs/sequelize': 11.0.1(@nestjs/common@11.1.12(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.12)(reflect-metadata@0.2.2)(rxjs@7.8.2)(sequelize-typescript@2.1.6(@types/node@25.2.0)(@types/validator@13.15.8)(reflect-metadata@0.2.2)(sequelize@6.37.7(sqlite3@5.1.7)))(sequelize@6.37.7(sqlite3@5.1.7))
+      '@nestjs/swagger': 11.2.5(@nestjs/common@11.1.12(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.12)(reflect-metadata@0.2.2)
+      '@nestjs/typeorm': 11.0.0(@nestjs/common@11.1.12(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.12)(reflect-metadata@0.2.2)(rxjs@7.8.2)(typeorm@0.3.28(babel-plugin-macros@3.1.0)(ioredis@5.8.2)(sqlite3@5.1.7)(ts-node@10.9.2(@swc/core@1.15.11(@swc/helpers@0.5.18))(@types/node@25.2.0)(typescript@5.9.3)))
+      '@primeuix/themes': 2.0.3
+      '@primevue/themes': 4.5.4
+      '@tailwindcss/postcss': 4.1.18
+      '@tauri-apps/plugin-updater': 2.10.1
+      axios: 1.13.4
+      cors: 2.8.6
+      electron-log: 5.4.3
+      express: 5.2.1
+      primeicons: 7.0.0
+      primeng: 21.1.1(b1bcf5f5fc24f82ad1a039ef8815c169)
+      primereact: 10.9.7(@types/react@19.2.10)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      primevue: 4.5.4(vue@3.5.27(typescript@5.9.3))
+      react: 19.2.4
+      react-dom: 19.2.4(react@19.2.4)
+      react-router-dom: 7.13.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      reflect-metadata: 0.2.2
+      rxjs: 7.8.2
+      sequelize: 6.37.7(sqlite3@5.1.7)
+      sequelize-typescript: 2.1.6(@types/node@25.2.0)(@types/validator@13.15.8)(reflect-metadata@0.2.2)(sequelize@6.37.7(sqlite3@5.1.7))
+      sqlite3: 5.1.7
+      tailwindcss-primeui: 0.6.1(tailwindcss@4.1.18)
+      tslib: 2.8.1
+      typeorm: 0.3.28(babel-plugin-macros@3.1.0)(ioredis@5.8.2)(sqlite3@5.1.7)(ts-node@10.9.2(@swc/core@1.15.11(@swc/helpers@0.5.18))(@types/node@25.2.0)(typescript@5.9.3))
+      update-electron-app: 3.1.2
+      uuid: 13.0.0
+      vue: 3.5.27(typescript@5.9.3)
+      vue-router: 5.0.2(@vue/compiler-sfc@3.5.27)(vue@3.5.27(typescript@5.9.3))
+    transitivePeerDependencies:
+      - '@angular/cdk'
+      - '@angular/common'
+      - '@angular/core'
+      - '@angular/forms'
+      - '@angular/platform-browser'
+      - '@angular/router'
+      - '@fastify/static'
+      - '@google-cloud/spanner'
+      - '@nestjs/microservices'
+      - '@nestjs/websockets'
+      - '@pinia/colada'
+      - '@sap/hana-client'
+      - '@types/node'
+      - '@types/react'
+      - '@types/validator'
+      - '@vue/compiler-sfc'
+      - babel-plugin-macros
+      - better-sqlite3
+      - bluebird
+      - class-transformer
+      - class-validator
+      - debug
+      - ibm_db
+      - ioredis
+      - mariadb
+      - mongodb
+      - mssql
+      - mysql2
+      - oracledb
+      - pg
+      - pg-hstore
+      - pg-native
+      - pg-query-stream
+      - pinia
+      - redis
+      - snowflake-sdk
+      - sql.js
+      - supports-color
+      - tailwindcss
+      - tedious
+      - ts-node
+      - typeorm-aurora-data-api-driver
+      - typescript
 
   tree-dump@1.1.0(tslib@2.8.1):
     dependencies:

@@ -5,22 +5,30 @@ import { tmpdir } from 'node:os';
 
 import {
   BACKEND_RUNTIME_DIR,
-  PACKAGED_NODE_EXE,
+  DATABASE_FILE_NAME,
+  getPackagedNodeExecutablePath,
   logStep,
   spawnLogged,
   terminateChildProcess,
   waitForUrl,
 } from './common.ts';
+import {
+  assertHostCanBuildDesktopTarget,
+  resolveDesktopTargetInfo,
+} from './runtime-target.ts';
 
 async function main() {
+  const target = resolveDesktopTargetInfo();
+  assertHostCanBuildDesktopTarget(target);
   const smokeRoot = await mkdtemp(join(tmpdir(), 'tauri-shell-smoke-'));
   const databaseRoot = join(smokeRoot, 'data');
   await mkdir(databaseRoot, { recursive: true });
-  const databasePath = join(databaseRoot, 'tasks.sqlite');
+  const databasePath = join(databaseRoot, DATABASE_FILE_NAME);
   const port = String(await reserveOpenPort());
+  const packagedNodeExecutable = getPackagedNodeExecutablePath(target);
 
-  logStep(`Booting the packaged Nest runtime smoke test on port ${port}`);
-  const backendProcess = spawnLogged(PACKAGED_NODE_EXE, ['main.js'], {
+  logStep(`Booting the packaged ${target.profile} Nest runtime smoke test on port ${port}`);
+  const backendProcess = spawnLogged(packagedNodeExecutable, ['main.js'], {
     cwd: BACKEND_RUNTIME_DIR,
     env: {
       ...process.env,

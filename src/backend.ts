@@ -1,11 +1,27 @@
 import { fork, spawn, type ChildProcess } from 'node:child_process';
-import { existsSync, readdirSync } from 'node:fs';
-import { join } from 'node:path';
-import { BrowserWindow } from 'electron';
+import {
+  copyFileSync,
+  existsSync,
+  mkdirSync,
+  readdirSync,
+  writeFileSync,
+} from 'node:fs';
+import { dirname, join } from 'node:path';
+import { app, BrowserWindow } from 'electron';
 import * as constants from './constants';
 import * as environmentUtils from './environment-utils';
 import * as fileUtils from './file-utils';
 import * as pathUtils from './path-utils';
+
+const DESKTOP_MIGRATION_APP_NAME = 'Tracker Suite';
+const DESKTOP_MIGRATION_STATE_FILE_NAME = 'migration-state.json';
+const DESKTOP_MIGRATION_NOTICE_FILE_NAME = 'bridge-notice.json';
+
+type LegacyDesktopMigrationBridge = {
+  exportPath?: string;
+  noticeMarkerPath?: string;
+  shouldShowNotice: boolean;
+};
 
 function resolveDefaultPortForEnvironment(env: string) {
   switch (env) {
@@ -30,6 +46,70 @@ function resolveJavaCommand() {
   }
 
   return process.platform === 'win32' ? 'java.exe' : 'java';
+}
+
+function getDesktopMigrationExportRoot() {
+  return join(
+    app.getPath('appData'),
+    DESKTOP_MIGRATION_APP_NAME,
+    'migrations',
+    'electron',
+  );
+}
+
+function prepareLegacyDesktopMigrationBridge(
+  resourcesPath: string,
+): LegacyDesktopMigrationBridge {
+  if (!app.isPackaged || environmentUtils.getEnvironment() !== 'prod') {
+    return { shouldShowNotice: false };
+  }
+
+  const rootBackendFolderPath = pathUtils.getRootBackendFolderPath(
+    environmentUtils.getEnvironment(),
+    resourcesPath,
+  );
+  const sourceDatabasePath = join(
+    rootBackendFolderPath,
+    constants.ROOT_DATABASE_NAME,
+  );
+  if (!existsSync(sourceDatabasePath)) {
+    return { shouldShowNotice: false };
+  }
+
+  const exportRoot = getDesktopMigrationExportRoot();
+  const exportPath = join(exportRoot, constants.ROOT_DATABASE_NAME);
+  const noticeMarkerPath = join(exportRoot, DESKTOP_MIGRATION_NOTICE_FILE_NAME);
+
+  mkdirSync(exportRoot, { recursive: true });
+  copyFileSync(sourceDatabasePath, exportPath);
+  writeFileSync(
+    join(exportRoot, DESKTOP_MIGRATION_STATE_FILE_NAME),
+    JSON.stringify(
+      {
+        exportedFrom: sourceDatabasePath,
+        exportedTo: exportPath,
+        exportedBy: 'legacy-electron-bridge',
+      },
+      null,
+      2,
+    ) + '\n',
+    'utf8',
+  );
+
+  return {
+    exportPath,
+    noticeMarkerPath,
+    shouldShowNotice: !existsSync(noticeMarkerPath),
+  };
+}
+
+function markLegacyDesktopMigrationNoticeShown(noticeMarkerPath: string) {
+  mkdirSync(dirname(noticeMarkerPath), { recursive: true });
+  writeFileSync(
+    noticeMarkerPath,
+    JSON.stringify({ shown: true }, null, 2) + '\n',
+    'utf8',
+  );
 }
 
 function tryResolveBundledJavaHome(resourcesPath: string): string | undefined {
@@ -263,4 +343,9 @@ async function checkIfPortIsOpen(
   );
 }
 
-export { startBackend, checkIfPortIsOpen };
+export {
+  startBackend,
+  checkIfPortIsOpen,
+  prepareLegacyDesktopMigrationBridge,
+  markLegacyDesktopMigrationNoticeShown,
+};

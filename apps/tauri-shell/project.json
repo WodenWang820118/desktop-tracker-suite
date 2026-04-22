@@ -33,8 +33,7 @@
       "executor": "nx:run-commands",
       "dependsOn": ["materialize-backend-runtime"],
       "options": {
-        "cwd": "apps/tauri-shell",
-        "command": "pnpm exec tauri build --config src-tauri/tauri.conf.json --debug --no-bundle"
+        "command": "node --experimental-strip-types tools/tauri/build.ts build"
       },
       "outputs": ["{workspaceRoot}/apps/tauri-shell/src-tauri/target/debug"]
     },
@@ -42,8 +41,7 @@
       "executor": "nx:run-commands",
       "dependsOn": ["materialize-backend-runtime"],
       "options": {
-        "cwd": "apps/tauri-shell",
-        "command": "pnpm exec tauri build --config src-tauri/tauri.conf.json --bundles nsis --no-sign"
+        "command": "node --experimental-strip-types tools/tauri/build.ts package"
       },
       "outputs": ["{workspaceRoot}/apps/tauri-shell/src-tauri/target/release/bundle"]
     }

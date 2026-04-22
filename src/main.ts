@@ -1,5 +1,4 @@
-
-import { app, BrowserWindow } from 'electron';
+import { app, BrowserWindow, dialog } from 'electron';
 import { join } from 'node:path';
 import { updateElectronApp } from 'update-electron-app';
 import { ChildProcess } from 'node:child_process';
@@ -19,6 +18,26 @@ updateElectronApp({
 let server: ChildProcess;
 
 app.whenReady().then(async () => {
+  const migrationBridge = backend.prepareLegacyDesktopMigrationBridge(
+    process.resourcesPath,
+  );
+  if (migrationBridge.shouldShowNotice && migrationBridge.noticeMarkerPath) {
+    await dialog.showMessageBox({
+      type: 'info',
+      title: 'Tracker Suite Migration',
+      message:
+        'This legacy Electron release now acts as a bridge to Tracker Suite.',
+      detail: migrationBridge.exportPath
+        ? `Your current database was exported to:\n${migrationBridge.exportPath}\n\nInstall the Tracker Suite desktop release to continue receiving updates and migrate your data automatically.`
+        : 'Install the Tracker Suite desktop release to continue receiving updates and migrate your data automatically.',
+      buttons: ['OK'],
+      defaultId: 0,
+    });
+    backend.markLegacyDesktopMigrationNoticeShown(
+      migrationBridge.noticeMarkerPath,
+    );
+  }
+
   const loadingWindow = frontend.createLoadingWindow();
   const logPath = join(
     pathUtils.getRootBackendFolderPath(

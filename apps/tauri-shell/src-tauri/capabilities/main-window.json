@@ -3,5 +3,5 @@
   "identifier": "main-window",
   "description": "Capability for the main Tauri window.",
   "windows": ["main"],
-  "permissions": ["core:default"]
+  "permissions": ["core:default", "updater:default"]
 }
