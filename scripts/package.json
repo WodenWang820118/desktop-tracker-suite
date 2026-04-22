@@ -1,0 +1,5 @@
+{
+  "name": "@org/scripts",
+  "private": true,
+  "type": "module"
+}

@@ -59,3 +59,4 @@ dependency-reduced-pom.xml
 release.properties
 buildNumber.properties
 /java-runtime
+.cache/
