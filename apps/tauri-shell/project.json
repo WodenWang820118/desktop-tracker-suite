@@ -1,0 +1,51 @@
+{
+  "name": "tauri-shell",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "sourceRoot": "apps/tauri-shell/src-tauri/src",
+  "tags": ["desktop", "tauri"],
+  "targets": {
+    "materialize-backend-runtime": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm exec nx build ng-tracker --configuration production && pnpm exec nx build nest-backend --configuration production && node --experimental-strip-types tools/tauri/materialize-backend-runtime.ts"
+      },
+      "outputs": ["{workspaceRoot}/dist/tauri-shell/resources"]
+    },
+    "smoke": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node --experimental-strip-types tools/tauri/smoke-backend-runtime.ts"
+      },
+      "configurations": {
+        "backend-runtime": {
+          "command": "node --experimental-strip-types tools/tauri/smoke-backend-runtime.ts"
+        }
+      }
+    },
+    "dev": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node --experimental-strip-types tools/tauri/dev.ts"
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["materialize-backend-runtime"],
+      "options": {
+        "cwd": "apps/tauri-shell",
+        "command": "pnpm exec tauri build --config src-tauri/tauri.conf.json --debug --no-bundle"
+      },
+      "outputs": ["{workspaceRoot}/apps/tauri-shell/src-tauri/target/debug"]
+    },
+    "package": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["materialize-backend-runtime"],
+      "options": {
+        "cwd": "apps/tauri-shell",
+        "command": "pnpm exec tauri build --config src-tauri/tauri.conf.json --bundles nsis --no-sign"
+      },
+      "outputs": ["{workspaceRoot}/apps/tauri-shell/src-tauri/target/release/bundle"]
+    }
+  }
+}

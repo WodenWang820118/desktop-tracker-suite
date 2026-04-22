@@ -1,0 +1,24 @@
+[package]
+name = "tauri-shell"
+version = "0.1.0"
+description = "Tauri shell for ng-tracker and nest-backend"
+authors = ["Guan Xin Wang"]
+license = "MIT"
+edition = "2021"
+rust-version = "1.77"
+
+[build-dependencies]
+tauri-build = { version = "2.5.6", features = [] }
+
+[dependencies]
+anyhow = "1"
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls"] }
+tauri = { version = "2.10.3", features = [] }
+tokio = { version = "1", features = ["time"] }
+url = "2.5"
+
+[profile.release]
+codegen-units = 1
+lto = true
+panic = "abort"
+strip = true
