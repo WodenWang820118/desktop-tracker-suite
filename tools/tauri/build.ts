@@ -6,7 +6,7 @@ import {
 } from './runtime-target.ts';
 
 type BuildMode = 'build' | 'package';
-type DesktopRuntimeMode = 'nest' | 'spring-native';
+type DesktopRuntimeMode = 'express' | 'nest' | 'nest-legacy' | 'spring-native';
 
 async function main() {
   const mode = parseBuildMode(process.argv[2]);
@@ -57,23 +57,41 @@ function parseRuntimeMode(value: string | undefined): DesktopRuntimeMode {
     return 'nest';
   }
 
+  if (value === 'express') {
+    return 'express';
+  }
+
+  if (value === 'nest-legacy') {
+    return 'nest-legacy';
+  }
+
   if (value === 'spring-native') {
     return 'spring-native';
   }
 
-  throw new Error(`Unsupported runtime mode "${value}". Expected "nest" or "spring-native".`);
+  throw new Error(
+    `Unsupported runtime mode "${value}". Expected "nest", "express", "nest-legacy", or "spring-native".`,
+  );
 }
 
-function resolveConfigPath(mode: BuildMode, runtimeMode: DesktopRuntimeMode) {
+function resolveConfigPath(_mode: BuildMode, runtimeMode: DesktopRuntimeMode) {
+  if (runtimeMode === 'nest') {
+    return 'src-tauri/tauri.nest-sidecar.conf.json';
+  }
+
+  if (runtimeMode === 'express') {
+    return 'src-tauri/tauri.express-sidecar.conf.json';
+  }
+
+  if (runtimeMode === 'nest-legacy') {
+    return 'src-tauri/tauri.package.conf.json';
+  }
+
   if (runtimeMode === 'spring-native') {
     return 'src-tauri/tauri.spring-native.conf.json';
   }
 
-  if (mode === 'package') {
-    return 'src-tauri/tauri.package.conf.json';
-  }
-
-  return 'src-tauri/tauri.conf.json';
+  throw new Error(`Unsupported runtime mode "${runtimeMode}".`);
 }
 
 main().catch((error) => {

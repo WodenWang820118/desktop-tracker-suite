@@ -25,6 +25,10 @@ import {
   WORKSPACE_ROOT,
 } from './common.ts';
 import {
+  buildPackagedNodeBackendPackageJson,
+  NODE_BACKEND_INSTALL_NPMRC,
+} from './node-backend-packaging.ts';
+import {
   assertHostCanBuildDesktopTarget,
   resolveDesktopTargetInfo,
 } from './runtime-target.ts';
@@ -50,19 +54,7 @@ export function buildPackagedBackendPackageJson(input: {
   packageManager?: string;
   sqliteVersion?: string;
 }) {
-  const sqliteVersion = input.sqliteVersion?.trim();
-  if (!sqliteVersion) {
-    throw new Error('sqlite3 is missing from the installed workspace dependencies.');
-  }
-
-  return {
-    ...input.backendPackageJson,
-    dependencies: {
-      ...(input.backendPackageJson.dependencies ?? {}),
-      sqlite3: sqliteVersion,
-    },
-    packageManager: input.packageManager,
-  };
+  return buildPackagedNodeBackendPackageJson(input);
 }
 
 export function buildDesktopRuntimeMetadata(target: {
@@ -119,9 +111,7 @@ async function main() {
   );
   await writeTextFile(
     join(BACKEND_RUNTIME_DIR, '.npmrc'),
-    ['node-linker=hoisted', 'only-built-dependencies[]=@nestjs/core', 'only-built-dependencies[]=sqlite3'].join(
-      '\n',
-    ) + '\n',
+    NODE_BACKEND_INSTALL_NPMRC,
   );
   await writeTextFile(join(BACKEND_RUNTIME_DIR, '.tauri-desktop-target'), `${target.profile}\n`);
   await writeTextFile(join(BACKEND_RUNTIME_DIR, '.tauri-database-name'), `${DATABASE_FILE_NAME}\n`);

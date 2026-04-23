@@ -6,7 +6,6 @@ import { tmpdir } from 'node:os';
 import {
   DATABASE_FILE_NAME,
   SPRING_NATIVE_RUNTIME_DIR,
-  TAURI_BINARIES_DIR,
   TAURI_SPRING_METADATA_DIR,
   TAURI_SPRING_RESOURCE_ROOT,
   getPreparedSpringSidecarPath,
@@ -48,11 +47,11 @@ async function main() {
     runtimeKind: 'spring-native-packaged',
     executablePath,
     executableSizeBytes: await pathSize(executablePath),
-    binariesSizeBytes: await pathSize(TAURI_BINARIES_DIR),
+    binariesSizeBytes: await pathSize(executablePath),
     metadataSizeBytes: await pathSize(TAURI_SPRING_METADATA_DIR),
     totalResourceSizeBytes: await pathSize(TAURI_SPRING_RESOURCE_ROOT),
     totalPreparedPayloadSizeBytes:
-      (await pathSize(TAURI_BINARIES_DIR)) + (await pathSize(TAURI_SPRING_RESOURCE_ROOT)),
+      (await pathSize(executablePath)) + (await pathSize(TAURI_SPRING_RESOURCE_ROOT)),
     databasePath,
     port,
     success: false,

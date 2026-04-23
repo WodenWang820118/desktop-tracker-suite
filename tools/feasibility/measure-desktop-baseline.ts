@@ -42,7 +42,7 @@ async function main() {
   const databasePath = join(databaseRoot, DATABASE_FILE_NAME);
   const port = await reserveOpenPort();
   const metrics: Record<string, unknown> = {
-    runtimeKind: 'nest-node-packaged',
+    runtimeKind: 'nest-node-packaged-legacy',
     desktopTarget: target.profile,
     backendRuntimeSizeBytes: await pathSize(BACKEND_RUNTIME_DIR),
     nodeRuntimeSizeBytes: await pathSize(NODE_RUNTIME_DIR),
