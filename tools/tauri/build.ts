@@ -6,9 +6,11 @@ import {
 } from './runtime-target.ts';
 
 type BuildMode = 'build' | 'package';
+type DesktopRuntimeMode = 'nest' | 'spring-native';
 
 async function main() {
   const mode = parseBuildMode(process.argv[2]);
+  const runtimeMode = parseRuntimeMode(process.argv[3]);
   const target = resolveDesktopTargetInfo();
   assertHostCanBuildDesktopTarget(target);
 
@@ -19,12 +21,20 @@ async function main() {
       : `Desktop version synchronized to ${syncResult.version}`,
   );
 
-  const tauriArgs = ['exec', 'tauri', 'build', '--config', 'src-tauri/tauri.conf.json', '--target', target.rustTarget];
+  const tauriArgs = [
+    'exec',
+    'tauri',
+    'build',
+    '--config',
+    resolveConfigPath(mode, runtimeMode),
+    '--target',
+    target.rustTarget,
+  ];
   if (mode === 'build') {
     tauriArgs.push('--debug', '--no-bundle');
   }
 
-  logStep(`Running Tauri ${mode} for ${target.profile} (${target.rustTarget})`);
+  logStep(`Running Tauri ${mode} for ${target.profile} (${target.rustTarget}, runtime=${runtimeMode})`);
   await runCommand(PNPM_COMMAND, tauriArgs, {
     cwd: TAURI_PROJECT_ROOT,
   });
@@ -40,6 +50,30 @@ function parseBuildMode(value: string | undefined): BuildMode {
   }
 
   throw new Error(`Unsupported build mode "${value}". Expected "build" or "package".`);
+}
+
+function parseRuntimeMode(value: string | undefined): DesktopRuntimeMode {
+  if (!value || value === 'nest') {
+    return 'nest';
+  }
+
+  if (value === 'spring-native') {
+    return 'spring-native';
+  }
+
+  throw new Error(`Unsupported runtime mode "${value}". Expected "nest" or "spring-native".`);
+}
+
+function resolveConfigPath(mode: BuildMode, runtimeMode: DesktopRuntimeMode) {
+  if (runtimeMode === 'spring-native') {
+    return 'src-tauri/tauri.spring-native.conf.json';
+  }
+
+  if (mode === 'package') {
+    return 'src-tauri/tauri.package.conf.json';
+  }
+
+  return 'src-tauri/tauri.conf.json';
 }
 
 main().catch((error) => {

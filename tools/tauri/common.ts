@@ -39,6 +39,11 @@ export const TAURI_RESOURCE_ROOT = join(TAURI_DIST_ROOT, 'resources');
 export const BACKEND_RUNTIME_DIR = join(TAURI_RESOURCE_ROOT, 'backend-runtime');
 export const NODE_RUNTIME_DIR = join(TAURI_RESOURCE_ROOT, 'nodejs');
 export const TAURI_METADATA_DIR = join(TAURI_RESOURCE_ROOT, 'metadata');
+export const SPRING_NATIVE_DIST_DIR = join(DIST_ROOT, 'spring-backend-native');
+export const TAURI_SPRING_DIST_ROOT = join(DIST_ROOT, 'tauri-shell-spring-native');
+export const TAURI_SPRING_RESOURCE_ROOT = join(TAURI_SPRING_DIST_ROOT, 'resources');
+export const SPRING_NATIVE_RUNTIME_DIR = join(TAURI_SPRING_RESOURCE_ROOT, 'spring-native');
+export const TAURI_SPRING_METADATA_DIR = join(TAURI_SPRING_RESOURCE_ROOT, 'metadata');
 export const NODE_CACHE_DIR = join(WORKSPACE_ROOT, '.cache', 'tauri-shell');
 export const NG_DIST_BROWSER_DIR = join(DIST_ROOT, 'ng-tracker', 'browser');
 export const NEST_DIST_DIR = join(DIST_ROOT, 'nest-backend');
@@ -374,6 +379,10 @@ export function getPackagedNodeExecutablePath(
   target: DesktopTargetInfo = resolveDesktopTargetInfo(),
 ) {
   return join(NODE_RUNTIME_DIR, target.nodeBinaryName);
+}
+
+export function getPackagedSpringExecutablePath(executableName = 'spring-backend.exe') {
+  return join(SPRING_NATIVE_RUNTIME_DIR, executableName);
 }
 
 function getCachedNodeExecutablePath(target: DesktopTargetInfo) {

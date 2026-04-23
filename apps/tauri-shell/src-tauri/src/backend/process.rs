@@ -71,53 +71,98 @@ pub(crate) fn spawn_packaged_backend(
     database_path: &Path,
 ) -> Result<Child> {
     let runtime_paths = resolve_packaged_runtime_paths(app)?;
-    trace_step(format!(
-        "resolved packaged backend paths: node={}, backend_root={}, entry={}, log={}",
-        runtime_paths.node_executable.display(),
-        runtime_paths.backend_root.display(),
-        runtime_paths.backend_entry.display(),
-        runtime_paths.backend_log_path.display(),
-    ));
+    match runtime_paths {
+        super::paths::PackagedRuntimePaths::NestNode {
+            node_executable,
+            backend_root,
+            backend_entry,
+            backend_log_path,
+        } => {
+            trace_step(format!(
+                "resolved packaged Nest backend paths: node={}, backend_root={}, entry={}, log={}",
+                node_executable.display(),
+                backend_root.display(),
+                backend_entry.display(),
+                backend_log_path.display(),
+            ));
 
-    if !runtime_paths.node_executable.exists() {
-        return Err(anyhow!(
-            "embedded Node runtime was not found at {}",
-            runtime_paths.node_executable.display()
-        ));
+            if !node_executable.exists() {
+                return Err(anyhow!(
+                    "embedded Node runtime was not found at {}",
+                    node_executable.display()
+                ));
+            }
+
+            if !backend_entry.exists() {
+                return Err(anyhow!(
+                    "packaged Nest backend entrypoint was not found at {}",
+                    backend_entry.display()
+                ));
+            }
+
+            let (stdout_log, stderr_log) = open_backend_log_handles(&backend_log_path)?;
+            Command::new(&node_executable)
+                .arg(&backend_entry)
+                .current_dir(&backend_root)
+                .env("PORT", port.to_string())
+                .env("DATABASE_PATH", database_path)
+                .env("NODE_ENV", "prod")
+                .stdin(Stdio::null())
+                .stdout(Stdio::from(stdout_log))
+                .stderr(Stdio::from(stderr_log))
+                .spawn()
+                .context("failed to spawn the packaged Nest backend")
+        }
+        super::paths::PackagedRuntimePaths::SpringNative {
+            executable,
+            backend_root,
+            backend_log_path,
+        } => {
+            trace_step(format!(
+                "resolved packaged Spring-native backend paths: executable={}, backend_root={}, log={}",
+                executable.display(),
+                backend_root.display(),
+                backend_log_path.display(),
+            ));
+
+            if !executable.exists() {
+                return Err(anyhow!(
+                    "packaged Spring-native backend executable was not found at {}",
+                    executable.display()
+                ));
+            }
+
+            let (stdout_log, stderr_log) = open_backend_log_handles(&backend_log_path)?;
+            Command::new(&executable)
+                .current_dir(&backend_root)
+                .env("PORT", port.to_string())
+                .env("DATABASE_PATH", database_path)
+                .env("SPRING_PROFILES_ACTIVE", "prod")
+                .stdin(Stdio::null())
+                .stdout(Stdio::from(stdout_log))
+                .stderr(Stdio::from(stderr_log))
+                .spawn()
+                .context("failed to spawn the packaged Spring-native backend")
+        }
     }
+}
 
-    if !runtime_paths.backend_entry.exists() {
-        return Err(anyhow!(
-            "packaged Nest backend entrypoint was not found at {}",
-            runtime_paths.backend_entry.display()
-        ));
-    }
-
+fn open_backend_log_handles(log_path: &Path) -> Result<(fs::File, fs::File)> {
     let stdout_log = fs::OpenOptions::new()
         .create(true)
         .append(true)
-        .open(&runtime_paths.backend_log_path)
+        .open(log_path)
         .with_context(|| {
             format!(
                 "failed to open the backend runtime log file at {}",
-                runtime_paths.backend_log_path.display()
+                log_path.display()
             )
         })?;
     let stderr_log = stdout_log
         .try_clone()
         .context("failed to duplicate the backend runtime log file handle")?;
 
-    Command::new(&runtime_paths.node_executable)
-        .arg(&runtime_paths.backend_entry)
-        .current_dir(&runtime_paths.backend_root)
-        .env("PORT", port.to_string())
-        .env("DATABASE_PATH", database_path)
-        .env("NODE_ENV", "prod")
-        .stdin(Stdio::null())
-        .stdout(Stdio::from(stdout_log))
-        .stderr(Stdio::from(stderr_log))
-        .spawn()
-        .context("failed to spawn the packaged Nest backend")
+    Ok((stdout_log, stderr_log))
 }
 
 fn terminate_child(child: &mut Child) -> Result<()> {

@@ -1,0 +1,45 @@
+{
+  "$schema": "../../../node_modules/@tauri-apps/cli/config.schema.json",
+  "productName": "Tracker Suite",
+  "version": "1.4.2",
+  "identifier": "com.wodenwang820118.tracker.tauri",
+  "build": {
+    "devUrl": "http://localhost:4200/?taskApiUrl=http%3A%2F%2Flocalhost%3A3000%2Ftasks",
+    "frontendDist": "../../../dist/ng-tracker/browser"
+  },
+  "app": {
+    "windows": [
+      {
+        "label": "main",
+        "title": "Tracker Suite",
+        "width": 1280,
+        "height": 800,
+        "minWidth": 1024,
+        "minHeight": 720,
+        "resizable": true,
+        "create": false
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; img-src 'self' asset: http://asset.localhost data: blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; connect-src 'self' http://localhost:5000 http://ipc.localhost http://tauri.localhost https://tauri.localhost;",
+      "devCsp": "default-src 'self' http://localhost:4200 http://localhost:3000 ws://localhost:4200 ws://localhost:3000 data: blob:; script-src 'self' 'unsafe-eval' http://localhost:4200; style-src 'self' 'unsafe-inline' http://localhost:4200; img-src 'self' data: blob: http://localhost:4200; font-src 'self' data: http://localhost:4200; connect-src 'self' http://localhost:4200 http://localhost:3000 ws://localhost:4200 ws://localhost:3000 http://ipc.localhost http://tauri.localhost https://tauri.localhost;",
+      "capabilities": ["main-window"]
+    }
+  },
+  "bundle": {
+    "active": true,
+    "createUpdaterArtifacts": false,
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "resources": {
+      "../../../dist/tauri-shell/resources/backend-runtime": "backend-runtime",
+      "../../../dist/tauri-shell/resources/nodejs": "nodejs",
+      "../../../dist/tauri-shell/resources/metadata": "metadata"
+    }
+  }
+}
