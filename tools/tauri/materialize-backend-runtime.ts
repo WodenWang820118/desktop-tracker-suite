@@ -1,5 +1,6 @@
 import { rm } from 'node:fs/promises';
 import { join } from 'node:path';
+import { pathToFileURL } from 'node:url';
 
 import {
   BACKEND_RUNTIME_DIR,
@@ -33,6 +34,43 @@ type PackageJson = {
   packageManager?: string;
 };
 
+type DesktopRuntimeMetadata = {
+  databaseFileName: string;
+  desktopTarget: string;
+  nodeBinaryName: string;
+};
+
+export function buildPackagedBackendPackageJson(input: {
+  backendPackageJson: PackageJson;
+  packageManager?: string;
+  sqliteVersion?: string;
+}) {
+  const sqliteVersion = input.sqliteVersion?.trim();
+  if (!sqliteVersion) {
+    throw new Error('sqlite3 is missing from the installed workspace dependencies.');
+  }
+
+  return {
+    ...input.backendPackageJson,
+    dependencies: {
+      ...(input.backendPackageJson.dependencies ?? {}),
+      sqlite3: sqliteVersion,
+    },
+    packageManager: input.packageManager,
+  };
+}
+
+export function buildDesktopRuntimeMetadata(target: {
+  profile: string;
+  nodeBinaryName: string;
+}): DesktopRuntimeMetadata {
+  return {
+    databaseFileName: DATABASE_FILE_NAME,
+    desktopTarget: target.profile,
+    nodeBinaryName: target.nodeBinaryName,
+  };
+}
+
 async function main() {
   const target = resolveDesktopTargetInfo();
   assertHostCanBuildDesktopTarget(target);
@@ -61,19 +99,14 @@ async function main() {
   await rm(join(BACKEND_RUNTIME_DIR, 'pnpm-lock.yaml'), { force: true });
 
   const backendPackageJson = await readJson<PackageJson>(distPackageJsonPath);
-  const sqliteVersion = sqlitePackageJson.version?.trim();
-  if (!sqliteVersion) {
-    throw new Error('sqlite3 is missing from the installed workspace dependencies.');
-  }
-
-  await writeJson(join(BACKEND_RUNTIME_DIR, 'package.json'), {
-    ...backendPackageJson,
-    dependencies: {
-      ...(backendPackageJson.dependencies ?? {}),
-      sqlite3: sqliteVersion,
-    },
-    packageManager: rootPackageJson.packageManager,
-  });
+  await writeJson(
+    join(BACKEND_RUNTIME_DIR, 'package.json'),
+    buildPackagedBackendPackageJson({
+      backendPackageJson,
+      packageManager: rootPackageJson.packageManager,
+      sqliteVersion: sqlitePackageJson.version,
+    }),
+  );
   await writeTextFile(
     join(BACKEND_RUNTIME_DIR, '.npmrc'),
     ['node-linker=hoisted', 'only-built-dependencies[]=@nestjs/core', 'only-built-dependencies[]=sqlite3'].join(
@@ -82,11 +115,10 @@ async function main() {
   );
   await writeTextFile(join(BACKEND_RUNTIME_DIR, '.tauri-desktop-target'), `${target.profile}\n`);
   await writeTextFile(join(BACKEND_RUNTIME_DIR, '.tauri-database-name'), `${DATABASE_FILE_NAME}\n`);
-  await writeJson(join(TAURI_METADATA_DIR, 'desktop-runtime.json'), {
-    databaseFileName: DATABASE_FILE_NAME,
-    desktopTarget: target.profile,
-    nodeBinaryName: target.nodeBinaryName,
-  });
+  await writeJson(
+    join(TAURI_METADATA_DIR, 'desktop-runtime.json'),
+    buildDesktopRuntimeMetadata(target),
+  );
 
   logStep(`Installing production dependencies for the packaged Nest runtime (${target.profile})`);
   await runCommand(
@@ -123,7 +155,12 @@ async function main() {
   logStep(`Tauri backend runtime materialized for ${target.profile} at ${TAURI_DIST_ROOT}`);
 }
 
-main().catch((error) => {
-  console.error(error instanceof Error ? error.stack ?? error.message : String(error));
-  process.exitCode = 1;
-});
+const isEntryPoint =
+  process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
+
+if (isEntryPoint) {
+  main().catch((error) => {
+    console.error(error instanceof Error ? error.stack ?? error.message : String(error));
+    process.exitCode = 1;
+  });
+}
