@@ -35,9 +35,14 @@ type PackageJson = {
 };
 
 type DesktopRuntimeMetadata = {
+  backendDirectory: string;
+  backendKind: 'nest-node';
   databaseFileName: string;
   desktopTarget: string;
+  entryFile: string;
+  logFileName: string;
   nodeBinaryName: string;
+  runtimeMode: 'resource';
 };
 
 export function buildPackagedBackendPackageJson(input: {
@@ -65,9 +70,14 @@ export function buildDesktopRuntimeMetadata(target: {
   nodeBinaryName: string;
 }): DesktopRuntimeMetadata {
   return {
+    backendDirectory: 'backend-runtime',
+    backendKind: 'nest-node',
     databaseFileName: DATABASE_FILE_NAME,
     desktopTarget: target.profile,
+    entryFile: 'main.js',
+    logFileName: 'backend-runtime.log',
     nodeBinaryName: target.nodeBinaryName,
+    runtimeMode: 'resource',
   };
 }
 

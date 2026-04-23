@@ -1,15 +1,20 @@
+import { readdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 import {
   DATABASE_FILE_NAME,
   SPRING_NATIVE_DIST_DIR,
+  SPRING_BACKEND_SIDECAR_NAME,
   SPRING_NATIVE_RUNTIME_DIR,
+  TAURI_BINARIES_DIR,
   TAURI_SPRING_DIST_ROOT,
   TAURI_SPRING_METADATA_DIR,
-  copyDirectory,
+  copyFileEnsured,
+  ensureDir,
   ensureCleanDir,
   fileExists,
+  getPreparedSpringSidecarPath,
   logStep,
   writeJson,
   writeTextFile,
@@ -21,28 +26,47 @@ import {
 
 type SpringDesktopRuntimeMetadata = {
   backendDirectory: string;
+  backendKind: 'spring-native';
   databaseFileName: string;
   desktopTarget: string;
-  executableName: string;
   logFileName: string;
-  runtimeKind: 'spring-native';
+  runtimeMode: 'sidecar';
+  sidecarName: string;
 };
 
-function buildDesktopRuntimeMetadata(target: { profile: string }): SpringDesktopRuntimeMetadata {
+export function buildDesktopRuntimeMetadata(target: { profile: string }): SpringDesktopRuntimeMetadata {
   return {
     backendDirectory: 'spring-native',
+    backendKind: 'spring-native',
     databaseFileName: DATABASE_FILE_NAME,
     desktopTarget: target.profile,
-    executableName: 'spring-backend.exe',
     logFileName: 'backend-runtime.log',
-    runtimeKind: 'spring-native',
+    runtimeMode: 'sidecar',
+    sidecarName: SPRING_BACKEND_SIDECAR_NAME,
   };
+}
+
+export function buildSpringNativeExecutableFileName(target: {
+  hostPlatform: NodeJS.Platform;
+}) {
+  return `spring-backend${target.hostPlatform === 'win32' ? '.exe' : ''}`;
+}
+
+export function listSpringNativeCompanionFiles(
+  entries: Array<{ isFile(): boolean; name: string }>,
+  executableFileName: string,
+) {
+  return entries
+    .filter((entry) => entry.isFile())
+    .map((entry) => entry.name)
+    .filter((entryName) => entryName.toLowerCase() !== executableFileName.toLowerCase());
 }
 
 async function main() {
   const target = resolveDesktopTargetInfo();
   assertHostCanBuildDesktopTarget(target);
-  const executablePath = join(SPRING_NATIVE_DIST_DIR, 'spring-backend.exe');
+  const executableFileName = buildSpringNativeExecutableFileName(target);
+  const executablePath = join(SPRING_NATIVE_DIST_DIR, executableFileName);
   if (!(await fileExists(executablePath))) {
     throw new Error(
       `Spring native executable is missing at ${executablePath}. Run nx run spring-backend:native-build first.`,
@@ -53,9 +77,23 @@ async function main() {
   await ensureCleanDir(TAURI_SPRING_DIST_ROOT);
   await ensureCleanDir(SPRING_NATIVE_RUNTIME_DIR);
   await ensureCleanDir(TAURI_SPRING_METADATA_DIR);
+  await ensureDir(TAURI_BINARIES_DIR);
 
-  logStep('Copying the built Spring native runtime into the packaged runtime folder');
-  await copyDirectory(SPRING_NATIVE_DIST_DIR, SPRING_NATIVE_RUNTIME_DIR);
+  const preparedExecutablePath = getPreparedSpringSidecarPath(target);
+  logStep(`Copying the built Spring native runtime into the Tauri sidecar binaries folder (${preparedExecutablePath})`);
+  await copyFileEnsured(executablePath, preparedExecutablePath);
+
+  const companionFiles = listSpringNativeCompanionFiles(
+    await readdir(SPRING_NATIVE_DIST_DIR, { withFileTypes: true }),
+    executableFileName,
+  );
+  for (const entry of companionFiles) {
+    await copyFileEnsured(
+      join(SPRING_NATIVE_DIST_DIR, entry),
+      join(SPRING_NATIVE_RUNTIME_DIR, entry),
+    );
+  }
+
   await writeJson(
     join(TAURI_SPRING_METADATA_DIR, 'desktop-runtime.json'),
     buildDesktopRuntimeMetadata(target),

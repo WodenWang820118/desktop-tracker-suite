@@ -33,6 +33,7 @@ const __dirname = dirname(__filename);
 export const WORKSPACE_ROOT = resolve(__dirname, '..', '..');
 export const TAURI_PROJECT_ROOT = join(WORKSPACE_ROOT, 'apps', 'tauri-shell');
 export const TAURI_SRC_TAURI_ROOT = join(TAURI_PROJECT_ROOT, 'src-tauri');
+export const TAURI_BINARIES_DIR = join(TAURI_SRC_TAURI_ROOT, 'binaries');
 export const DIST_ROOT = join(WORKSPACE_ROOT, 'dist');
 export const TAURI_DIST_ROOT = join(DIST_ROOT, 'tauri-shell');
 export const TAURI_RESOURCE_ROOT = join(TAURI_DIST_ROOT, 'resources');
@@ -50,6 +51,9 @@ export const NEST_DIST_DIR = join(DIST_ROOT, 'nest-backend');
 export const NODE_VERSION = '24.11.1';
 export const DATABASE_FILE_NAME = 'database.sqlite3';
 export const LEGACY_TAURI_DATABASE_FILE_NAME = 'tasks.sqlite';
+export const SPRING_BACKEND_SIDECAR_NAME = 'spring-backend';
+export const NEST_BACKEND_SIDECAR_NAME = 'nest-backend';
+export const EXPRESS_BACKEND_SIDECAR_NAME = 'express-backend';
 export const PNPM_COMMAND = process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm';
 export const DEV_FRONTEND_URL = 'http://127.0.0.1:4200/';
 export const DEV_TASK_API_URL = 'http://localhost:3000/tasks';
@@ -266,8 +270,15 @@ function runWindowsPowerShell(script: string) {
 function inspectWindowsStaleBackendProcesses() {
   const probe = runWindowsPowerShell(
     [
-      "$targetSuffix = '\\dist\\tauri-shell\\resources\\backend-runtime\\main.js'",
-      "$processes = Get-CimInstance Win32_Process | Where-Object { $_.Name -ieq 'node.exe' -and $null -ne $_.CommandLine -and $_.CommandLine -like \"*$targetSuffix*\" }",
+      "$legacyNodeSuffix = '\\dist\\tauri-shell\\resources\\backend-runtime\\main.js'",
+      "$springSidecarSuffix = '\\apps\\tauri-shell\\src-tauri\\binaries\\spring-backend-'",
+      "$nestSidecarSuffix = '\\apps\\tauri-shell\\src-tauri\\binaries\\nest-backend-'",
+      "$expressSidecarSuffix = '\\apps\\tauri-shell\\src-tauri\\binaries\\express-backend-'",
+      '$processes = Get-CimInstance Win32_Process | Where-Object { ' +
+        "($_.Name -ieq 'node.exe' -and $null -ne $_.CommandLine -and $_.CommandLine -like \"*$legacyNodeSuffix*\") -or " +
+        "($_.Name -like 'spring-backend-*.exe' -and $null -ne $_.CommandLine -and $_.CommandLine -like \"*$springSidecarSuffix*\") -or " +
+        "($_.Name -like 'nest-backend-*.exe' -and $null -ne $_.CommandLine -and $_.CommandLine -like \"*$nestSidecarSuffix*\") -or " +
+        "($_.Name -like 'express-backend-*.exe' -and $null -ne $_.CommandLine -and $_.CommandLine -like \"*$expressSidecarSuffix*\") }",
       '$processes | ForEach-Object { "$($_.ProcessId)`t$($_.CommandLine)" }',
     ].join('; '),
   );
@@ -330,7 +341,13 @@ function inspectPosixStaleBackendProcesses() {
     })
     .filter(
       (entry): entry is { pid: string; commandLine: string } =>
-        entry !== null && entry.commandLine.includes('/dist/tauri-shell/resources/backend-runtime/main.js'),
+        entry !== null &&
+        (
+          entry.commandLine.includes('/dist/tauri-shell/resources/backend-runtime/main.js') ||
+          entry.commandLine.includes('/apps/tauri-shell/src-tauri/binaries/spring-backend-') ||
+          entry.commandLine.includes('/apps/tauri-shell/src-tauri/binaries/nest-backend-') ||
+          entry.commandLine.includes('/apps/tauri-shell/src-tauri/binaries/express-backend-')
+        ),
     );
 }
 
@@ -381,8 +398,25 @@ export function getPackagedNodeExecutablePath(
   return join(NODE_RUNTIME_DIR, target.nodeBinaryName);
 }
 
-export function getPackagedSpringExecutablePath(executableName = 'spring-backend.exe') {
-  return join(SPRING_NATIVE_RUNTIME_DIR, executableName);
+export function getTauriSidecarBinaryFileName(
+  sidecarName: string,
+  target: DesktopTargetInfo = resolveDesktopTargetInfo(),
+) {
+  const extension = target.hostPlatform === 'win32' ? '.exe' : '';
+  return `${sidecarName}-${target.rustTarget}${extension}`;
+}
+
+export function getTauriSidecarBinaryPath(
+  sidecarName: string,
+  target: DesktopTargetInfo = resolveDesktopTargetInfo(),
+) {
+  return join(TAURI_BINARIES_DIR, getTauriSidecarBinaryFileName(sidecarName, target));
+}
+
+export function getPreparedSpringSidecarPath(
+  target: DesktopTargetInfo = resolveDesktopTargetInfo(),
+) {
+  return getTauriSidecarBinaryPath(SPRING_BACKEND_SIDECAR_NAME, target);
 }
 
 function getCachedNodeExecutablePath(target: DesktopTargetInfo) {

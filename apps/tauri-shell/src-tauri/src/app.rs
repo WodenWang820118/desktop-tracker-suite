@@ -22,6 +22,7 @@ pub(crate) fn build_tauri_app() -> Result<App> {
     }
 
     tauri::Builder::default()
+        .plugin(tauri_plugin_shell::init())
         .plugin(updater_builder.build())
         .manage(backend_state)
         .setup(|app| {

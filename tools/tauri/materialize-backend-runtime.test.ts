@@ -70,9 +70,24 @@ test('buildDesktopRuntimeMetadata records the packaged runtime target fields', (
       nodeBinaryName: 'node',
     }),
     {
+      backendDirectory: 'backend-runtime',
+      backendKind: 'nest-node',
       databaseFileName: 'database.sqlite3',
       desktopTarget: 'darwin-arm64',
+      entryFile: 'main.js',
+      logFileName: 'backend-runtime.log',
       nodeBinaryName: 'node',
+      runtimeMode: 'resource',
     },
+  );
+});
+
+test('buildDesktopRuntimeMetadata records the Windows node executable name', () => {
+  assert.equal(
+    buildDesktopRuntimeMetadata({
+      profile: 'windows-x64',
+      nodeBinaryName: 'node.exe',
+    }).nodeBinaryName,
+    'node.exe',
   );
 });

@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { mkdir, mkdtemp } from 'node:fs/promises';
 import { createServer } from 'node:net';
 import { join } from 'node:path';
@@ -6,6 +7,7 @@ import { tmpdir } from 'node:os';
 import {
   BACKEND_RUNTIME_DIR,
   DATABASE_FILE_NAME,
+  fileExists,
   getPackagedNodeExecutablePath,
   logStep,
   spawnLogged,
@@ -16,6 +18,13 @@ import {
   assertHostCanBuildDesktopTarget,
   resolveDesktopTargetInfo,
 } from './runtime-target.ts';
+
+type TaskResponse = {
+  id: string;
+  text: string;
+  day: string;
+  reminder: boolean;
+};
 
 async function main() {
   const target = resolveDesktopTargetInfo();
@@ -43,7 +52,48 @@ async function main() {
       attempts: 60,
       delayMs: 1000,
     });
-    logStep(`Packaged Nest runtime responded successfully on port ${port}`);
+
+    const taskId = randomUUID();
+    const createdResponse = await fetchJsonResponse<TaskResponse>(
+      `http://127.0.0.1:${port}/tasks/create`,
+      {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: taskId,
+          text: 'packaged nest runtime smoke',
+          day: '2026-04-23',
+          reminder: true,
+        }),
+      },
+    );
+    if (createdResponse.status !== 201) {
+      throw new Error(
+        `Expected Nest createTask response status 201, received ${createdResponse.status}.`,
+      );
+    }
+    const created = createdResponse.body;
+    const reloaded = await fetchJson<TaskResponse>(
+      `http://127.0.0.1:${port}/tasks/${encodeURIComponent(created.id)}`,
+    );
+    if (
+      reloaded.id !== created.id ||
+      reloaded.text !== created.text ||
+      reloaded.day !== created.day ||
+      reloaded.reminder !== created.reminder
+    ) {
+      throw new Error(
+        `CRUD smoke verification failed. Expected ${JSON.stringify(created)}, received ${JSON.stringify(reloaded)}.`,
+      );
+    }
+
+    if (!(await fileExists(databasePath))) {
+      throw new Error(`Expected Nest smoke database at ${databasePath} to exist.`);
+    }
+
+    logStep(`Packaged Nest runtime passed CRUD smoke on port ${port}`);
   } finally {
     await terminateChildProcess(backendProcess, 'packaged Nest runtime');
   }
@@ -72,6 +122,25 @@ async function reserveOpenPort() {
       });
     });
   });
+}
+
+async function fetchJson<T>(url: string, init?: RequestInit): Promise<T> {
+  return (await fetchJsonResponse<T>(url, init)).body;
+}
+
+async function fetchJsonResponse<T>(
+  url: string,
+  init?: RequestInit,
+): Promise<{ body: T; status: number }> {
+  const response = await fetch(url, init);
+  if (!response.ok) {
+    throw new Error(`Request to ${url} failed with ${response.status} ${response.statusText}.`);
+  }
+
+  return {
+    body: (await response.json()) as T,
+    status: response.status,
+  };
 }
 
 main().catch((error) => {

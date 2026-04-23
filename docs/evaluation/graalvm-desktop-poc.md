@@ -17,6 +17,28 @@ The PoC is a mixed result:
 
 Recommendation: do **not** migrate the desktop shell from Nest+Node to Spring+GraalVM based on the current Windows packaging result. Keep this work as a feasibility branch and, if desired, reuse the GraalVM path only for standalone Spring distribution experiments.
 
+## Packaging Clarification
+
+After checking the current repo against the latest official Tauri and Node.js documentation:
+
+- The current repo does **not** package backend processes as Tauri `sidecar`s.
+- The current repo packages backend runtimes as Tauri `bundle.resources` and resolves them from Tauri's resource directory at runtime.
+- A true Tauri sidecar uses `bundle.externalBin` plus the shell plugin permission model.
+
+That distinction matters for future desktop decisions:
+
+- `spring-backend` + GraalVM is a valid candidate for a Tauri sidecar because it already becomes a platform-specific executable.
+- `nest-backend` / `express-backend` should not be described as "just use `node.exe`" unless the JavaScript payload is also accounted for.
+- For Node backends there are two valid packaging models:
+  - Ship the Node runtime plus bundled JavaScript as Tauri resources.
+  - Preferably package the Node application itself as a self-contained executable and then bundle that executable as a Tauri sidecar.
+
+In other words:
+
+1. **Java backend with GraalVM**: valid and aligned with the sidecar model.
+2. **Node backend with `node.exe`**: viable only as `node.exe` plus backend assets, or by turning the backend into a self-contained executable first.
+3. **All backends as sidecars**: possible in principle, but not what this repo implements today.
+
 ## What Changed
 
 ### Spring native path
@@ -37,6 +59,10 @@ Recommendation: do **not** migrate the desktop shell from Nest+Node to Spring+Gr
   - standalone Spring-native smoke/measurement
   - packaged Spring-native runtime measurement
   - bundle artifact measurement
+
+Note:
+
+- Both desktop runtime paths above are currently implemented as bundled `resources`, not as Tauri `externalBin` sidecars.
 
 ### Packaging blocker isolated
 
@@ -159,6 +185,8 @@ Implication for CI:
 - Investigate whether the SQLite warning should be addressed via explicit native-access settings for future JDK/GraalVM compatibility.
 - Validate whether size can be improved with profile-guided optimization or different bundle/compression strategies, but do not assume that will recover the `85%` installer regression.
 - Only consider a broader desktop migration if a later iteration improves the actual installer artifact, not just the unpacked runtime payload.
+- If the product requirement becomes "all desktop backends must ship as true Tauri sidecars", plan a separate migration from `bundle.resources` to `bundle.externalBin` instead of treating the current packaging path as already equivalent.
+- For Node backends, prefer a self-contained binary approach over shipping raw `node.exe` plus readable JavaScript unless debuggability is more important than bundle shape.
 
 ## Verification Run List
 
@@ -179,8 +207,13 @@ Implication for CI:
 
 - GraalVM Native Image docs: https://www.graalvm.org/latest/reference-manual/native-image/
 - GraalVM Native Image build options: https://www.graalvm.org/dev/reference-manual/native-image/overview/BuildOptions/
+- Spring Boot native image introduction: https://docs.spring.io/spring-boot/reference/packaging/native-image/introducing-graalvm-native-images.html
 - Tauri distribute overview: https://v2.tauri.app/distribute/
 - Tauri Windows installer docs: https://v2.tauri.app/distribute/windows-installer/
+- Tauri resources docs: https://v2.tauri.app/develop/resources/
+- Tauri sidecar docs: https://v2.tauri.app/develop/sidecar/
+- Tauri Node.js sidecar guide: https://v2.tauri.app/learn/sidecar-nodejs/
 - Tauri macOS signing/notarization docs: https://v2.tauri.app/ko/distribute/sign/macos/
 - Tauri prerequisites: https://v2.tauri.app/start/prerequisites/
 - Tauri Debian packaging docs: https://v2.tauri.app/distribute/debian/
+- Node.js single executable applications: https://nodejs.org/docs/latest-v22.x/api/single-executable-applications.html
