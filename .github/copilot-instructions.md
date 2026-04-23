@@ -1,7 +1,7 @@
 # Copilot Bridge Instructions
 
 - `AGENTS.md` is the canonical repository instruction file. Follow it first.
-- For Angular, React, Vue, NestJS, Express, Java, and Electron tasks, use the canonical stack conventions in `.agents/stack-conventions.md` via `AGENTS.md`.
+- For Angular, React, Vue, NestJS, Express, Java, and Tauri tasks, use the canonical stack conventions in `.agents/stack-conventions.md` via `AGENTS.md`.
 - For this repository, GitHub Copilot Claude Sonnet 4.6 is the preferred scripted reviewer for plan reviews, test reviews, and escalated implementation reviews created in any tool.
 - Project skills live in `.agents/skills`. Do not recreate `.github/skills` copies.
 - Reviewer personas live in `.agents/reviewers`. Custom Copilot agents live in `.github/agents`.
@@ -19,4 +19,4 @@
 - If the gate should be closed again, run `pnpm review:reset`.
 - For browser-verifiable or desktop-visible UI verification requests, use `qa-verification` and capture a concrete verification story tied to a real user or operator flow.
 - Run workspace tasks through `pnpm nx ...` and inspect project configuration before guessing targets or flags.
-- Keep repo topology in mind: Angular, React, and Vue frontends; NestJS, Express, and Spring backends; and the Electron shell/runtime files at the workspace root.
+- Keep repo topology in mind: Angular, React, and Vue frontends; NestJS, Express, and Spring backends; and the Tauri desktop shell under `apps/tauri-shell`.

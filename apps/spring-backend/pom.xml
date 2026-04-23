@@ -4,7 +4,7 @@
 
     <parent>
         <groupId>com.wodendev</groupId>
-        <artifactId>nx-ng-nest-electron</artifactId>
+        <artifactId>tracker-suite</artifactId>
         <version>0.0.1-SNAPSHOT</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>

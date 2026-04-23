@@ -59,7 +59,7 @@ The agent must operate in distinct phases, loading context incrementally. A late
 
 - Use `incremental-implementation` as the execution discipline for multi-file work.
 - Load specialist skills on demand for the current slice, such as `frontend-ui-engineering`, `api-and-interface-design`, `security-and-hardening`, or repo-specific Nx skills.
-- Load `.agents/stack-conventions.md` only when the task involves Angular, React, Vue, NestJS, Express, Java, or Electron runtime code.
+- Load `.agents/stack-conventions.md` only when the task involves Angular, React, Vue, NestJS, Express, Java, or Tauri runtime code.
 - Keep checkpoint and release-closeout skills unloaded until the work reaches their checkpoint.
 
 ### Phase 4: Test, QA, and Review Checkpoints
@@ -120,9 +120,9 @@ Use more than one reviewer if the task crosses categories.
 Use `qa-verification` when one of these is true:
 
 - the task changes browser-visible UI behavior
-- the task changes desktop-visible Electron behavior that needs a human verification story
+- the task changes desktop-visible Tauri behavior that needs a human verification story
 - the user explicitly asks for verification evidence, screenshots, or a QA pass
-- smoke verification across backend, Electron, or workspace tasks materially reduces risk
+- smoke verification across backend, Tauri, or workspace tasks materially reduces risk
 
 Keep verification evidence tied to actual user or operator flows, not just component snapshots.
 
@@ -168,13 +168,13 @@ Keep verification evidence tied to actual user or operator flows, not just compo
 - `apps/nest-backend`: NestJS backend
 - `apps/express-backend`: Express backend
 - `apps/spring-backend`: Spring Boot backend
-- `src/` and the Electron/Vite/Forge configs at workspace root: Electron main, preload, renderer bootstrap, and packaging/runtime wiring
+- `apps/tauri-shell`: Tauri desktop shell, Rust runtime orchestration, and packaging/runtime wiring
 
 Use repo-specific reviewers and skills with that topology in mind.
 
 ## Stack Conventions
 
-- For Angular, React, Vue, NestJS, Express, Java, and Electron implementation work, use `.agents/stack-conventions.md` as the canonical stack-conventions source after reading `AGENTS.md`.
+- For Angular, React, Vue, NestJS, Express, Java, and Tauri implementation work, use `.agents/stack-conventions.md` as the canonical stack-conventions source after reading `AGENTS.md`.
 - Keep bridge files thin. They may point to the canonical conventions file, but they must not duplicate the full conventions body.
 - Angular guidance should reflect the repo's standalone-component, dependency-injection-first, `inject()`, and signal-first patterns.
 - React guidance should reflect the repo's functional component style, typed props and service boundaries, and router-driven app shells.
@@ -182,7 +182,7 @@ Use repo-specific reviewers and skills with that topology in mind.
 - NestJS guidance should reflect the repo's dependency-injection-first architecture plus the `core/` and `feature/` split with thin controllers and service-led orchestration.
 - Express guidance should reflect the repo's route/service/core split with thin route handlers and explicit infrastructure seams.
 - Java guidance should reflect the repo's Spring Boot constructor-injection style and compact domain services.
-- Electron guidance should reflect the repo's split between `main`, `preload`, renderer bootstrap, and environment/path helpers at the workspace root.
+- Tauri guidance should reflect the repo's desktop shell split between the Rust runtime, packaged backend orchestration, and frontend query-string bootstrapping.
 
 <!-- nx configuration start-->
 <!-- Leave the start & end comments to automatically receive updates. -->

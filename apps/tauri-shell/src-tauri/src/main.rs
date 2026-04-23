@@ -1,7 +1,6 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use std::{
-  env,
   fs,
   io::Write,
   path::{Path, PathBuf},
@@ -46,7 +45,6 @@ const SHUTDOWN_POLL_MS: u64 = 250;
 const SHUTDOWN_TIMEOUT_MS: u64 = 5000;
 const TRACE_ENV_VAR: &str = "TAURI_SHELL_TRACE";
 const TRACE_FILE_NAME: &str = "tauri-shell-startup.log";
-const LEGACY_INSTALL_NAME_MARKERS: &[&str] = &["electron-tracker-suite", "tracker-suite"];
 
 #[derive(Clone)]
 struct BackendProcessState {
@@ -264,21 +262,6 @@ fn ensure_database_path(app: &AppHandle) -> Result<PathBuf> {
     return Ok(database_path);
   }
 
-  for candidate in resolve_legacy_database_candidates(&app_data_dir) {
-    if !candidate.exists() {
-      continue;
-    }
-
-    import_legacy_database(
-      &candidate,
-      &database_path,
-      &migration_state_path,
-      "legacy-electron",
-      "Imported a legacy Electron database snapshot into the GA database location.",
-    )?;
-    return Ok(database_path);
-  }
-
   write_migration_state(
     &migration_state_path,
     &MigrationState {
@@ -286,7 +269,8 @@ fn ensure_database_path(app: &AppHandle) -> Result<PathBuf> {
       source: None,
       database_path: database_path.display().to_string(),
       details: Some(
-        "No legacy Tauri preview or Electron bridge database was found; Tracker Suite will create a fresh database.".into(),
+        "No legacy Tauri preview database was found; Tracker Suite will create a fresh database."
+          .into(),
       ),
     },
   )?;
@@ -524,179 +508,6 @@ fn write_migration_state(path: &Path, state: &MigrationState) -> Result<()> {
     )
   })?;
   Ok(())
-}
-
-fn resolve_legacy_database_candidates(app_data_dir: &Path) -> Vec<PathBuf> {
-  let mut candidates = Vec::new();
-
-  push_unique_path(
-    &mut candidates,
-    app_data_dir.join("migrations").join("electron").join(DATABASE_FILE_NAME),
-  );
-  push_unique_path(
-    &mut candidates,
-    app_data_dir
-      .join("migrations")
-      .join("electron")
-      .join(LEGACY_TAURI_DATABASE_FILE_NAME),
-  );
-
-  if let Some(system_root) = system_app_data_root() {
-    for app_name in ["Tracker Suite", "tracker-suite", "electron-tracker-suite"] {
-      push_unique_path(
-        &mut candidates,
-        system_root
-          .join(app_name)
-          .join("migrations")
-          .join("electron")
-          .join(DATABASE_FILE_NAME),
-      );
-      push_unique_path(
-        &mut candidates,
-        system_root
-          .join(app_name)
-          .join("migrations")
-          .join("electron")
-          .join(LEGACY_TAURI_DATABASE_FILE_NAME),
-      );
-    }
-  }
-
-  candidates.extend(resolve_legacy_install_database_candidates());
-  candidates
-}
-
-fn resolve_legacy_install_database_candidates() -> Vec<PathBuf> {
-  let mut candidates = Vec::new();
-
-  #[cfg(target_os = "windows")]
-  {
-    if let Some(local_app_data) = env::var_os("LOCALAPPDATA") {
-      collect_legacy_install_candidates(
-        &PathBuf::from(local_app_data).join("Programs"),
-        &[
-          "resources/nest-backend/database.sqlite3",
-          "resources/backend-runtime/database.sqlite3",
-        ],
-        &mut candidates,
-      );
-    }
-
-    if let Some(program_files) = env::var_os("ProgramFiles") {
-      collect_legacy_install_candidates(
-        &PathBuf::from(program_files),
-        &[
-          "resources/nest-backend/database.sqlite3",
-          "resources/backend-runtime/database.sqlite3",
-        ],
-        &mut candidates,
-      );
-    }
-  }
-
-  #[cfg(target_os = "macos")]
-  {
-    collect_legacy_install_candidates(
-      Path::new("/Applications"),
-      &[
-        "Contents/Resources/nest-backend/database.sqlite3",
-        "Contents/Resources/backend-runtime/database.sqlite3",
-      ],
-      &mut candidates,
-    );
-
-    if let Some(home) = env::var_os("HOME") {
-      collect_legacy_install_candidates(
-        &PathBuf::from(home).join("Applications"),
-        &[
-          "Contents/Resources/nest-backend/database.sqlite3",
-          "Contents/Resources/backend-runtime/database.sqlite3",
-        ],
-        &mut candidates,
-      );
-    }
-  }
-
-  #[cfg(all(unix, not(target_os = "macos")))]
-  {
-    collect_legacy_install_candidates(
-      Path::new("/opt"),
-      &[
-        "resources/nest-backend/database.sqlite3",
-        "resources/backend-runtime/database.sqlite3",
-      ],
-      &mut candidates,
-    );
-
-    if let Some(home) = env::var_os("HOME") {
-      collect_legacy_install_candidates(
-        &PathBuf::from(home).join(".local").join("share"),
-        &[
-          "resources/nest-backend/database.sqlite3",
-          "resources/backend-runtime/database.sqlite3",
-        ],
-        &mut candidates,
-      );
-    }
-  }
-
-  candidates
-}
-
-fn collect_legacy_install_candidates(
-  base_dir: &Path,
-  relative_paths: &[&str],
-  candidates: &mut Vec<PathBuf>,
-) {
-  let entries = match fs::read_dir(base_dir) {
-    Ok(entries) => entries,
-    Err(_) => return,
-  };
-
-  for entry in entries.flatten() {
-    let file_name = entry.file_name();
-    let file_name = file_name.to_string_lossy().to_lowercase();
-    if !LEGACY_INSTALL_NAME_MARKERS
-      .iter()
-      .any(|marker| file_name.contains(marker))
-    {
-      continue;
-    }
-
-    for relative_path in relative_paths {
-      push_unique_path(candidates, entry.path().join(relative_path));
-    }
-  }
-}
-
-fn push_unique_path(paths: &mut Vec<PathBuf>, path: PathBuf) {
-  if !paths.iter().any(|existing| existing == &path) {
-    paths.push(path);
-  }
-}
-
-fn system_app_data_root() -> Option<PathBuf> {
-  #[cfg(target_os = "windows")]
-  {
-    return env::var_os("APPDATA").map(PathBuf::from);
-  }
-
-  #[cfg(target_os = "macos")]
-  {
-    return env::var_os("HOME")
-      .map(PathBuf::from)
-      .map(|home| home.join("Library").join("Application Support"));
-  }
-
-  #[cfg(all(unix, not(target_os = "macos")))]
-  {
-    return env::var_os("XDG_DATA_HOME")
-      .map(PathBuf::from)
-      .or_else(|| env::var_os("HOME").map(PathBuf::from).map(|home| home.join(".local").join("share")));
-  }
-
-  #[allow(unreachable_code)]
-  None
 }
 
 fn trace_step(message: impl AsRef<str>) {
