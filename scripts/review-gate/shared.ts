@@ -382,10 +382,11 @@ export function parseHookInput(rawInput: string): HookInput {
   let toolArgs = input.toolArgs;
 
   if (typeof toolArgs === 'string') {
+    const command = toolArgs;
     try {
-      toolArgs = JSON.parse(toolArgs) as { command?: string };
+      toolArgs = JSON.parse(command) as { command?: string };
     } catch {
-      toolArgs = { command: toolArgs };
+      toolArgs = { command };
     }
   }
 

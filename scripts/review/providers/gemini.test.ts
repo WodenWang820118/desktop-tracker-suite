@@ -24,7 +24,7 @@ test('probeGeminiCliHealth records health-version and health-probe observations 
         acquireLock: async () => () => undefined,
         loadRateLimitState: () => ({ models: {} }),
         recordObservation(observation) {
-          recorded.push(observation as Record<string, unknown>);
+          recorded.push(observation as unknown as Record<string, unknown>);
           return observation;
         },
         recordRequestStart() {
@@ -69,7 +69,7 @@ test('runGeminiReview records a successful first attempt with wait-before-start 
       getInterRequestDelay: () => 1_500,
       loadRateLimitState: () => ({ models: {} }),
       recordObservation(observation) {
-        recorded.push(observation as Record<string, unknown>);
+        recorded.push(observation as unknown as Record<string, unknown>);
         return observation;
       },
       recordRequestStart() {
@@ -113,7 +113,7 @@ test('runGeminiReview records capacity-triggered retries with retry delay metada
       getRetryDelay: () => 20_000,
       loadRateLimitState: () => ({ models: {} }),
       recordObservation(observation) {
-        recorded.push(observation as Record<string, unknown>);
+        recorded.push(observation as unknown as Record<string, unknown>);
         return observation;
       },
       recordRequestStart() {
@@ -165,7 +165,7 @@ test('runGeminiReview records timeout retries before succeeding', async () => {
       getRetryDelay: () => 35_000,
       loadRateLimitState: () => ({ models: {} }),
       recordObservation(observation) {
-        recorded.push(observation as Record<string, unknown>);
+        recorded.push(observation as unknown as Record<string, unknown>);
         return observation;
       },
       recordRequestStart() {
@@ -213,7 +213,7 @@ test('runGeminiReview does not mark successful timeout-themed output as a timeou
       getInterRequestDelay: () => 0,
       loadRateLimitState: () => ({ models: {} }),
       recordObservation(observation) {
-        recorded.push(observation as Record<string, unknown>);
+        recorded.push(observation as unknown as Record<string, unknown>);
         return observation;
       },
       recordRequestStart() {

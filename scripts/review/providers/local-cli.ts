@@ -1,8 +1,8 @@
-import { spawnSync } from 'node:child_process';
+import { spawnSync, type SpawnSyncOptionsWithStringEncoding } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 
-interface LocalCliCommandInput {
+export interface LocalCliCommandInput {
   args: string[];
   command: string;
   cwd?: string;
@@ -11,12 +11,23 @@ interface LocalCliCommandInput {
   windowsScriptName?: string;
 }
 
-export function runLocalCliCommand(input: LocalCliCommandInput) {
-  const options = {
+export interface LocalCliCommandResult {
+  error?: Error;
+  signal?: NodeJS.Signals | null;
+  status: number | null;
+  stderr: string;
+  stdout: string;
+}
+
+export function runLocalCliCommand(
+  input: LocalCliCommandInput,
+): LocalCliCommandResult {
+  const stdio: ['pipe', 'pipe', 'pipe'] = ['pipe', 'pipe', 'pipe'];
+  const options: SpawnSyncOptionsWithStringEncoding = {
     cwd: input.cwd,
     encoding: 'utf8' as const,
     input: input.input,
-    stdio: ['pipe', 'pipe', 'pipe'] as const,
+    stdio,
     timeout: input.timeoutMs,
   };
 
@@ -37,11 +48,11 @@ export function runLocalCliCommand(input: LocalCliCommandInput) {
           ...input.args,
         ],
         options,
-      );
+      ) as LocalCliCommandResult;
     }
   }
 
-  return spawnSync(input.command, input.args, options);
+  return spawnSync(input.command, input.args, options) as LocalCliCommandResult;
 }
 
 export function resolveWindowsPowerShellPath(): string | null {

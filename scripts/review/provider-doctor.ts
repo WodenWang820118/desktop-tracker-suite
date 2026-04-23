@@ -243,33 +243,37 @@ function buildBucketReport(
 function buildBucketTimeoutRecommendation(
   bucket: ProviderObservationBucket,
 ): TimeoutRecommendationSummary | undefined {
-  if (
-    bucket.provider === 'copilot' &&
-    bucket.operation !== 'health-probe' &&
-    bucket.operation !== 'reasoning-help' &&
-    bucket.operation !== 'review'
-  ) {
+  if (bucket.provider === 'copilot') {
+    if (
+      bucket.operation !== 'health-probe' &&
+      bucket.operation !== 'reasoning-help' &&
+      bucket.operation !== 'review'
+    ) {
+      return undefined;
+    }
+
+    return buildTimeoutRecommendationSummary({
+      currentTimeoutMs: getCopilotPolicyTimeoutMs(bucket.operation),
+      observations: bucket.observations,
+    });
+  }
+
+  if (bucket.provider !== 'gemini') {
     return undefined;
   }
 
   if (
-    bucket.provider === 'gemini' &&
     bucket.operation !== 'health-probe' &&
     bucket.operation !== 'review-attempt'
   ) {
     return undefined;
   }
 
-  const currentTimeoutMs =
-    bucket.provider === 'copilot'
-      ? getCopilotPolicyTimeoutMs(bucket.operation)
-      : getGeminiPolicyTimeoutMs({
-          model: bucket.model,
-          operation: bucket.operation,
-        });
-
   return buildTimeoutRecommendationSummary({
-    currentTimeoutMs,
+    currentTimeoutMs: getGeminiPolicyTimeoutMs({
+      model: bucket.model,
+      operation: bucket.operation,
+    }),
     observations: bucket.observations,
   });
 }

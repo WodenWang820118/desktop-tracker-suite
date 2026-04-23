@@ -1,0 +1,30 @@
+{
+  "name": "@org/scripts",
+  "$schema": "../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "sourceRoot": "scripts",
+  "tags": ["tooling"],
+  "targets": {
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "eslint .",
+        "cwd": "scripts"
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node --experimental-strip-types --test review/**/*.test.ts review-gate/*.test.ts",
+        "cwd": "scripts"
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm exec tsc -p tsconfig.json --pretty false && pnpm exec tsc -p tsconfig.spec.json --pretty false",
+        "cwd": "scripts"
+      }
+    }
+  }
+}

@@ -42,7 +42,7 @@ test('updateCargoPackageVersion preserves indentation on the version line', () =
 
   const nextManifest = updateCargoPackageVersion(cargoManifest, '1.4.2');
 
-  assert.match(nextManifest, /\n  version = "1\.4\.2"\n/u);
+  assert.match(nextManifest, /\n {2}version = "1\.4\.2"\n/u);
   assert.doesNotMatch(nextManifest, /version = "0\.1\.0"/u);
 });
 
