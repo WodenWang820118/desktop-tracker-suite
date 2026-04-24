@@ -60,3 +60,5 @@ release.properties
 buildNumber.properties
 /java-runtime
 .cache/
+apps/tauri-shell/src-tauri/binaries/*
+!apps/tauri-shell/src-tauri/binaries/.gitkeep

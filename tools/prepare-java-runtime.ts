@@ -2,12 +2,12 @@
   Build a minimal Java runtime image for the Spring backend.
 
   Why:
-  - Shipping a full JDK inside Electron is huge and OS-specific.
+  - Shipping a full JDK inside a desktop bundle is huge and OS-specific.
   - In CI we can install JDK 25, then generate a small runtime image via jdeps+jlink.
 
   Output:
   - dist/java-runtime/<image>/bin/java (folder name is stable: "runtime")
-  - Electron packager should include ./dist/java-runtime as extraResource (it becomes resources/java-runtime).
+  - The desktop bundler should include ./dist/java-runtime as an extra resource (it becomes resources/java-runtime).
 
   Notes:
   - Requires a JDK (not just a JRE) because it uses jdeps and jlink.

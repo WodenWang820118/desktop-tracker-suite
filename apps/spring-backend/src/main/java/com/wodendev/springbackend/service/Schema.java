@@ -1,12 +1,11 @@
 package com.wodendev.springbackend.service;
 
+import com.wodendev.springbackend.config.DatabaseRuntimeDescriptor;
 import com.wodendev.springbackend.exception.DatabaseExceptionHelper;
 
-import lombok.Data;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.core.env.Environment;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -19,18 +18,17 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-@Data
 public class Schema implements InitializingBean {
     private String createdAtColumn;
     private String updatedAtColumn;
 
     private final JdbcTemplate jdbc;
-    private final Environment env;
+    private final DatabaseRuntimeDescriptor runtime;
     private boolean isSQLite;
 
     @Override
     public void afterPropertiesSet() {
-        this.isSQLite = env.getProperty("spring.datasource.url", "").startsWith("jdbc:sqlite:");
+        this.isSQLite = runtime.isSqlite();
         ensureTasksTableExists();
         detectAndMigrateColumns();
     }
@@ -105,14 +103,22 @@ public class Schema implements InitializingBean {
     }
 
     private String resolveDatabasePath() {
-        String databasePath = env.getProperty("DATABASE_PATH");
-        if (databasePath != null && !databasePath.isBlank()) {
-            return databasePath;
+        if (runtime.isSqlite()) {
+            return runtime.logPath();
         }
-        String url = env.getProperty("spring.datasource.url", "");
-        if (url.startsWith("jdbc:sqlite:")) {
-            return url.substring("jdbc:sqlite:".length());
-        }
+
         return "unknown";
+    }
+
+    public String getCreatedAtColumn() {
+        return createdAtColumn;
+    }
+
+    public String getUpdatedAtColumn() {
+        return updatedAtColumn;
+    }
+
+    public boolean isSqlite() {
+        return isSQLite;
     }
 }

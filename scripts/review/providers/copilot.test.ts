@@ -275,7 +275,7 @@ test('runCopilotReview retries without reasoning flags when the review command r
         };
       })(),
       recordObservation(observation) {
-        recorded.push(observation as Record<string, unknown>);
+        recorded.push(observation as unknown as Record<string, unknown>);
         return observation;
       },
       reasoningEffortSupportCache: cache,
@@ -431,7 +431,7 @@ test('probeCopilotCliHealth records health-version and health-probe observations
           };
         })(),
         recordObservation(observation) {
-          recorded.push(observation as Record<string, unknown>);
+          recorded.push(observation as unknown as Record<string, unknown>);
           return observation;
         },
         runCommand: (input) => {
@@ -486,7 +486,7 @@ test('runCopilotReview records reasoning-help and review observations and preser
         };
       })(),
       recordObservation(observation) {
-        recorded.push(observation as Record<string, unknown>);
+        recorded.push(observation as unknown as Record<string, unknown>);
         return observation;
       },
       reasoningEffortSupportCache: new Map(),
@@ -554,7 +554,7 @@ test('runCopilotReview records review timeouts before failing', () => {
             };
           })(),
           recordObservation(observation) {
-            recorded.push(observation as Record<string, unknown>);
+            recorded.push(observation as unknown as Record<string, unknown>);
             return observation;
           },
           reasoningEffortSupportCache: new Map([[repoRoot, null]]),
@@ -598,7 +598,7 @@ test('runCopilotReview does not mark successful timeout-themed output as a timeo
         };
       })(),
       recordObservation(observation) {
-        recorded.push(observation as Record<string, unknown>);
+        recorded.push(observation as unknown as Record<string, unknown>);
         return observation;
       },
       reasoningEffortSupportCache: new Map([[repoRoot, null]]),

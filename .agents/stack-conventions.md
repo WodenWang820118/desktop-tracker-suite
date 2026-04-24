@@ -1,7 +1,7 @@
 # Stack Conventions
 
 Use this file for stack-specific coding conventions after reading `AGENTS.md`.
-It is the canonical conventions source for Angular, React, Vue, NestJS, Express, Java, and Electron work in this repository.
+It is the canonical conventions source for Angular, React, Vue, NestJS, Express, Java, and Tauri work in this repository.
 When in doubt, prefer the patterns already used in the workspace over generic framework advice.
 
 ## Angular
@@ -60,10 +60,10 @@ When in doubt, prefer the patterns already used in the workspace over generic fr
 - Use scoped loggers for operational events; do not log secrets, request bodies, or sensitive file contents.
 - Prefer typed exceptions or safe fallbacks at IO and integration boundaries instead of leaking low-level implementation details across layers.
 
-## Electron
+## Tauri
 
-- Keep Electron main-process responsibilities in the workspace-root `src/` files and avoid pulling renderer concerns into the main process.
-- Preserve the split between `main.ts`, `preload.ts`, renderer bootstrap files, and environment/path utility modules.
-- Keep privileged APIs behind preload boundaries instead of exposing Node or Electron primitives directly to the renderer.
-- Prefer small, explicit helper modules for path, environment, and backend/frontend coordination logic rather than monolithic bootstrap files.
-- Treat filesystem, process execution, updater, and environment access as security-sensitive boundaries and keep them easy to review.
+- Keep Tauri runtime responsibilities inside `apps/tauri-shell/src-tauri` and avoid pushing shell or process-lifecycle logic into the frontend app.
+- Preserve the split between Rust runtime orchestration, packaged backend materialization, and frontend query-string bootstrapping.
+- Use Tauri resource and app-data APIs for packaged paths instead of hard-coded relative traversal.
+- Keep filesystem, process execution, updater, and environment access in small reviewable helpers because they are security-sensitive boundaries.
+- Treat packaged backend startup, shutdown, and data-path migration as explicit lifecycle code with focused smoke coverage.

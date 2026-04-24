@@ -340,6 +340,20 @@ test('parseHookInput normalizes string toolArgs into an object command', () => {
   });
 });
 
+test('parseHookInput wraps plain string toolArgs into a command object', () => {
+  const parsed = parseHookInput(
+    JSON.stringify({
+      toolName: 'powershell',
+      toolArgs: 'git status',
+    }),
+  );
+
+  assert.deepEqual(parsed, {
+    toolName: 'powershell',
+    toolArgs: { command: 'git status' },
+  });
+});
+
 test('copilot-gpt-5-mini approvals remain valid through gate evaluation', () => {
   const approval = createApproval({
     reviewer: 'copilot-gpt-5-mini',

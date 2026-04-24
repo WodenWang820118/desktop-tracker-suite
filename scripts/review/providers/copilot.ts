@@ -8,6 +8,7 @@ import {
 import {
   createProviderTelemetryContext,
   recordProviderObservation,
+  type ProviderObservationInput,
   type ProviderTelemetryContext,
 } from '../provider-observability.ts';
 import {
@@ -16,7 +17,19 @@ import {
   COPILOT_REASONING_EFFORT_HELP_TIMEOUT_MS,
   COPILOT_REVIEW_TIMEOUT_MS,
 } from '../provider-policies.ts';
-import { runLocalCliCommand } from './local-cli.ts';
+import {
+  runLocalCliCommand,
+  type LocalCliCommandInput,
+  type LocalCliCommandResult,
+} from './local-cli.ts';
+
+type CopilotObservationRecorder = (
+  input: ProviderObservationInput,
+  repoRoot?: string,
+) => unknown;
+type CopilotCommandRunner = (
+  input: LocalCliCommandInput,
+) => LocalCliCommandResult;
 
 interface CopilotReviewInput {
   model?: string;
@@ -27,12 +40,12 @@ interface CopilotReviewInput {
 
 interface CopilotProviderDependencies {
   now?: () => number;
-  recordObservation?: typeof recordProviderObservation;
+  recordObservation?: CopilotObservationRecorder;
   reasoningEffortSupportCache?: Map<
     string,
     '--effort' | '--reasoning-effort' | null
   >;
-  runCommand?: typeof runLocalCliCommand;
+  runCommand?: CopilotCommandRunner;
 }
 
 const COPILOT_HEALTH_PROMPT = 'Reply with exactly OK.';
@@ -419,14 +432,14 @@ export function buildCopilotCommandArgs(input: {
 function supportsCopilotReasoningEffort(input: {
   model?: string;
   now: () => number;
-  recordObservation: typeof recordProviderObservation;
+  recordObservation: CopilotObservationRecorder;
   reasoningEffortSupportCache: Map<
     string,
     '--effort' | '--reasoning-effort' | null
   >;
   repoRoot: string;
   telemetryContext: ProviderTelemetryContext;
-  runCommand: typeof runLocalCliCommand;
+  runCommand: CopilotCommandRunner;
 }): '--effort' | '--reasoning-effort' | null {
   const cacheKey = resolve(input.repoRoot);
   const cached = input.reasoningEffortSupportCache.get(cacheKey);
@@ -574,7 +587,7 @@ function classifyCopilotErrorCategory(
 }
 
 function isCopilotTimedOut(
-  result: ReturnType<typeof runLocalCliCommand>,
+  result: LocalCliCommandResult,
   output = '',
 ): boolean {
   return (

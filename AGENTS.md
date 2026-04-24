@@ -59,7 +59,7 @@ The agent must operate in distinct phases, loading context incrementally. A late
 
 - Use `incremental-implementation` as the execution discipline for multi-file work.
 - Load specialist skills on demand for the current slice, such as `frontend-ui-engineering`, `api-and-interface-design`, `security-and-hardening`, or repo-specific Nx skills.
-- Load `.agents/stack-conventions.md` only when the task involves Angular, React, Vue, NestJS, Express, Java, or Electron runtime code.
+- Load `.agents/stack-conventions.md` only when the task involves Angular, React, Vue, NestJS, Express, Java, or Tauri runtime code.
 - Keep checkpoint and release-closeout skills unloaded until the work reaches their checkpoint.
 
 ### Phase 4: Test, QA, and Review Checkpoints
@@ -88,9 +88,9 @@ If the scripted Copilot Claude path is unavailable in the current environment, p
 1. `Plan review`: produce a spec or implementation plan, then send it to a second reviewer.
    Default: GitHub Copilot Claude Sonnet 4.6. If the normal Copilot Claude path is unavailable or quota exhausted, use `gemini-2.5-pro` before retrying with GitHub Copilot GPT-5 mini. If both local CLIs are unavailable, use the matching Codex reviewer subagent.
 2. `Test review`: after writing tests but before running the broad sign-off suite or using those tests as approval evidence, send the test strategy and assertions to a second reviewer.
-   Default: GitHub Copilot Claude Sonnet 4.6. If the normal Copilot Claude path is unavailable or quota exhausted, use `gemini-2.5-pro` before retrying with GitHub Copilot GPT-5 mini. If both local CLIs are unavailable, use the matching local reviewer persona or Codex reviewer subagent instead of silently self-approving.
+   Default: Use `gemini-2.5-pro` before retrying with GitHub Copilot GPT-5 mini. If both local CLIs are unavailable, use the matching local reviewer persona or Codex reviewer subagent instead of silently self-approving.
 3. `Implementation review`: after the first working implementation, self-check, and reviewable verification story are ready, send the change to a second reviewer.
-   Default: `pnpm review:implementation` keeps Gemini Flash Preview using the CLI model id `gemini-3-flash-preview` first for normal or sensitive implementation reviews. Its auto router may start with the matching Codex reviewer subagent only when the context contains an explicit small changed-file list, that list exactly matches the repo's current changed-file set, the scope is non-sensitive, and no review or governance surfaces are touched. Otherwise fall back in this order: GitHub Copilot Claude Sonnet 4.6, GitHub Copilot GPT-5 mini, then the matching Codex reviewer subagent. Escalate to GitHub Copilot Claude when blocking findings remain or when the change touches auth, secrets, filesystem, shell execution, network behavior, or public contracts.
+   Default: `pnpm review:implementation` keeps Gemini Flash Preview using the CLI model id `gemini-3-flash-preview` first for normal or sensitive implementation reviews. Its auto router may start with the matching Codex reviewer subagent only when the context contains an explicit small changed-file list, that list exactly matches the repo's current changed-file set, the scope is non-sensitive, and no review or governance surfaces are touched. Otherwise fall back in this order: GitHub Copilot GPT-5 mini, then the matching Codex reviewer subagent. Escalate to GitHub Copilot Claude when blocking findings remain or when the change touches auth, secrets, filesystem, shell execution, network behavior, or public contracts.
 
 For browser-verifiable UI work, use `qa-verification` after implementation and before final sign-off when a human-reviewable verification trail would materially reduce risk.
 
@@ -120,9 +120,9 @@ Use more than one reviewer if the task crosses categories.
 Use `qa-verification` when one of these is true:
 
 - the task changes browser-visible UI behavior
-- the task changes desktop-visible Electron behavior that needs a human verification story
+- the task changes desktop-visible Tauri behavior that needs a human verification story
 - the user explicitly asks for verification evidence, screenshots, or a QA pass
-- smoke verification across backend, Electron, or workspace tasks materially reduces risk
+- smoke verification across backend, Tauri, or workspace tasks materially reduces risk
 
 Keep verification evidence tied to actual user or operator flows, not just component snapshots.
 
@@ -168,13 +168,13 @@ Keep verification evidence tied to actual user or operator flows, not just compo
 - `apps/nest-backend`: NestJS backend
 - `apps/express-backend`: Express backend
 - `apps/spring-backend`: Spring Boot backend
-- `src/` and the Electron/Vite/Forge configs at workspace root: Electron main, preload, renderer bootstrap, and packaging/runtime wiring
+- `apps/tauri-shell`: Tauri desktop shell, Rust runtime orchestration, and packaging/runtime wiring
 
 Use repo-specific reviewers and skills with that topology in mind.
 
 ## Stack Conventions
 
-- For Angular, React, Vue, NestJS, Express, Java, and Electron implementation work, use `.agents/stack-conventions.md` as the canonical stack-conventions source after reading `AGENTS.md`.
+- For Angular, React, Vue, NestJS, Express, Java, and Tauri implementation work, use `.agents/stack-conventions.md` as the canonical stack-conventions source after reading `AGENTS.md`.
 - Keep bridge files thin. They may point to the canonical conventions file, but they must not duplicate the full conventions body.
 - Angular guidance should reflect the repo's standalone-component, dependency-injection-first, `inject()`, and signal-first patterns.
 - React guidance should reflect the repo's functional component style, typed props and service boundaries, and router-driven app shells.
@@ -182,7 +182,7 @@ Use repo-specific reviewers and skills with that topology in mind.
 - NestJS guidance should reflect the repo's dependency-injection-first architecture plus the `core/` and `feature/` split with thin controllers and service-led orchestration.
 - Express guidance should reflect the repo's route/service/core split with thin route handlers and explicit infrastructure seams.
 - Java guidance should reflect the repo's Spring Boot constructor-injection style and compact domain services.
-- Electron guidance should reflect the repo's split between `main`, `preload`, renderer bootstrap, and environment/path helpers at the workspace root.
+- Tauri guidance should reflect the repo's desktop shell split between the Rust runtime, packaged backend orchestration, and frontend query-string bootstrapping.
 
 <!-- nx configuration start-->
 <!-- Leave the start & end comments to automatically receive updates. -->

@@ -35,7 +35,7 @@ async function main() {
     ]);
   };
 
-  let tauriProcess;
+  let tauriProcess: ReturnType<typeof spawnLogged> | undefined;
 
   const handleSignal = (signal: NodeJS.Signals) => {
     logStep(`Received ${signal}, stopping the Tauri dev stack`);
@@ -56,10 +56,14 @@ async function main() {
         cwd: TAURI_PROJECT_ROOT,
       },
     );
+    if (!tauriProcess) {
+      throw new Error('Failed to start the Tauri dev process.');
+    }
+    const runningTauriProcess = tauriProcess;
 
     const exitCode = await new Promise<number>((resolvePromise, rejectPromise) => {
-      tauriProcess.on('error', rejectPromise);
-      tauriProcess.on('exit', (code) => resolvePromise(code ?? 0));
+      runningTauriProcess.on('error', rejectPromise);
+      runningTauriProcess.on('exit', (code) => resolvePromise(code ?? 0));
     });
 
     process.exitCode = exitCode;

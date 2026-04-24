@@ -6,6 +6,7 @@ import {
 import {
   createProviderTelemetryContext,
   recordProviderObservation,
+  type ProviderObservationInput,
   type ProviderTelemetryContext,
 } from '../provider-observability.ts';
 import { GEMINI_HEALTH_TIMEOUT_MS } from '../provider-policies.ts';
@@ -18,7 +19,19 @@ import {
   recordRequestStart,
   sleep,
 } from '../rate-limit.ts';
-import { runLocalCliCommand } from './local-cli.ts';
+import {
+  runLocalCliCommand,
+  type LocalCliCommandInput,
+  type LocalCliCommandResult,
+} from './local-cli.ts';
+
+type GeminiObservationRecorder = (
+  input: ProviderObservationInput,
+  repoRoot?: string,
+) => unknown;
+type GeminiCommandRunner = (
+  input: LocalCliCommandInput,
+) => LocalCliCommandResult;
 
 interface GeminiReviewInput {
   model: string;
@@ -34,9 +47,9 @@ interface GeminiProviderDependencies {
   getRetryDelay?: typeof getRetryDelayMs;
   loadRateLimitState?: typeof loadRateLimitState;
   now?: () => number;
-  recordObservation?: typeof recordProviderObservation;
+  recordObservation?: GeminiObservationRecorder;
   recordRequestStart?: typeof recordRequestStart;
-  runCommand?: typeof runLocalCliCommand;
+  runCommand?: GeminiCommandRunner;
   sleep?: typeof sleep;
 }
 
@@ -389,7 +402,7 @@ async function runGeminiTextCommand(
 }
 
 function isGeminiTimedOut(
-  result: ReturnType<typeof runLocalCliCommand>,
+  result: LocalCliCommandResult,
   output = '',
 ): boolean {
   return (

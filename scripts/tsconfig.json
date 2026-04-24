@@ -4,10 +4,12 @@
     "target": "es2022",
     "module": "nodenext",
     "moduleResolution": "nodenext",
+    "allowImportingTsExtensions": true,
     "types": ["node"],
     "lib": ["es2022"],
     "strict": true,
     "noEmit": true
   },
-  "include": ["./*.ts"]
+  "include": ["./*.ts", "./review/**/*.ts", "./review-gate/**/*.ts"],
+  "exclude": ["./**/*.test.ts"]
 }

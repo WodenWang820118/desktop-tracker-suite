@@ -3,5 +3,42 @@
   "identifier": "main-window",
   "description": "Capability for the main Tauri window.",
   "windows": ["main"],
-  "permissions": ["core:default"]
+  "permissions": [
+    "core:default",
+    "updater:default",
+    {
+      "identifier": "shell:allow-spawn",
+      "allow": [
+        {
+          "name": "spring-backend",
+          "sidecar": true
+        },
+        {
+          "name": "nest-backend",
+          "sidecar": true
+        },
+        {
+          "name": "express-backend",
+          "sidecar": true
+        }
+      ]
+    },
+    {
+      "identifier": "shell:allow-kill",
+      "allow": [
+        {
+          "name": "spring-backend",
+          "sidecar": true
+        },
+        {
+          "name": "nest-backend",
+          "sidecar": true
+        },
+        {
+          "name": "express-backend",
+          "sidecar": true
+        }
+      ]
+    }
+  ]
 }
