@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { mkdir, mkdtemp } from 'node:fs/promises';
+import { mkdtemp } from 'node:fs/promises';
 import { createServer } from 'node:net';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
@@ -7,6 +7,7 @@ import { tmpdir } from 'node:os';
 import {
   BACKEND_RUNTIME_DIR,
   DATABASE_FILE_NAME,
+  ensureDir,
   fileExists,
   getPackagedNodeExecutablePath,
   logStep,
@@ -31,7 +32,7 @@ async function main() {
   assertHostCanBuildDesktopTarget(target);
   const smokeRoot = await mkdtemp(join(tmpdir(), 'tauri-shell-smoke-'));
   const databaseRoot = join(smokeRoot, 'data');
-  await mkdir(databaseRoot, { recursive: true });
+  await ensureDir(databaseRoot, { root: smokeRoot });
   const databasePath = join(databaseRoot, DATABASE_FILE_NAME);
   const port = String(await reserveOpenPort());
   const packagedNodeExecutable = getPackagedNodeExecutablePath(target);
@@ -89,7 +90,7 @@ async function main() {
       );
     }
 
-    if (!(await fileExists(databasePath))) {
+    if (!(await fileExists(databasePath, { root: smokeRoot }))) {
       throw new Error(`Expected Nest smoke database at ${databasePath} to exist.`);
     }
 

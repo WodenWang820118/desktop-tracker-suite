@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { mkdir, mkdtemp } from 'node:fs/promises';
+import { mkdtemp } from 'node:fs/promises';
 import { createServer } from 'node:net';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
@@ -8,6 +8,7 @@ import {
   DATABASE_FILE_NAME,
   EXPRESS_BACKEND_SIDECAR_NAME,
   NEST_BACKEND_SIDECAR_NAME,
+  ensureDir,
   fileExists,
   getTauriSidecarBinaryPath,
   logStep,
@@ -57,7 +58,7 @@ async function main() {
 
   const smokeRoot = await mkdtemp(join(tmpdir(), `tauri-shell-${runtimeMode}-sidecar-smoke-`));
   const databaseRoot = join(smokeRoot, 'data');
-  await mkdir(databaseRoot, { recursive: true });
+  await ensureDir(databaseRoot, { root: smokeRoot });
   const databasePath = join(databaseRoot, DATABASE_FILE_NAME);
   const port = String(await reserveOpenPort());
 
@@ -114,7 +115,7 @@ async function main() {
       );
     }
 
-    if (!(await fileExists(databasePath))) {
+    if (!(await fileExists(databasePath, { root: smokeRoot }))) {
       throw new Error(`Expected ${runtime.label} smoke database at ${databasePath} to exist.`);
     }
 
