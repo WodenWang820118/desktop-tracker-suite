@@ -15,7 +15,7 @@
     "test": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "node --experimental-strip-types --test tools/tauri/*.test.ts"
+        "command": "node --test tools/tauri/*.test.ts"
       }
     },
     "typecheck": {

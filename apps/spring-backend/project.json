@@ -28,7 +28,7 @@
     "native-build": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "mvn -f pom.xml -pl apps/spring-backend -am -Pnative -DskipTests spring-boot:process-aot native:compile && node --experimental-strip-types tools/prepare-spring-native-dist.ts"
+        "command": "mvn -f pom.xml -pl apps/spring-backend -am -Pnative -DskipTests spring-boot:process-aot native:compile && node tools/prepare-spring-native-dist.ts"
       },
       "outputs": ["{workspaceRoot}/dist/spring-backend-native"]
     },
@@ -36,7 +36,7 @@
       "executor": "nx:run-commands",
       "dependsOn": ["native-build"],
       "options": {
-        "command": "node --experimental-strip-types tools/feasibility/smoke-spring-native.ts"
+        "command": "node tools/feasibility/smoke-spring-native.ts"
       },
       "outputs": ["{workspaceRoot}/dist/feasibility/graalvm-desktop/windows"]
     },

@@ -92,7 +92,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Synchronize desktop version files
-        run: node --experimental-strip-types tools/tauri/sync-version.ts
+        run: node tools/tauri/sync-version.ts
 
       - name: Materialize packaged backend runtime
         run: pnpm run desktop:materialize-runtime

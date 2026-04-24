@@ -11,7 +11,7 @@ const options = parseArgs(process.argv.slice(2));
 if (options.help) {
   console.log(
     [
-      'Usage: node --experimental-strip-types tools/scripts/review-gate/approve-pre-implementation.ts [options]',
+      'Usage: node tools/scripts/review-gate/approve-pre-implementation.ts [options]',
       '',
       'Options:',
       '  --reviewer <id>   Reviewer id: copilot-claude | copilot-gpt-5-mini | gemini-2.5-pro | codex-subagent',

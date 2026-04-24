@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import {
+  buildNodeWorkerArgs,
   getUsageText,
   parseCliArgs,
   writePrefilterOutput,
@@ -54,7 +55,22 @@ test('getUsageText stays path-agnostic', () => {
   const usage = getUsageText();
 
   assert.doesNotMatch(usage, /scripts[\\/]/i);
+  assert.doesNotMatch(usage, /--experimental-strip-types/);
   assert.match(usage, /local-reviewer\.ts/);
+});
+
+test('buildNodeWorkerArgs omits the strip-types flag', () => {
+  const args = buildNodeWorkerArgs('tools/scripts/review/local-reviewer.ts', [
+    'evaluate',
+    '--json',
+  ]);
+
+  assert.deepEqual(args, [
+    'tools/scripts/review/local-reviewer.ts',
+    'evaluate',
+    '--json',
+  ]);
+  assert.doesNotMatch(args.join(' '), /--experimental-strip-types/);
 });
 
 test('writePrefilterOutput includes hybrid additive fields without breaking key=value output', () => {

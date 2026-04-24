@@ -377,7 +377,7 @@ export function parseCliArgs(
 
 export function getUsageText(scriptName = 'local-reviewer.ts'): string {
   return [
-    `Usage: node --experimental-strip-types ${scriptName} <doctor|staged|prefilter|evaluate> [options]`,
+    `Usage: node ${scriptName} <doctor|staged|prefilter|evaluate> [options]`,
     '',
     'Options:',
     `  --small-diff-threshold-chars <n>  Override the small diff cutoff (default: ${DEFAULT_SMALL_DIFF_THRESHOLD_CHARS})`,
@@ -936,7 +936,7 @@ async function runJsonWorker<T>(input: {
   scriptPath: string;
 }): Promise<T> {
   const result = await runNodeWorker({
-    args: ['--experimental-strip-types', input.scriptPath, ...input.args],
+    args: buildNodeWorkerArgs(input.scriptPath, input.args),
     cwd: input.cwd,
   });
 
@@ -949,6 +949,13 @@ async function runJsonWorker<T>(input: {
       }`,
     );
   }
+}
+
+export function buildNodeWorkerArgs(
+  scriptPath: string,
+  args: string[],
+): string[] {
+  return [scriptPath, ...args];
 }
 
 async function runNodeWorker(input: {
