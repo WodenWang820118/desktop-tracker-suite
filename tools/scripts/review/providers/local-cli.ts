@@ -2,6 +2,10 @@ import { spawnSync, type SpawnSyncOptionsWithStringEncoding } from 'node:child_p
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 
+import { resolveWindowsPowerShellPath } from '../windows-cli.ts';
+
+export { resolveWindowsPowerShellPath };
+
 export interface LocalCliCommandInput {
   args: string[];
   command: string;
@@ -53,19 +57,6 @@ export function runLocalCliCommand(
   }
 
   return spawnSync(input.command, input.args, options) as LocalCliCommandResult;
-}
-
-export function resolveWindowsPowerShellPath(): string | null {
-  if (process.platform !== 'win32') {
-    return null;
-  }
-
-  const candidates = [
-    'C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe',
-    'C:\\Program Files\\PowerShell\\7\\pwsh.exe',
-  ];
-
-  return candidates.find((candidate) => existsSync(candidate)) ?? null;
 }
 
 export function resolveWindowsScriptPath(scriptName: string): string | null {

@@ -21,6 +21,7 @@ import type {
   LocalReviewReport,
   WindowsProcessBridgePayload,
 } from '../types.ts';
+import { resolveWindowsPowerShellPath } from '../../windows-cli.ts';
 
 // Runtime helpers are the only local-reviewer support layer that may spawn processes.
 export function createLocalReviewerDependencies(): LocalReviewerDependencies {
@@ -409,19 +410,6 @@ function sanitizeEnv(
     (entry): entry is [string, string] => typeof entry[1] === 'string',
   );
   return Object.fromEntries(sanitizedEntries);
-}
-
-function resolveWindowsPowerShellPath(): string | null {
-  if (process.platform !== 'win32') {
-    return null;
-  }
-
-  const candidates = [
-    'C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe',
-    'C:\\Program Files\\PowerShell\\7\\pwsh.exe',
-  ];
-
-  return candidates.find((candidate) => existsSync(candidate)) ?? null;
 }
 
 function encodePowerShellCommand(command: string): string {
