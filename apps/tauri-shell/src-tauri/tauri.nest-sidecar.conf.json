@@ -37,8 +37,6 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ],
-    "resources": {
-      "../../../dist/tauri-shell-nest-sidecar/resources/metadata": "metadata"
-    }
+    "resources": ["../../../dist/tauri-shell-nest-sidecar/resources/metadata"]
   }
 }

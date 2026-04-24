@@ -37,9 +37,9 @@
       "icons/icon.ico"
     ],
     "externalBin": ["binaries/spring-backend"],
-    "resources": {
-      "../../../dist/tauri-shell-spring-native/resources/spring-native": "spring-native",
-      "../../../dist/tauri-shell-spring-native/resources/metadata": "metadata"
-    }
+    "resources": [
+      "../../../dist/tauri-shell-spring-native/resources/spring-native",
+      "../../../dist/tauri-shell-spring-native/resources/metadata"
+    ]
   }
 }
