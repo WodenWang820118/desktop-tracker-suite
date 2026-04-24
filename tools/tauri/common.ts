@@ -1,5 +1,4 @@
 import {
-  spawn,
   spawnSync,
   type ChildProcess,
   type SpawnOptions,
@@ -10,27 +9,33 @@ import {
   chmod,
   copyFile,
   cp,
-  mkdir,
   mkdtemp,
   readFile,
   rm,
-  stat,
   writeFile,
 } from 'node:fs/promises';
-import { dirname, join, resolve } from 'node:path';
+import { dirname, join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { fileURLToPath } from 'node:url';
 
 import {
   assertHostCanBuildDesktopTarget,
   resolveDesktopTargetInfo,
   type DesktopTargetInfo,
 } from './runtime-target.ts';
+import {
+  ensureDir as ensureSharedDir,
+  fileExists as sharedFileExists,
+  writeJson as writeSharedJson,
+} from '../shared/fs.ts';
+import { waitForUrl as waitForSharedUrl } from '../shared/http.ts';
+import {
+  runCommand as runSharedCommand,
+  spawnLogged as spawnSharedLogged,
+  terminateChildProcess as terminateSharedChildProcess,
+} from '../shared/process.ts';
+import { sleep } from '../shared/time.ts';
+import { WORKSPACE_ROOT } from '../shared/workspace.ts';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-export const WORKSPACE_ROOT = resolve(__dirname, '..', '..');
 export const TAURI_PROJECT_ROOT = join(WORKSPACE_ROOT, 'apps', 'tauri-shell');
 export const TAURI_SRC_TAURI_ROOT = join(TAURI_PROJECT_ROOT, 'src-tauri');
 export const TAURI_BINARIES_DIR = join(TAURI_SRC_TAURI_ROOT, 'binaries');
@@ -83,13 +88,15 @@ export function logStep(message: string) {
   console.log(`[tauri-shell] ${message}`);
 }
 
+export { sleep, WORKSPACE_ROOT };
+
 export async function ensureDir(path: string) {
-  await mkdir(path, { recursive: true });
+  await ensureSharedDir(path);
 }
 
 export async function ensureCleanDir(path: string) {
   await rm(path, { recursive: true, force: true });
-  await mkdir(path, { recursive: true });
+  await ensureDir(path);
 }
 
 export async function copyDirectory(source: string, destination: string) {
@@ -101,7 +108,7 @@ export async function readJson<T>(path: string): Promise<T> {
 }
 
 export async function writeJson(path: string, value: unknown) {
-  await writeFile(path, `${JSON.stringify(value, null, 2)}\n`, 'utf8');
+  await writeSharedJson(path, value);
 }
 
 export async function writeTextFile(path: string, value: string) {
@@ -109,12 +116,7 @@ export async function writeTextFile(path: string, value: string) {
 }
 
 export async function fileExists(path: string) {
-  try {
-    await stat(path);
-    return true;
-  } catch {
-    return false;
-  }
+  return await sharedFileExists(path);
 }
 
 export async function waitForUrl(
@@ -127,24 +129,22 @@ export async function waitForUrl(
     delayMs?: number;
   } = {},
 ) {
-  for (let attempt = 1; attempt <= attempts; attempt += 1) {
-    try {
-      const response = await fetch(url);
-      if (response.ok) return;
-      logStep(`Wait for ${url} attempt ${attempt} returned ${response.status}`);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      logStep(`Wait for ${url} attempt ${attempt} failed: ${message}`);
-    }
+  await waitForSharedUrl(url, {
+    attempts,
+    delayMs,
+    onRetry(event) {
+      if (typeof event.status === 'number') {
+        logStep(`Wait for ${url} attempt ${event.attempt} returned ${event.status}`);
+        return;
+      }
 
-    await sleep(delayMs);
-  }
-
-  throw new Error(`Timed out waiting for ${url}`);
-}
-
-export async function sleep(ms: number) {
-  await new Promise((resolve) => setTimeout(resolve, ms));
+      logStep(
+        `Wait for ${url} attempt ${event.attempt} failed: ${
+          event.errorMessage ?? 'unknown error'
+        }`,
+      );
+    },
+  });
 }
 
 export async function runCommand(
@@ -152,31 +152,9 @@ export async function runCommand(
   args: string[],
   options: SpawnOptions = {},
 ) {
-  logStep(`> ${command} ${args.join(' ')}`);
-
-  await new Promise<void>((resolvePromise, rejectPromise) => {
-    const child = spawn(command, args, {
-      stdio: 'inherit',
-      cwd: WORKSPACE_ROOT,
-      shell: process.platform === 'win32' && command.endsWith('.cmd'),
-      ...options,
-    });
-
-    child.on('error', rejectPromise);
-    child.on('exit', (code, signal) => {
-      if (code === 0) {
-        resolvePromise();
-        return;
-      }
-
-      rejectPromise(
-        new Error(
-          `${command} ${args.join(' ')} exited with code ${String(code)} and signal ${String(
-            signal,
-          )}`,
-        ),
-      );
-    });
+  await runSharedCommand(command, args, {
+    log: logStep,
+    ...options,
   });
 }
 
@@ -185,47 +163,21 @@ export function spawnLogged(
   args: string[],
   options: SpawnOptions = {},
 ) {
-  logStep(`> ${command} ${args.join(' ')}`);
-
-  return spawn(command, args, {
-    stdio: 'inherit',
-    cwd: WORKSPACE_ROOT,
-    shell: process.platform === 'win32' && command.endsWith('.cmd'),
+  return spawnSharedLogged(command, args, {
+    log: logStep,
     ...options,
   });
 }
 
 export async function terminateChildProcess(child: ChildProcess | undefined, label: string) {
-  if (!child || !child.pid || child.exitCode !== null) return;
-
-  logStep(`Stopping ${label} (pid ${child.pid})`);
-  child.kill();
-
-  const exited = await waitForExit(child, 5000);
-  if (exited) return;
-
-  if (process.platform === 'win32') {
-    await runCommand('taskkill', ['/PID', String(child.pid), '/T', '/F']);
-    await waitForExit(child, 2000);
-    return;
-  }
-
-  child.kill('SIGKILL');
-  await waitForExit(child, 2000);
-}
-
-export async function waitForExit(child: ChildProcess, timeoutMs: number) {
-  if (child.exitCode !== null) return true;
-
-  return new Promise<boolean>((resolvePromise) => {
-    const timeout = setTimeout(() => {
-      resolvePromise(false);
-    }, timeoutMs);
-
-    child.once('exit', () => {
-      clearTimeout(timeout);
-      resolvePromise(true);
-    });
+  await terminateSharedChildProcess(child, label, {
+    log(message) {
+      logStep(
+        message.startsWith('stopping ')
+          ? `Stopping ${message.slice('stopping '.length)}`
+          : message,
+      );
+    },
   });
 }
 
