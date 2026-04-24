@@ -1,10 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-import { sleep } from '../../shared/time.ts';
-
-export { sleep };
-
 export interface RateLimitState {
   models: Record<string, { lastStartedAtMs: number }>;
 }
@@ -189,3 +185,6 @@ function isLockStale(lockPath: string): boolean {
   }
 }
 
+export function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
