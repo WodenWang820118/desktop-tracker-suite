@@ -59,7 +59,7 @@ test('validateReviewerId rejects reviewers outside the allowlist', () => {
   );
 });
 
-test('isReviewGateCommand only exempts the TypeScript review-gate entrypoints', () => {
+test('isReviewGateCommand exempts both legacy and relocated TypeScript review-gate entrypoints', () => {
   assert.equal(
     isReviewGateCommand(
       'node --experimental-strip-types scripts/review-gate/status.ts',
@@ -67,10 +67,51 @@ test('isReviewGateCommand only exempts the TypeScript review-gate entrypoints', 
     true,
   );
   assert.equal(
-    isReviewGateCommand('node scripts/review-gate/status.mjs'),
+    isReviewGateCommand(
+      'node --experimental-strip-types tools/scripts/review-gate/status.ts',
+    ),
+    true,
+  );
+  assert.equal(
+    isReviewGateCommand(
+      'node --experimental-strip-types scripts/review-gate/approve-pre-implementation.ts',
+    ),
+    true,
+  );
+  assert.equal(
+    isReviewGateCommand(
+      'node --experimental-strip-types tools/scripts/review-gate/approve-pre-implementation.ts',
+    ),
+    true,
+  );
+  assert.equal(
+    isReviewGateCommand(
+      'node --experimental-strip-types scripts/review-gate/reset.ts',
+    ),
+    true,
+  );
+  assert.equal(
+    isReviewGateCommand(
+      'node --experimental-strip-types tools/scripts/review-gate/reset.ts',
+    ),
+    true,
+  );
+  assert.equal(
+    isReviewGateCommand(
+      'node --experimental-strip-types .\\tools\\scripts\\review-gate\\status.ts',
+    ),
+    true,
+  );
+  assert.equal(
+    isReviewGateCommand('node tools/scripts/review-gate/status.mjs'),
     false,
   );
   assert.equal(isReviewGateCommand('pnpm review:status'), true);
+  assert.equal(
+    isReviewGateCommand('pnpm review:approve-pre-implementation'),
+    true,
+  );
+  assert.equal(isReviewGateCommand('pnpm review:reset'), true);
   assert.equal(isReviewGateCommand('pnpm nx test ng-tracker'), false);
 });
 
@@ -88,7 +129,7 @@ test('buildDenyPayload points reviewers to Copilot first, then Gemini, and inclu
   assert.match(payload.permissionDecisionReason, /Codex/i);
   assert.match(
     payload.permissionDecisionReason,
-    /approve-pre-implementation\.ts/,
+    /tools\/scripts\/review-gate\/approve-pre-implementation\.ts/,
   );
 });
 
@@ -159,7 +200,7 @@ test('isMutatingToolUse fails closed for non-allowlisted shell commands', () => 
   assert.equal(
     isMutatingToolUse({
       toolName: 'powershell',
-      toolArgs: { command: 'node scripts/setup.js' },
+      toolArgs: { command: 'node tools/scripts/setup.js' },
     }),
     true,
   );
@@ -253,6 +294,84 @@ test('isMutatingToolUse fails closed for non-allowlisted shell commands', () => 
       toolArgs: {
         command:
           'node --experimental-strip-types scripts/review-gate/status.ts',
+      },
+    }),
+    false,
+  );
+  assert.equal(
+    isMutatingToolUse({
+      toolName: 'powershell',
+      toolArgs: {
+        command:
+          'node --experimental-strip-types tools/scripts/review-gate/status.ts',
+      },
+    }),
+    false,
+  );
+  assert.equal(
+    isMutatingToolUse({
+      toolName: 'powershell',
+      toolArgs: {
+        command:
+          'node --experimental-strip-types .\\tools\\scripts\\review-gate\\status.ts',
+      },
+    }),
+    false,
+  );
+  assert.equal(
+    isMutatingToolUse({
+      toolName: 'powershell',
+      toolArgs: {
+        command:
+          'node --experimental-strip-types scripts/review-gate/approve-pre-implementation.ts',
+      },
+    }),
+    false,
+  );
+  assert.equal(
+    isMutatingToolUse({
+      toolName: 'powershell',
+      toolArgs: {
+        command:
+          'node --experimental-strip-types tools/scripts/review-gate/approve-pre-implementation.ts',
+      },
+    }),
+    false,
+  );
+  assert.equal(
+    isMutatingToolUse({
+      toolName: 'powershell',
+      toolArgs: {
+        command:
+          'node --experimental-strip-types scripts/review-gate/reset.ts',
+      },
+    }),
+    false,
+  );
+  assert.equal(
+    isMutatingToolUse({
+      toolName: 'powershell',
+      toolArgs: {
+        command:
+          'node --experimental-strip-types tools/scripts/review-gate/reset.ts',
+      },
+    }),
+    false,
+  );
+  assert.equal(
+    isMutatingToolUse({
+      toolName: 'powershell',
+      toolArgs: {
+        command: 'pnpm review:approve-pre-implementation',
+      },
+    }),
+    false,
+  );
+  assert.equal(
+    isMutatingToolUse({
+      toolName: 'powershell',
+      toolArgs: {
+        command: 'pnpm review:reset',
       },
     }),
     false,

@@ -948,13 +948,32 @@ function normalizeReviewPath(candidate: string): string {
     .replace(/^\/+/, '')
     .replace(/^\.\//, '')
     .trim();
+  const normalizedRepoRoot = resolve(process.cwd())
+    .replaceAll('\\', '/')
+    .replace(/^[A-Za-z]:\//, '')
+    .replace(/^\/+/, '')
+    .replace(/\/+$/, '');
+
+  if (normalizedRepoRoot.length > 0) {
+    if (normalized === normalizedRepoRoot) {
+      return '';
+    }
+
+    if (normalized.startsWith(`${normalizedRepoRoot}/`)) {
+      return normalized.slice(normalizedRepoRoot.length + 1);
+    }
+  }
+
+  const anchoredNormalized = normalized.startsWith('/')
+    ? normalized
+    : `/${normalized}`;
 
   const workspaceAnchors = [
     '/apps/',
     '/libs/',
     '/packages/',
-    '/scripts/',
     '/tools/',
+    '/scripts/',
     '/docs/',
     '/.agents/',
     '/.github/',
@@ -965,9 +984,9 @@ function normalizeReviewPath(candidate: string): string {
   ];
 
   for (const anchor of workspaceAnchors) {
-    const index = normalized.indexOf(anchor);
+    const index = anchoredNormalized.indexOf(anchor);
     if (index >= 0) {
-      return normalized.slice(index + 1);
+      return anchoredNormalized.slice(index + 1);
     }
   }
 

@@ -126,11 +126,26 @@ test('parseChangedFilesFromContext normalizes Windows-style paths', () => {
     parseChangedFilesFromContext(
       [
         'Changed files:',
-        '- .\\scripts\\review\\run-checkpoint-review.ts',
+        '- .\\tools\\scripts\\review\\run-checkpoint-review.ts',
         '',
       ].join('\n'),
     ),
-    ['scripts/review/run-checkpoint-review.ts'],
+    ['tools/scripts/review/run-checkpoint-review.ts'],
+  );
+});
+
+test('parseChangedFilesFromContext normalizes absolute repo-root Windows paths', () => {
+  const repoRoot = process.cwd().replaceAll('/', '\\');
+
+  assert.deepEqual(
+    parseChangedFilesFromContext(
+      [
+        'Changed files:',
+        `- ${repoRoot}\\tools\\scripts\\review\\run-checkpoint-review.ts`,
+        '',
+      ].join('\n'),
+    ),
+    ['tools/scripts/review/run-checkpoint-review.ts'],
   );
 });
 
@@ -151,10 +166,24 @@ test('inferAutoReviewRisk marks review control-plane files as high risk', () => 
       checkpoint: 'implementation',
       context: [
         'Changed files:',
-        '- scripts/review/run-checkpoint-review.ts',
+        '- tools/scripts/review/run-checkpoint-review.ts',
         '',
         'Notes:',
         '- Updates implementation routing.',
+      ].join('\n'),
+      focus: 'general',
+    }),
+    'high',
+  );
+  assert.equal(
+    inferAutoReviewRisk({
+      checkpoint: 'implementation',
+      context: [
+        'Changed files:',
+        '- scripts/review/run-checkpoint-review.ts',
+        '',
+        'Notes:',
+        '- Legacy path remains compatibility-sensitive.',
       ].join('\n'),
       focus: 'general',
     }),
@@ -767,12 +796,12 @@ test('buildReviewPrompt includes the checkpoint, focus, and supplied context', (
       focus: 'security',
       model: 'gemini-3-flash-preview',
     },
-    'Changed files: scripts/review-gate/shared.ts',
+    'Changed files: tools/scripts/review-gate/shared.ts',
   );
 
   assert.match(prompt, /Checkpoint: implementation/);
   assert.match(prompt, /Primary focus: security/);
-  assert.match(prompt, /Changed files: scripts\/review-gate\/shared\.ts/);
+  assert.match(prompt, /Changed files: tools\/scripts\/review-gate\/shared\.ts/);
 });
 
 test('createCheckpointReviewTelemetryContext keeps checkpoint buckets distinct', () => {

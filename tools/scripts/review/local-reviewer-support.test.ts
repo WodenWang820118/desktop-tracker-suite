@@ -184,7 +184,7 @@ test(
   },
 );
 
-test('getEscalationReasons detects high severity and sensitive paths', () => {
+test('getEscalationReasons detects high severity and sensitive review content', () => {
   const reasons = getEscalationReasons({
     diffText: '+ execSync("rm -rf /")',
     fileCount: 3,
@@ -193,7 +193,7 @@ test('getEscalationReasons detects high severity and sensitive paths', () => {
         severity: 'high',
         title: 'Shell execution',
         detail: 'Uses execSync.',
-        file_path: 'scripts/review.ts',
+        file_path: 'tools/scripts/review.ts',
         line: 3,
         recommendation: null,
         profile: 'typescript',
@@ -201,7 +201,7 @@ test('getEscalationReasons detects high severity and sensitive paths', () => {
         evidence: null,
       },
     ],
-    changedFiles: ['src/shell/auth.service.ts'],
+    changedFiles: ['tools/scripts/review.ts'],
   });
 
   assert.match(reasons.join(' '), /critical\/high/i);
