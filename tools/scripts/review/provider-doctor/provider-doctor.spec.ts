@@ -9,7 +9,7 @@ import {
   formatProviderDoctorReport,
   parseCliArgs,
 } from './provider-doctor.ts';
-import { recordProviderObservation } from './provider-observability.ts';
+import { recordProviderObservation } from '../provider-observability.ts';
 
 test('parseCliArgs supports provider filtering and json output', () => {
   assert.deepEqual(parseCliArgs(['--provider', 'gemini', '--json']), {

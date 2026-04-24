@@ -12,7 +12,7 @@ import {
   parseChangedFilesFromContext,
   type ReviewExecution,
 } from './run-checkpoint-review.ts';
-import { createProviderObservationBucketKey } from './provider-observability.ts';
+import { createProviderObservationBucketKey } from '../provider-observability.ts';
 
 test('parseCliArgs reads the supported checkpoint review flags', () => {
   const parsed = parseCliArgs([
