@@ -31,6 +31,8 @@ import {
 import { waitForUrl as waitForSharedUrl } from '../shared/http.ts';
 import {
   runCommand as runSharedCommand,
+  RunCommandError,
+  type RunCommandOptions,
   spawnLogged as spawnSharedLogged,
   terminateChildProcess as terminateSharedChildProcess,
 } from '../shared/process.ts';
@@ -161,6 +163,95 @@ export async function runCommand(
     log: logStep,
     ...options,
   });
+}
+
+type StagedProductionDependencyInstallRunner = (
+  command: string,
+  args: string[],
+  options: RunCommandOptions,
+) => Promise<unknown>;
+
+export interface InstallStagedProductionDependenciesOptions {
+  cwd: string;
+  env?: NodeJS.ProcessEnv;
+  isCi?: boolean;
+  label: string;
+  run?: StagedProductionDependencyInstallRunner;
+}
+
+const STAGED_PRODUCTION_DEPENDENCY_INSTALL_ARGS = [
+  'install',
+  '--prod',
+  '--ignore-workspace',
+  '--no-lockfile',
+] as const;
+
+export function buildStagedProductionDependencyInstallArgs({
+  offline,
+}: {
+  offline: boolean;
+}): string[] {
+  return offline
+    ? [...STAGED_PRODUCTION_DEPENDENCY_INSTALL_ARGS, '--offline']
+    : [...STAGED_PRODUCTION_DEPENDENCY_INSTALL_ARGS];
+}
+
+export function isPnpmOfflineMetadataMiss(error: unknown): boolean {
+  if (!(error instanceof RunCommandError)) {
+    return false;
+  }
+
+  const diagnosticText = [error.stdout, error.stderr, error.message].join('\n');
+  return /\bERR_PNPM_NO_OFFLINE_META\b/u.test(diagnosticText);
+}
+
+export async function installStagedProductionDependencies({
+  cwd,
+  env,
+  isCi = process.env.CI === 'true',
+  label,
+  run = runSharedCommand,
+}: InstallStagedProductionDependenciesOptions): Promise<void> {
+  const installEnv = {
+    ...process.env,
+    ...env,
+    CI: 'true',
+    npm_config_node_linker: 'hoisted',
+    npm_config_confirm_modules_purge: 'false',
+  };
+  const baseOptions = {
+    cwd,
+    env: installEnv,
+    log: logStep,
+  };
+
+  try {
+    await run(PNPM_COMMAND, buildStagedProductionDependencyInstallArgs({ offline: true }), {
+      ...baseOptions,
+      stdio: 'pipe',
+    });
+    return;
+  } catch (error) {
+    if (!isCi || !isPnpmOfflineMetadataMiss(error)) {
+      throw error;
+    }
+
+    logStep(
+      `Offline pnpm metadata is unavailable for ${label}; retrying production dependency install online.`,
+    );
+
+    try {
+      await run(PNPM_COMMAND, buildStagedProductionDependencyInstallArgs({ offline: false }), {
+        ...baseOptions,
+        stdio: 'inherit',
+      });
+    } catch (fallbackError) {
+      throw new Error(
+        `Online pnpm install fallback failed after an offline metadata miss for ${label}.`,
+        { cause: fallbackError },
+      );
+    }
+  }
 }
 
 export function spawnLogged(
@@ -511,3 +602,4 @@ async function ensureExecutablePermissions(path: string) {
 
   await chmod(path, 0o755);
 }
+

@@ -7,7 +7,6 @@ import {
   DATABASE_FILE_NAME,
   NEST_DIST_DIR,
   NODE_RUNTIME_DIR,
-  PNPM_COMMAND,
   TAURI_METADATA_DIR,
   TAURI_DIST_ROOT,
   copyDirectory,
@@ -16,9 +15,9 @@ import {
   ensureNodeBinaryDownloaded,
   fileExists,
   getPackagedNodeExecutablePath,
+  installStagedProductionDependencies,
   logStep,
   readJson,
-  runCommand,
   stopStaleTauriBackendProcesses,
   writeJson,
   writeTextFile,
@@ -121,19 +120,10 @@ async function main() {
   );
 
   logStep(`Installing production dependencies for the packaged Nest runtime (${target.profile})`);
-  await runCommand(
-    PNPM_COMMAND,
-    ['install', '--prod', '--ignore-workspace', '--offline', '--no-lockfile'],
-    {
-      cwd: BACKEND_RUNTIME_DIR,
-      env: {
-        ...process.env,
-        CI: 'true',
-        npm_config_node_linker: 'hoisted',
-        npm_config_confirm_modules_purge: 'false',
-      },
-    },
-  );
+  await installStagedProductionDependencies({
+    cwd: BACKEND_RUNTIME_DIR,
+    label: 'packaged Nest runtime',
+  });
   const sqliteBindingPath = join(
     BACKEND_RUNTIME_DIR,
     'node_modules',

@@ -21,6 +21,7 @@ import {
   ensureDir,
   fileExists,
   getTauriSidecarBinaryPath,
+  installStagedProductionDependencies,
   logStep,
   readJson,
   runCommand,
@@ -150,19 +151,10 @@ async function main() {
   logStep(
     `Installing production dependencies for the packaged ${runtimeDefinition.label} sidecar (${target.profile})`,
   );
-  await runCommand(
-    PNPM_COMMAND,
-    ['install', '--prod', '--ignore-workspace', '--offline', '--no-lockfile'],
-    {
-      cwd: stageRoot,
-      env: {
-        ...process.env,
-        CI: 'true',
-        npm_config_node_linker: 'hoisted',
-        npm_config_confirm_modules_purge: 'false',
-      },
-    },
-  );
+  await installStagedProductionDependencies({
+    cwd: stageRoot,
+    label: `packaged ${runtimeDefinition.label} sidecar`,
+  });
 
   const sqliteBindingPath = join(
     stageRoot,
