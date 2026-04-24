@@ -25,6 +25,7 @@ import {
 import {
   ensureDir as ensureSharedDir,
   fileExists as sharedFileExists,
+  type WorkspacePathOptions,
   writeJson as writeSharedJson,
 } from '../shared/fs.ts';
 import { waitForUrl as waitForSharedUrl } from '../shared/http.ts';
@@ -90,8 +91,8 @@ export function logStep(message: string) {
 
 export { sleep, WORKSPACE_ROOT };
 
-export async function ensureDir(path: string) {
-  await ensureSharedDir(path);
+export async function ensureDir(path: string, options?: WorkspacePathOptions) {
+  await ensureSharedDir(path, options);
 }
 
 export async function ensureCleanDir(path: string) {
@@ -107,16 +108,20 @@ export async function readJson<T>(path: string): Promise<T> {
   return JSON.parse(await readFile(path, 'utf8')) as T;
 }
 
-export async function writeJson(path: string, value: unknown) {
-  await writeSharedJson(path, value);
+export async function writeJson(
+  path: string,
+  value: unknown,
+  options?: WorkspacePathOptions,
+) {
+  await writeSharedJson(path, value, options);
 }
 
 export async function writeTextFile(path: string, value: string) {
   await writeFile(path, value, 'utf8');
 }
 
-export async function fileExists(path: string) {
-  return await sharedFileExists(path);
+export async function fileExists(path: string, options?: WorkspacePathOptions) {
+  return await sharedFileExists(path, options);
 }
 
 export async function waitForUrl(

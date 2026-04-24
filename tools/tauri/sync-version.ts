@@ -39,7 +39,7 @@ export async function syncDesktopVersionFiles(
   );
   if (tauriConfig.version !== version) {
     tauriConfig.version = version;
-    await writeJson(tauriConfigPath, tauriConfig);
+    await writeJson(tauriConfigPath, tauriConfig, { root: workspaceRoot });
     changedFiles.push(tauriConfigPath);
   }
 
