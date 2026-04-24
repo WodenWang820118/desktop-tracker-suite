@@ -4,10 +4,11 @@ import test from 'node:test';
 import {
   buildNodeWorkerArgs,
   getUsageText,
+  main,
   parseCliArgs,
   writePrefilterOutput,
   type ParsedLocalReviewerCliArgs,
-} from './local-reviewer.ts';
+} from '../local-reviewer.ts';
 
 test('parseCliArgs keeps estimate-only defaults for evaluate', () => {
   const parsed = parseCliArgs(['evaluate']);
@@ -109,11 +110,46 @@ test('writePrefilterOutput includes hybrid additive fields without breaking key=
 
   const output = writes.join('');
   assert.match(output, /^recommended_escalation=false/m);
+  assert.match(output, /^report_path=\/repo\/report\.json$/m);
+  assert.match(output, /^context_path=\/repo\/context\.md$/m);
+  assert.match(output, /^review_context_path=\/repo\/review\.md$/m);
+  assert.match(output, /^review_context_mode=prefilter-summary$/m);
   assert.match(output, /^gpt_provider=copilot-gpt-5-mini$/m);
   assert.match(output, /^gpt_risk=low$/m);
   assert.match(output, /^gpt_confidence=medium$/m);
   assert.match(output, /^local_mode=targeted$/m);
   assert.match(output, /^requested_profiles=typescript$/m);
   assert.match(output, /^decision_basis=gpt\+local$/m);
+  assert.match(output, /^small_diff_threshold_chars=1024$/m);
   assert.match(output, /"recommended_escalation": false/);
+});
+
+test('main dispatches internal worker commands with argv payloads', async () => {
+  const calls: string[] = [];
+  const handlers = {
+    runCollectCandidatesWorker: async (argv: string[]) => {
+      calls.push(`collect:${argv.join('|')}`);
+    },
+    runEvaluateSampleWorker: async (argv: string[]) => {
+      calls.push(`evaluate:${argv.join('|')}`);
+    },
+    runHybridGptWorker: async (argv: string[]) => {
+      calls.push(`gpt:${argv.join('|')}`);
+    },
+    runHybridLocalWorker: async (argv: string[]) => {
+      calls.push(`local:${argv.join('|')}`);
+    },
+  };
+
+  await main(['__collect-candidates', '--repo-name', 'gx.go'], handlers);
+  await main(['__evaluate-sample', '--sample-base64', 'abc'], handlers);
+  await main(['__hybrid-gpt-review', '--diff-base64', 'xyz'], handlers);
+  await main(['__hybrid-local-review', '--local-mode', 'full'], handlers);
+
+  assert.deepEqual(calls, [
+    'collect:--repo-name|gx.go',
+    'evaluate:--sample-base64|abc',
+    'gpt:--diff-base64|xyz',
+    'local:--local-mode|full',
+  ]);
 });
