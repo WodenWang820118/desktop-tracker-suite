@@ -1,13 +1,20 @@
-import { spawn, type ChildProcess, type SpawnOptions } from 'node:child_process';
-import { mkdir, readdir, stat, writeFile } from 'node:fs/promises';
+import { type ChildProcess, type SpawnOptions } from 'node:child_process';
+import { readdir, stat } from 'node:fs/promises';
 import { createServer } from 'node:net';
-import { dirname, join, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { join } from 'node:path';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+import {
+  ensureDir,
+  writeJson as writeSharedJson,
+} from '../shared/fs.ts';
+import { waitForUrl as waitForSharedUrl } from '../shared/http.ts';
+import {
+  spawnLogged as spawnSharedLogged,
+  terminateChildProcess as terminateSharedChildProcess,
+} from '../shared/process.ts';
+import { sleep } from '../shared/time.ts';
+import { WORKSPACE_ROOT } from '../shared/workspace.ts';
 
-export const WORKSPACE_ROOT = resolve(__dirname, '..', '..');
 export const FEASIBILITY_OUTPUT_DIR = join(
   WORKSPACE_ROOT,
   'dist',
@@ -16,13 +23,10 @@ export const FEASIBILITY_OUTPUT_DIR = join(
   'windows',
 );
 
-export async function ensureDir(path: string) {
-  await mkdir(path, { recursive: true });
-}
+export { ensureDir, sleep, WORKSPACE_ROOT };
 
 export async function writeJson(path: string, value: unknown) {
-  await ensureDir(dirname(path));
-  await writeFile(path, `${JSON.stringify(value, null, 2)}\n`, 'utf8');
+  await writeSharedJson(path, value);
 }
 
 export async function writeMetricSnapshot(fileName: string, value: unknown) {
@@ -71,10 +75,6 @@ export async function reserveOpenPort() {
   });
 }
 
-export async function sleep(ms: number) {
-  await new Promise((resolvePromise) => setTimeout(resolvePromise, ms));
-}
-
 export async function waitForUrl(
   url: string,
   {
@@ -85,21 +85,7 @@ export async function waitForUrl(
     delayMs?: number;
   } = {},
 ) {
-  const startedAt = Date.now();
-  for (let attempt = 1; attempt <= attempts; attempt += 1) {
-    try {
-      const response = await fetch(url);
-      if (response.ok) {
-        return Date.now() - startedAt;
-      }
-    } catch {
-      // Ignore and retry until timeout.
-    }
-
-    await sleep(delayMs);
-  }
-
-  throw new Error(`Timed out waiting for ${url}`);
+  return await waitForSharedUrl(url, { attempts, delayMs });
 }
 
 export function spawnLogged(
@@ -107,11 +93,8 @@ export function spawnLogged(
   args: string[],
   options: SpawnOptions = {},
 ) {
-  console.log(`[feasibility] > ${command} ${args.join(' ')}`);
-  return spawn(command, args, {
-    stdio: 'inherit',
-    cwd: WORKSPACE_ROOT,
-    shell: process.platform === 'win32' && command.endsWith('.cmd'),
+  return spawnSharedLogged(command, args, {
+    log: (message) => console.log(`[feasibility] ${message}`),
     ...options,
   });
 }
@@ -120,59 +103,8 @@ export async function terminateChildProcess(
   child: ChildProcess | undefined,
   label: string,
 ) {
-  if (!child || !child.pid || child.exitCode !== null) {
-    return;
-  }
-
-  console.log(`[feasibility] stopping ${label} (pid ${child.pid})`);
-  child.kill();
-
-  const exited = await waitForExit(child, 5000);
-  if (exited) {
-    return;
-  }
-
-  if (process.platform === 'win32') {
-    await spawnCommand('taskkill', ['/PID', String(child.pid), '/T', '/F']);
-    await waitForExit(child, 2000);
-    return;
-  }
-
-  child.kill('SIGKILL');
-  await waitForExit(child, 2000);
-}
-
-async function spawnCommand(command: string, args: string[]) {
-  await new Promise<void>((resolvePromise, rejectPromise) => {
-    const child = spawn(command, args, {
-      stdio: 'ignore',
-      cwd: WORKSPACE_ROOT,
-      shell: process.platform === 'win32',
-    });
-
-    child.on('error', rejectPromise);
-    child.on('exit', (code) => {
-      if (code === 0) {
-        resolvePromise();
-        return;
-      }
-
-      rejectPromise(new Error(`${command} ${args.join(' ')} exited with code ${String(code)}`));
-    });
-  });
-}
-
-async function waitForExit(child: ChildProcess, timeoutMs: number) {
-  if (child.exitCode !== null) {
-    return true;
-  }
-
-  return await new Promise<boolean>((resolvePromise) => {
-    const timeout = setTimeout(() => resolvePromise(false), timeoutMs);
-    child.once('exit', () => {
-      clearTimeout(timeout);
-      resolvePromise(true);
-    });
+  await terminateSharedChildProcess(child, label, {
+    log: (message) => console.log(`[feasibility] ${message}`),
   });
 }
 
