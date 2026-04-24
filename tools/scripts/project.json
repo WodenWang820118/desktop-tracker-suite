@@ -15,7 +15,7 @@
     "test": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "node --test review/**/*.test.ts review-gate/*.test.ts",
+        "command": "node --test review/**/*.test.ts review/**/*.spec.ts review-gate/*.test.ts",
         "cwd": "tools/scripts"
       }
     },

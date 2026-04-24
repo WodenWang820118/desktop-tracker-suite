@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node --test review/**/*.test.ts review-gate/*.test.ts",
+    "test": "node --test review/**/*.test.ts review/**/*.spec.ts review-gate/*.test.ts",
     "typecheck": "tsc -p tsconfig.json --pretty false && tsc -p tsconfig.spec.json --pretty false"
   }
 }

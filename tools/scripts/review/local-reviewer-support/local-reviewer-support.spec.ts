@@ -41,7 +41,7 @@ import {
 import {
   createProviderObservationBucketKey,
   createProviderTelemetryContext,
-} from './provider-observability.ts';
+} from '../provider-observability.ts';
 
 test('resolveLocalReviewerRepoRoot finds the sibling workspace', () => {
   const workspace = mkdtempSync(join(tmpdir(), 'local-reviewer-support-'));
@@ -361,7 +361,9 @@ test('buildHybridReviewReport escalates when either GPT or local review blocks a
   assert.equal(report.merged_findings.length, 1);
   assert.equal(report.findings.length, 1);
   assert.equal(report.merged_findings[0]?.source, 'gpt');
-  assert.match(report.summary, /Low-risk change|Hybrid review completed/i);
+  assert.equal(report.findings[0]?.source, 'gpt');
+  assert.doesNotMatch(report.summary, /low-risk change/i);
+  assert.match(report.summary, /Hybrid review completed/i);
   assert.equal(report.decision_basis, 'gpt+local');
   assert.match(
     buildHybridPrefilterContext({ report }),
