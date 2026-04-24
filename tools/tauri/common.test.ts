@@ -65,6 +65,7 @@ test('installStagedProductionDependencies succeeds with the offline install firs
     },
     isCi: true,
     label: 'test runtime',
+    platform: 'linux',
     run: async (...call) => {
       calls.push(call);
     },
@@ -96,6 +97,7 @@ test('installStagedProductionDependencies falls back online in CI on offline met
     cwd: '/workspace/stage',
     isCi: true,
     label: 'test runtime',
+    platform: 'linux',
     run: async (...call) => {
       calls.push(call);
       if (calls.length === 1) {
@@ -111,6 +113,27 @@ test('installStagedProductionDependencies falls back online in CI on offline met
     stdio: 'pipe',
   });
   assertCommandCall(calls[1], {
+    args: buildStagedProductionDependencyInstallArgs({ offline: false }),
+    cwd: '/workspace/stage',
+    stdio: 'inherit',
+  });
+});
+
+test('installStagedProductionDependencies uses the online install directly on Windows CI', async () => {
+  const calls: CommandCall[] = [];
+
+  await installStagedProductionDependencies({
+    cwd: '/workspace/stage',
+    isCi: true,
+    label: 'test runtime',
+    platform: 'win32',
+    run: async (...call) => {
+      calls.push(call);
+    },
+  });
+
+  assert.equal(calls.length, 1);
+  assertCommandCall(calls[0], {
     args: buildStagedProductionDependencyInstallArgs({ offline: false }),
     cwd: '/workspace/stage',
     stdio: 'inherit',
@@ -156,6 +179,7 @@ test('installStagedProductionDependencies does not fall back for other pnpm erro
       cwd: '/workspace/stage',
       isCi: true,
       label: 'test runtime',
+      platform: 'linux',
       run: async (...call) => {
         calls.push(call);
         throw otherPnpmError;
@@ -176,6 +200,7 @@ test('installStagedProductionDependencies does not fall back for plain errors in
       cwd: '/workspace/stage',
       isCi: true,
       label: 'test runtime',
+      platform: 'linux',
       run: async (...call) => {
         calls.push(call);
         throw plainError;
@@ -204,6 +229,7 @@ test('installStagedProductionDependencies surfaces online fallback failures', as
       cwd: '/workspace/stage',
       isCi: true,
       label: 'test runtime',
+      platform: 'linux',
       run: async () => {
         attempts += 1;
         if (attempts === 1) {

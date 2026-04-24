@@ -176,6 +176,7 @@ export interface InstallStagedProductionDependenciesOptions {
   env?: NodeJS.ProcessEnv;
   isCi?: boolean;
   label: string;
+  platform?: NodeJS.Platform;
   run?: StagedProductionDependencyInstallRunner;
 }
 
@@ -210,6 +211,7 @@ export async function installStagedProductionDependencies({
   env,
   isCi = process.env.CI === 'true',
   label,
+  platform = process.platform,
   run = runSharedCommand,
 }: InstallStagedProductionDependenciesOptions): Promise<void> {
   const installEnv = {
@@ -224,6 +226,16 @@ export async function installStagedProductionDependencies({
     env: installEnv,
     log: logStep,
   };
+  if (isCi && platform === 'win32') {
+    logStep(
+      `Using online pnpm production dependency install for ${label} on Windows CI.`,
+    );
+    await run(PNPM_COMMAND, buildStagedProductionDependencyInstallArgs({ offline: false }), {
+      ...baseOptions,
+      stdio: 'inherit',
+    });
+    return;
+  }
 
   try {
     await run(PNPM_COMMAND, buildStagedProductionDependencyInstallArgs({ offline: true }), {
