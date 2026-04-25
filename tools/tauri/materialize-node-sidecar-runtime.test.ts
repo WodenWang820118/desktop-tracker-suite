@@ -203,7 +203,7 @@ test('buildNodeSidecarPackageJson adds pkg metadata and sqlite3 to the runtime p
   assert.deepEqual(packagedJson.pkg, buildNodeSidecarPkgConfig());
 });
 
-test('buildNodeSidecarPkgConfig includes scripts, json assets, and native addons', () => {
+test('buildNodeSidecarPkgConfig includes json assets and native addons', () => {
   assert.deepEqual(buildNodeSidecarPkgConfig(), {
     assets: ['assets/**/*', 'node_modules/**/*.json', 'node_modules/**/*.node'],
     ignore: [
@@ -222,7 +222,6 @@ test('buildNodeSidecarPkgConfig includes scripts, json assets, and native addons
       'node_modules/**/*.d.ts',
       'sidecar-build/**/*',
     ],
-    scripts: ['node_modules/**/*.js'],
   });
 });
 

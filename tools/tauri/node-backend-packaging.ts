@@ -12,7 +12,6 @@ type PackageJson = {
 export type NodeSidecarPkgConfig = {
   assets?: string[];
   ignore?: string[];
-  scripts?: string[];
 };
 
 export const NODE_BACKEND_INSTALL_NPMRC =
@@ -63,7 +62,6 @@ export function buildNodeSidecarPkgConfig(): NodeSidecarPkgConfig {
       'node_modules/**/*.d.ts',
       'sidecar-build/**/*',
     ],
-    scripts: ['node_modules/**/*.js'],
   };
 }
 
