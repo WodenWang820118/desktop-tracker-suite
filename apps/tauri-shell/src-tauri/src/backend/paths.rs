@@ -87,8 +87,9 @@ pub(crate) fn resolve_packaged_runtime_paths(app: &AppHandle) -> Result<Packaged
     let app_log_dir = app
         .path()
         .app_log_dir()
-        .context("failed to resolve Tracker Suite log directory")?;
-    fs::create_dir_all(&app_log_dir).context("failed to create Tracker Suite log directory")?;
+        .context("failed to resolve Desktop Tracker Suite log directory")?;
+    fs::create_dir_all(&app_log_dir)
+        .context("failed to create Desktop Tracker Suite log directory")?;
 
     build_packaged_runtime_paths(
         resource_dir,
@@ -319,16 +320,16 @@ mod tests {
     fn normalize_spawn_path_strips_windows_unc_prefix() {
         assert_eq!(
             normalize_spawn_path(PathBuf::from(
-                r"\\?\C:\tracker-suite\backend-runtime\main.js"
+                r"\\?\C:\desktop-tracker-suite\backend-runtime\main.js"
             )),
-            PathBuf::from(r"C:\tracker-suite\backend-runtime\main.js")
+            PathBuf::from(r"C:\desktop-tracker-suite\backend-runtime\main.js")
         );
     }
 
     #[cfg(windows)]
     #[test]
     fn normalize_spawn_path_preserves_windows_absolute_paths() {
-        let path = PathBuf::from(r"C:\tracker-suite\backend-runtime\main.js");
+        let path = PathBuf::from(r"C:\desktop-tracker-suite\backend-runtime\main.js");
         assert_eq!(normalize_spawn_path(path.clone()), path);
     }
 
@@ -624,24 +625,24 @@ mod tests {
     fn sample_resource_dir() -> PathBuf {
         #[cfg(windows)]
         {
-            return PathBuf::from(r"C:\tracker-suite\resources");
+            return PathBuf::from(r"C:\desktop-tracker-suite\resources");
         }
 
         #[cfg(not(windows))]
         {
-            PathBuf::from("/tmp/tracker-suite/resources")
+            PathBuf::from("/tmp/desktop-tracker-suite/resources")
         }
     }
 
     fn sample_log_path() -> PathBuf {
         #[cfg(windows)]
         {
-            return PathBuf::from(r"C:\tracker-suite\logs\backend-runtime.log");
+            return PathBuf::from(r"C:\desktop-tracker-suite\logs\backend-runtime.log");
         }
 
         #[cfg(not(windows))]
         {
-            PathBuf::from("/tmp/tracker-suite/logs/backend-runtime.log")
+            PathBuf::from("/tmp/desktop-tracker-suite/logs/backend-runtime.log")
         }
     }
 }

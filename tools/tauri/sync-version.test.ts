@@ -94,7 +94,7 @@ test('syncDesktopVersionFiles aligns tauri.conf.json and Cargo.toml to the works
     );
     await writeFile(
       join(tauriSrcRoot, 'tauri.conf.json'),
-      JSON.stringify({ productName: 'Tracker Suite', version: '0.0.1' }, null, 2),
+      JSON.stringify({ productName: 'Desktop Tracker Suite', version: '0.0.1' }, null, 2),
       'utf8',
     );
     await writeFile(
@@ -120,7 +120,7 @@ test('syncDesktopVersionFiles aligns tauri.conf.json and Cargo.toml to the works
     const syncedCargoManifest = await readFile(join(tauriSrcRoot, 'Cargo.toml'), 'utf8');
 
     assert.equal(syncedConfig.version, '9.8.7');
-    assert.equal(syncedConfig.productName, 'Tracker Suite');
+    assert.equal(syncedConfig.productName, 'Desktop Tracker Suite');
     assert.match(syncedCargoManifest, /version = "9\.8\.7"/u);
     assert.doesNotMatch(syncedCargoManifest, /version = "0\.0\.1"/u);
   } finally {
@@ -141,7 +141,7 @@ test('syncDesktopVersionFiles is a no-op when versions are already aligned', asy
     );
     await writeFile(
       join(tauriSrcRoot, 'tauri.conf.json'),
-      JSON.stringify({ productName: 'Tracker Suite', version: '1.4.2' }, null, 2),
+      JSON.stringify({ productName: 'Desktop Tracker Suite', version: '1.4.2' }, null, 2),
       'utf8',
     );
     await writeFile(
@@ -175,7 +175,7 @@ test('syncDesktopVersionFiles reports only the stale file when a partial sync is
     );
     await writeFile(
       join(tauriSrcRoot, 'tauri.conf.json'),
-      JSON.stringify({ productName: 'Tracker Suite', version: '0.0.1' }, null, 2),
+      JSON.stringify({ productName: 'Desktop Tracker Suite', version: '0.0.1' }, null, 2),
       'utf8',
     );
     await writeFile(
@@ -196,7 +196,7 @@ test('syncDesktopVersionFiles reports only the stale file when a partial sync is
     assert.equal(result.version, '2.3.4');
     assert.deepEqual(result.changedFiles, [join(tauriSrcRoot, 'tauri.conf.json')]);
     assert.equal(syncedConfig.version, '2.3.4');
-    assert.equal(syncedConfig.productName, 'Tracker Suite');
+    assert.equal(syncedConfig.productName, 'Desktop Tracker Suite');
     assert.match(syncedCargoManifest, /version = "2\.3\.4"/u);
   } finally {
     await rm(workspaceRoot, { recursive: true, force: true });
@@ -216,7 +216,7 @@ test('syncDesktopVersionFiles reports only Cargo.toml when that is the stale fil
     );
     await writeFile(
       join(tauriSrcRoot, 'tauri.conf.json'),
-      JSON.stringify({ productName: 'Tracker Suite', version: '3.4.5' }, null, 2),
+      JSON.stringify({ productName: 'Desktop Tracker Suite', version: '3.4.5' }, null, 2),
       'utf8',
     );
     await writeFile(
@@ -237,7 +237,7 @@ test('syncDesktopVersionFiles reports only Cargo.toml when that is the stale fil
     assert.equal(result.version, '3.4.5');
     assert.deepEqual(result.changedFiles, [join(tauriSrcRoot, 'Cargo.toml')]);
     assert.equal(syncedConfig.version, '3.4.5');
-    assert.equal(syncedConfig.productName, 'Tracker Suite');
+    assert.equal(syncedConfig.productName, 'Desktop Tracker Suite');
     assert.match(syncedCargoManifest, /version = "3\.4\.5"/u);
     assert.doesNotMatch(syncedCargoManifest, /version = "0\.0\.1"/u);
   } finally {
@@ -258,7 +258,7 @@ test('syncDesktopVersionFiles adds the tauri.conf.json version field when it is 
     );
     await writeFile(
       join(tauriSrcRoot, 'tauri.conf.json'),
-      JSON.stringify({ productName: 'Tracker Suite' }, null, 2),
+      JSON.stringify({ productName: 'Desktop Tracker Suite' }, null, 2),
       'utf8',
     );
     await writeFile(
@@ -278,7 +278,7 @@ test('syncDesktopVersionFiles adds the tauri.conf.json version field when it is 
     assert.equal(result.version, '4.5.6');
     assert.deepEqual(result.changedFiles, [join(tauriSrcRoot, 'tauri.conf.json')]);
     assert.equal(syncedConfig.version, '4.5.6');
-    assert.equal(syncedConfig.productName, 'Tracker Suite');
+    assert.equal(syncedConfig.productName, 'Desktop Tracker Suite');
   } finally {
     await rm(workspaceRoot, { recursive: true, force: true });
   }
@@ -293,7 +293,7 @@ test('syncDesktopVersionFiles throws when package.json is missing a version fiel
     await writeFile(join(workspaceRoot, 'package.json'), JSON.stringify({}, null, 2), 'utf8');
     await writeFile(
       join(tauriSrcRoot, 'tauri.conf.json'),
-      JSON.stringify({ productName: 'Tracker Suite', version: '1.0.0' }, null, 2),
+      JSON.stringify({ productName: 'Desktop Tracker Suite', version: '1.0.0' }, null, 2),
       'utf8',
     );
     await writeFile(
@@ -323,7 +323,7 @@ test('syncDesktopVersionFiles rejects when the workspace package.json is missing
 
     await writeFile(
       join(tauriSrcRoot, 'tauri.conf.json'),
-      JSON.stringify({ productName: 'Tracker Suite', version: '1.0.0' }, null, 2),
+      JSON.stringify({ productName: 'Desktop Tracker Suite', version: '1.0.0' }, null, 2),
       'utf8',
     );
     await writeFile(
@@ -354,7 +354,7 @@ test('syncDesktopVersionFiles rejects when the workspace package.json contains i
     await writeFile(join(workspaceRoot, 'package.json'), '{ invalid json', 'utf8');
     await writeFile(
       join(tauriSrcRoot, 'tauri.conf.json'),
-      JSON.stringify({ productName: 'Tracker Suite', version: '1.0.0' }, null, 2),
+      JSON.stringify({ productName: 'Desktop Tracker Suite', version: '1.0.0' }, null, 2),
       'utf8',
     );
     await writeFile(
@@ -389,7 +389,7 @@ test('syncDesktopVersionFiles rejects when Cargo.toml is missing a package versi
     );
     await writeFile(
       join(tauriSrcRoot, 'tauri.conf.json'),
-      JSON.stringify({ productName: 'Tracker Suite', version: '1.0.0' }, null, 2),
+      JSON.stringify({ productName: 'Desktop Tracker Suite', version: '1.0.0' }, null, 2),
       'utf8',
     );
     await writeFile(
@@ -485,7 +485,7 @@ test('syncDesktopVersionFiles rejects when Cargo.toml is missing', async () => {
     );
     await writeFile(
       join(tauriSrcRoot, 'tauri.conf.json'),
-      JSON.stringify({ productName: 'Tracker Suite', version: '1.0.0' }, null, 2),
+      JSON.stringify({ productName: 'Desktop Tracker Suite', version: '1.0.0' }, null, 2),
       'utf8',
     );
 

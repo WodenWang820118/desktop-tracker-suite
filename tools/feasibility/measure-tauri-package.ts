@@ -34,12 +34,12 @@ async function main() {
   );
   const productName =
     runtimeMode === 'spring-native'
-      ? 'Tracker Suite Spring Native PoC'
+      ? 'Desktop Tracker Suite Spring Native PoC'
       : runtimeMode === 'express'
-        ? 'Tracker Suite Express Sidecar PoC'
+        ? 'Desktop Tracker Suite Express Sidecar PoC'
         : runtimeMode === 'nest-legacy'
-          ? 'Tracker Suite Legacy Nest Runtime'
-          : 'Tracker Suite';
+          ? 'Desktop Tracker Suite Legacy Nest Runtime'
+          : 'Desktop Tracker Suite';
   const bundleArtifacts = await collectBundleArtifacts(bundleRoot, productName);
 
   if (bundleArtifacts.length === 0) {

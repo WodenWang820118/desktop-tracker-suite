@@ -1,11 +1,11 @@
 {
-  "name": "tracker-suite",
+  "name": "desktop-tracker-suite",
   "version": "1.4.2",
   "type": "module",
   "sideEffects": false,
   "license": "MIT",
   "author": "Guan Xin Wang",
-  "description": "Tracker Suite desktop workspace with a Tauri shell, Angular frontend, and Nest backend",
+  "description": "Desktop Tracker Suite workspace with a Tauri shell, Angular frontend, and Nest backend",
   "scripts": {
     "preinstall": "npx only-allow pnpm",
     "with-env": "node --loader ts-node/esm tools/with-env.ts",

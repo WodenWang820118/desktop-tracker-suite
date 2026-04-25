@@ -1,6 +1,6 @@
 {
   "$schema": "../../../node_modules/@tauri-apps/cli/config.schema.json",
-  "productName": "Tracker Suite Legacy Nest Runtime",
+  "productName": "Desktop Tracker Suite Legacy Nest Runtime",
   "version": "1.4.2",
   "identifier": "com.wodenwang820118.tracker.tauri",
   "build": {
@@ -11,7 +11,7 @@
     "windows": [
       {
         "label": "main",
-        "title": "Tracker Suite",
+        "title": "Desktop Tracker Suite",
         "width": 1280,
         "height": 800,
         "minWidth": 1024,

@@ -1,8 +1,8 @@
-# Tracker Suite Monorepo
+# Desktop Tracker Suite Monorepo
 
 ## Overview
 
-Tracker Suite is an Nx monorepo that contains multiple frontend and backend implementations of the same task-tracking domain, plus a production desktop shell built with Tauri.
+Desktop Tracker Suite is an Nx monorepo that contains multiple frontend and backend implementations of the same task-tracking domain, plus a production desktop shell built with Tauri.
 
 The shipped desktop product uses:
 

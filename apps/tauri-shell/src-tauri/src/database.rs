@@ -58,7 +58,7 @@ fn prepare_database_path(app_data_dir: &Path) -> Result<PathBuf> {
       source: None,
       database_path: database_path.display().to_string(),
       details: Some(
-        "No legacy Tauri preview database was found; Tracker Suite will create a fresh database."
+        "No legacy Tauri preview database was found; Desktop Tracker Suite will create a fresh database."
           .into(),
       ),
     },
@@ -278,7 +278,7 @@ mod tests {
         assert_eq!(
             migration_state["details"].as_str(),
             Some(
-                "No legacy Tauri preview database was found; Tracker Suite will create a fresh database."
+                "No legacy Tauri preview database was found; Desktop Tracker Suite will create a fresh database."
             )
         );
     }

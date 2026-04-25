@@ -6,7 +6,7 @@ import { environment } from '../../../environments/environment';
 import { formatDatabaseError } from '../utils/error-formatter';
 
 function resolveTaskApiUrl(): string {
-  // Tracker Suite passes desktop overrides via query string: index.html?taskApiUrl=http://localhost:5000/tasks
+  // Desktop Tracker Suite passes desktop overrides via query string: index.html?taskApiUrl=http://localhost:5000/tasks
   try {
     const search = (globalThis as any)?.location?.search;
     if (typeof search === 'string' && search) {

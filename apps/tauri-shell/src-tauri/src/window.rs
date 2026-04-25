@@ -6,7 +6,7 @@ use crate::diagnostics::trace_step;
 
 const MAIN_WINDOW_LABEL: &str = "main";
 const DEV_FRONTEND_URL: &str = "http://localhost:4200/";
-const PRODUCT_NAME: &str = "Tracker Suite";
+const PRODUCT_NAME: &str = "Desktop Tracker Suite";
 
 pub(crate) fn create_main_window(app: &AppHandle, task_api_url: &str) -> Result<()> {
     if app.get_webview_window(MAIN_WINDOW_LABEL).is_some() {

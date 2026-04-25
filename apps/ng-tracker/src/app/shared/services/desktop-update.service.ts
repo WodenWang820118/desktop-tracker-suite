@@ -36,7 +36,7 @@ export class DesktopUpdateService {
         this.messageService.add({
           severity: 'info',
           summary: 'Update Available',
-          detail: `Tracker Suite ${update.version} is ready to install when you are.`,
+          detail: `Desktop Tracker Suite ${update.version} is ready to install when you are.`,
           life: 5000,
         });
         return;
@@ -47,11 +47,11 @@ export class DesktopUpdateService {
       this.messageService.add({
         severity: 'success',
         summary: 'Update Installed',
-        detail: 'The update has been installed. Restart Tracker Suite to finish applying it.',
+        detail: 'The update has been installed. Restart Desktop Tracker Suite to finish applying it.',
         life: 7000,
       });
     } catch (error) {
-      console.warn('Tracker Suite could not complete the update check.', error);
+      console.warn('Desktop Tracker Suite could not complete the update check.', error);
     }
   }
 }
@@ -63,7 +63,7 @@ function isPackagedTauriRuntime() {
 function buildUpdatePrompt(version: string, releaseNotes: string | null | undefined) {
   const trimmedNotes = releaseNotes?.trim();
   if (!trimmedNotes) {
-    return `Tracker Suite ${version} is available. Download and install it now?`;
+    return `Desktop Tracker Suite ${version} is available. Download and install it now?`;
   }
 
   const summary =
@@ -71,5 +71,5 @@ function buildUpdatePrompt(version: string, releaseNotes: string | null | undefi
       ? `${trimmedNotes.slice(0, UPDATE_SUMMARY_MAX_LENGTH).trimEnd()}...`
       : trimmedNotes;
 
-  return `Tracker Suite ${version} is available.\n\nRelease notes: ${summary}\n\nDownload and install it now?`;
+  return `Desktop Tracker Suite ${version} is available.\n\nRelease notes: ${summary}\n\nDownload and install it now?`;
 }

@@ -115,7 +115,7 @@ jobs:
           $windowsConfig | Add-Member -NotePropertyName timestampUrl -NotePropertyValue 'http://timestamp.digicert.com' -Force
           $config | ConvertTo-Json -Depth 20 | Set-Content $configPath
 
-      - name: Build and publish Tracker Suite bundles
+      - name: Build and publish Desktop Tracker Suite bundles
         uses: tauri-apps/tauri-action@84b9d35b5fc46c1e45415bdb6144030364f7ebc5
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -131,15 +131,15 @@ jobs:
         with:
           projectPath: apps/tauri-shell
           tagName: ${{ env.RELEASE_TAG }}
-          releaseName: Tracker Suite ${{ env.RELEASE_TAG }}
-          releaseBody: See the release assets for the latest Tracker Suite desktop installers and updater metadata.
+          releaseName: Desktop Tracker Suite ${{ env.RELEASE_TAG }}
+          releaseBody: See the release assets for the latest Desktop Tracker Suite desktop installers and updater metadata.
           releaseDraft: true
           prerelease: false
           generateReleaseNotes: true
           uploadUpdaterJson: true
           updaterJsonPreferNsis: true
           uploadWorkflowArtifacts: true
-          workflowArtifactNamePattern: tracker-suite-[version]-[platform]-[arch]-[bundle]
-          releaseAssetNamePattern: tracker-suite-[version]-[platform]-[arch][setup][ext]
+          workflowArtifactNamePattern: desktop-tracker-suite-[version]-[platform]-[arch]-[bundle]
+          releaseAssetNamePattern: desktop-tracker-suite-[version]-[platform]-[arch][setup][ext]
           # Tauri staples macOS notarization tickets by default unless --skip-stapling is passed.
           args: --config src-tauri/tauri.conf.json --target ${{ matrix.rust_target }}
