@@ -1,6 +1,6 @@
 {
   "$schema": "../../../node_modules/@tauri-apps/cli/config.schema.json",
-  "productName": "Desktop Tracker Suite Legacy Nest Runtime",
+  "productName": "Desktop Tracker Suite",
   "version": "1.4.2",
   "identifier": "com.wodenwang820118.tracker.tauri",
   "build": {
@@ -28,7 +28,8 @@
   },
   "bundle": {
     "active": true,
-    "createUpdaterArtifacts": false,
+    "createUpdaterArtifacts": true,
+    "externalBin": ["binaries/nest-backend"],
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
@@ -36,10 +37,16 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ],
-    "resources": {
-      "../../../dist/tauri-shell/resources/backend-runtime": "backend-runtime",
-      "../../../dist/tauri-shell/resources/nodejs": "nodejs",
-      "../../../dist/tauri-shell/resources/metadata": "metadata"
+    "resources": ["../../../dist/tauri-shell-nest-sidecar/resources/metadata"]
+  },
+  "plugins": {
+    "updater": {
+      "endpoints": [
+        "https://github.com/WodenWang820118/nx-electron/releases/latest/download/latest.json"
+      ],
+      "windows": {
+        "installMode": "passive"
+      }
     }
   }
 }

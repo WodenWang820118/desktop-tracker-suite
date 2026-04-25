@@ -1,4 +1,4 @@
-import { readFile, writeFile } from 'node:fs/promises';
+import { readdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import {
@@ -29,9 +29,9 @@ export async function syncDesktopVersionFiles(
   const workspaceRoot = options.workspaceRoot ?? WORKSPACE_ROOT;
   const tauriSrcRoot = options.tauriSrcRoot ?? TAURI_SRC_TAURI_ROOT;
   const version = await readWorkspaceVersion(workspaceRoot);
-  const tauriConfigPath = join(tauriSrcRoot, 'tauri.conf.json');
-  const cargoManifestPath = join(tauriSrcRoot, 'Cargo.toml');
   const changedFiles: string[] = [];
+  const tauriConfigPath = join(tauriSrcRoot, 'tauri.conf.json');
+  const pendingConfigWrites: Array<{ path: string; config: Record<string, unknown> }> = [];
 
   const tauriConfig = await readRequiredJson<Record<string, unknown>>(
     tauriConfigPath,
@@ -39,15 +39,40 @@ export async function syncDesktopVersionFiles(
   );
   if (tauriConfig.version !== version) {
     tauriConfig.version = version;
-    await writeJson(tauriConfigPath, tauriConfig, { root: workspaceRoot });
-    changedFiles.push(tauriConfigPath);
+    pendingConfigWrites.push({ path: tauriConfigPath, config: tauriConfig });
   }
 
+  for (const variantConfigPath of await listTauriVariantConfigPaths(tauriSrcRoot)) {
+    const variantConfig = await readRequiredJson<Record<string, unknown>>(
+      variantConfigPath,
+      `Tauri desktop config at ${variantConfigPath}`,
+    );
+    if (
+      Object.hasOwn(variantConfig, 'version') &&
+      variantConfig.version !== version
+    ) {
+      variantConfig.version = version;
+      pendingConfigWrites.push({ path: variantConfigPath, config: variantConfig });
+    }
+  }
+
+  const cargoManifestPath = join(tauriSrcRoot, 'Cargo.toml');
   const currentCargoManifest = await readRequiredTextFile(
     cargoManifestPath,
     'Tauri Cargo manifest',
   );
-  const nextCargoManifest = updateCargoPackageVersion(currentCargoManifest, version);
+  const nextCargoManifest = updateCargoPackageVersion(
+    currentCargoManifest,
+    version,
+  );
+
+  for (const pendingConfigWrite of pendingConfigWrites) {
+    await writeJson(pendingConfigWrite.path, pendingConfigWrite.config, {
+      root: workspaceRoot,
+    });
+    changedFiles.push(pendingConfigWrite.path);
+  }
+
   if (nextCargoManifest !== currentCargoManifest) {
     await writeFile(cargoManifestPath, nextCargoManifest, 'utf8');
     changedFiles.push(cargoManifestPath);
@@ -57,6 +82,17 @@ export async function syncDesktopVersionFiles(
     version,
     changedFiles,
   };
+}
+
+async function listTauriVariantConfigPaths(tauriSrcRoot: string) {
+  const entries = await readdir(tauriSrcRoot, { withFileTypes: true });
+  return entries
+    .filter((entry) => entry.isFile())
+    .map((entry) => entry.name)
+    .filter((name) => name !== 'tauri.conf.json')
+    .filter((name) => /^tauri.*\.conf\.json$/u.test(name))
+    .sort((left, right) => left.localeCompare(right))
+    .map((name) => join(tauriSrcRoot, name));
 }
 
 export function updateCargoPackageVersion(manifest: string, version: string) {
@@ -121,6 +157,12 @@ function wrapMissingFileError(error: unknown, path: string, label: string) {
   const errnoError = error as NodeJS.ErrnoException | undefined;
   if (errnoError?.code === 'ENOENT') {
     return new Error(`${label} is missing at ${path}.`, { cause: error });
+  }
+
+  if (error instanceof SyntaxError) {
+    return new Error(`${label} contains invalid JSON (SyntaxError): ${error.message}`, {
+      cause: error,
+    });
   }
 
   return error;

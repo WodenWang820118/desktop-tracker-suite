@@ -142,4 +142,4 @@ jobs:
           workflowArtifactNamePattern: desktop-tracker-suite-[version]-[platform]-[arch]-[bundle]
           releaseAssetNamePattern: desktop-tracker-suite-[version]-[platform]-[arch][setup][ext]
           # Tauri staples macOS notarization tickets by default unless --skip-stapling is passed.
-          args: --config src-tauri/tauri.conf.json --target ${{ matrix.rust_target }}
+          args: --config src-tauri/tauri.release.conf.json --target ${{ matrix.rust_target }}

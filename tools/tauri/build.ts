@@ -6,7 +6,7 @@ import {
 } from './runtime-target.ts';
 
 type BuildMode = 'build' | 'package';
-type DesktopRuntimeMode = 'express' | 'nest' | 'nest-legacy' | 'spring-native';
+type DesktopRuntimeMode = 'express' | 'nest' | 'spring-native';
 
 async function main() {
   const mode = parseBuildMode(process.argv[2]);
@@ -61,16 +61,12 @@ function parseRuntimeMode(value: string | undefined): DesktopRuntimeMode {
     return 'express';
   }
 
-  if (value === 'nest-legacy') {
-    return 'nest-legacy';
-  }
-
   if (value === 'spring-native') {
     return 'spring-native';
   }
 
   throw new Error(
-    `Unsupported runtime mode "${value}". Expected "nest", "express", "nest-legacy", or "spring-native".`,
+    `Unsupported runtime mode "${value}". Expected "nest", "express", or "spring-native".`,
   );
 }
 
@@ -81,10 +77,6 @@ function resolveConfigPath(_mode: BuildMode, runtimeMode: DesktopRuntimeMode) {
 
   if (runtimeMode === 'express') {
     return 'src-tauri/tauri.express-sidecar.conf.json';
-  }
-
-  if (runtimeMode === 'nest-legacy') {
-    return 'src-tauri/tauri.package.conf.json';
   }
 
   if (runtimeMode === 'spring-native') {

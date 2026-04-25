@@ -81,15 +81,15 @@ test('updateCargoPackageVersion throws when the package section has no version l
   );
 });
 
-test('syncDesktopVersionFiles aligns tauri.conf.json and Cargo.toml to the workspace version', async () => {
-  const workspaceRoot = await mkdtemp(join(tmpdir(), 'tauri-version-sync-'));
+test('syncDesktopVersionFiles aligns tauri config variants and Cargo.toml to the workspace version', async () => {
+  const workspaceRoot = await mkdtemp(join(tmpdir(), 'tauri-version-sync-variants-'));
   const tauriSrcRoot = join(workspaceRoot, 'apps', 'tauri-shell', 'src-tauri');
   try {
     await mkdir(tauriSrcRoot, { recursive: true });
 
     await writeFile(
       join(workspaceRoot, 'package.json'),
-      JSON.stringify({ version: '9.8.7' }, null, 2),
+      JSON.stringify({ version: '10.0.0' }, null, 2),
       'utf8',
     );
     await writeFile(
@@ -97,6 +97,23 @@ test('syncDesktopVersionFiles aligns tauri.conf.json and Cargo.toml to the works
       JSON.stringify({ productName: 'Desktop Tracker Suite', version: '0.0.1' }, null, 2),
       'utf8',
     );
+    await writeFile(
+      join(tauriSrcRoot, 'tauri.release.conf.json'),
+      JSON.stringify({ productName: 'Desktop Tracker Suite', version: '0.0.2' }, null, 2),
+      'utf8',
+    );
+    await writeFile(
+      join(tauriSrcRoot, 'tauri.nest-sidecar.conf.json'),
+      JSON.stringify({ productName: 'Desktop Tracker Suite', version: '0.0.3' }, null, 2),
+      'utf8',
+    );
+    await writeFile(
+      join(tauriSrcRoot, 'tauri.windows.conf.json'),
+      JSON.stringify({ bundle: { windows: { certificateThumbprint: null } } }, null, 2),
+      'utf8',
+    );
+    await writeFile(join(tauriSrcRoot, 'tauri.conf.json.bak'), '{}', 'utf8');
+
     await writeFile(
       join(tauriSrcRoot, 'Cargo.toml'),
       ['[package]', 'name = "tauri-shell"', 'version = "0.0.1"', ''].join('\n'),
@@ -108,20 +125,33 @@ test('syncDesktopVersionFiles aligns tauri.conf.json and Cargo.toml to the works
       tauriSrcRoot,
     });
 
-    assert.equal(result.version, '9.8.7');
+    assert.equal(result.version, '10.0.0');
     assert.deepEqual(result.changedFiles.sort(), [
       join(tauriSrcRoot, 'Cargo.toml'),
       join(tauriSrcRoot, 'tauri.conf.json'),
+      join(tauriSrcRoot, 'tauri.nest-sidecar.conf.json'),
+      join(tauriSrcRoot, 'tauri.release.conf.json'),
     ]);
 
-    const syncedConfig = JSON.parse(
+    const syncedMainConfig = JSON.parse(
       await readFile(join(tauriSrcRoot, 'tauri.conf.json'), 'utf8'),
-    ) as { version: string; productName: string };
+    ) as { version: string };
+    const syncedReleaseConfig = JSON.parse(
+      await readFile(join(tauriSrcRoot, 'tauri.release.conf.json'), 'utf8'),
+    ) as { version: string };
+    const syncedNestSidecarConfig = JSON.parse(
+      await readFile(join(tauriSrcRoot, 'tauri.nest-sidecar.conf.json'), 'utf8'),
+    ) as { version: string };
+    const unchangedWindowsConfig = JSON.parse(
+      await readFile(join(tauriSrcRoot, 'tauri.windows.conf.json'), 'utf8'),
+    ) as Record<string, unknown>;
     const syncedCargoManifest = await readFile(join(tauriSrcRoot, 'Cargo.toml'), 'utf8');
 
-    assert.equal(syncedConfig.version, '9.8.7');
-    assert.equal(syncedConfig.productName, 'Desktop Tracker Suite');
-    assert.match(syncedCargoManifest, /version = "9\.8\.7"/u);
+    assert.equal(syncedMainConfig.version, '10.0.0');
+    assert.equal(syncedReleaseConfig.version, '10.0.0');
+    assert.equal(syncedNestSidecarConfig.version, '10.0.0');
+    assert.ok(!('version' in unchangedWindowsConfig));
+    assert.match(syncedCargoManifest, /version = "10\.0\.0"/u);
     assert.doesNotMatch(syncedCargoManifest, /version = "0\.0\.1"/u);
   } finally {
     await rm(workspaceRoot, { recursive: true, force: true });
@@ -141,6 +171,11 @@ test('syncDesktopVersionFiles is a no-op when versions are already aligned', asy
     );
     await writeFile(
       join(tauriSrcRoot, 'tauri.conf.json'),
+      JSON.stringify({ productName: 'Desktop Tracker Suite', version: '1.4.2' }, null, 2),
+      'utf8',
+    );
+    await writeFile(
+      join(tauriSrcRoot, 'tauri.release.conf.json'),
       JSON.stringify({ productName: 'Desktop Tracker Suite', version: '1.4.2' }, null, 2),
       'utf8',
     );
@@ -467,6 +502,81 @@ test('syncDesktopVersionFiles rejects when tauri.conf.json contains invalid JSON
         }),
       /SyntaxError/u,
     );
+  } finally {
+    await rm(workspaceRoot, { recursive: true, force: true });
+  }
+});
+
+test('syncDesktopVersionFiles rejects with the variant config path when a variant contains invalid JSON', async () => {
+  const workspaceRoot = await mkdtemp(join(tmpdir(), 'tauri-version-sync-variant-invalid-json-'));
+  const tauriSrcRoot = join(workspaceRoot, 'apps', 'tauri-shell', 'src-tauri');
+  try {
+    await mkdir(tauriSrcRoot, { recursive: true });
+
+    await writeFile(
+      join(workspaceRoot, 'package.json'),
+      JSON.stringify({ version: '1.0.0' }, null, 2),
+      'utf8',
+    );
+    await writeFile(
+      join(tauriSrcRoot, 'tauri.conf.json'),
+      JSON.stringify({ productName: 'Desktop Tracker Suite', version: '1.0.0' }, null, 2),
+      'utf8',
+    );
+    await writeFile(join(tauriSrcRoot, 'tauri.bad.conf.json'), '{ invalid json', 'utf8');
+    await writeFile(
+      join(tauriSrcRoot, 'Cargo.toml'),
+      ['[package]', 'name = "tauri-shell"', 'version = "1.0.0"', ''].join('\n'),
+      'utf8',
+    );
+
+    await assert.rejects(
+      () =>
+        syncDesktopVersionFiles({
+          workspaceRoot,
+          tauriSrcRoot,
+        }),
+      /Tauri desktop config at .*tauri\.bad\.conf\.json contains invalid JSON \(SyntaxError\)/u,
+    );
+  } finally {
+    await rm(workspaceRoot, { recursive: true, force: true });
+  }
+});
+
+test('syncDesktopVersionFiles leaves files unchanged when a variant config fails to parse', async () => {
+  const workspaceRoot = await mkdtemp(join(tmpdir(), 'tauri-version-sync-variant-fail-no-write-'));
+  const tauriSrcRoot = join(workspaceRoot, 'apps', 'tauri-shell', 'src-tauri');
+  try {
+    await mkdir(tauriSrcRoot, { recursive: true });
+
+    await writeFile(
+      join(workspaceRoot, 'package.json'),
+      JSON.stringify({ version: '2.0.0' }, null, 2),
+      'utf8',
+    );
+    const baseConfig = JSON.stringify(
+      { productName: 'Desktop Tracker Suite', version: '1.0.0' },
+      null,
+      2,
+    );
+    const cargoManifest = ['[package]', 'name = "tauri-shell"', 'version = "1.0.0"', ''].join(
+      '\n',
+    );
+    await writeFile(join(tauriSrcRoot, 'tauri.conf.json'), baseConfig, 'utf8');
+    await writeFile(join(tauriSrcRoot, 'tauri.bad.conf.json'), '{ invalid json', 'utf8');
+    await writeFile(join(tauriSrcRoot, 'Cargo.toml'), cargoManifest, 'utf8');
+
+    await assert.rejects(
+      () =>
+        syncDesktopVersionFiles({
+          workspaceRoot,
+          tauriSrcRoot,
+        }),
+      /tauri\.bad\.conf\.json/u,
+    );
+
+    assert.equal(await readFile(join(tauriSrcRoot, 'tauri.conf.json'), 'utf8'), baseConfig);
+    assert.equal(await readFile(join(tauriSrcRoot, 'Cargo.toml'), 'utf8'), cargoManifest);
   } finally {
     await rm(workspaceRoot, { recursive: true, force: true });
   }

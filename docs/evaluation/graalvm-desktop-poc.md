@@ -11,7 +11,7 @@ Windows-only execution is complete for the original three feasibility comparison
 The PoC is a mixed result:
 
 - `spring-backend` now builds and boots as a GraalVM native Windows executable.
-- The Tauri shell can launch the legacy Nest+Node packaged runtime, the Spring native sidecar, and the new Nest/Express Node sidecars from additive packaging paths.
+- The Tauri shell could launch the original Nest+Node packaged runtime, the Spring native sidecar, and the new Nest/Express Node sidecars from additive packaging paths during the evaluation.
 - Unpacked desktop runtime resources got materially smaller with Spring native.
 - The packaged Windows installer got materially larger with Spring native.
 
@@ -24,19 +24,13 @@ The feasibility result above is still the recommendation, but the repo implement
 - Default packaged desktop runtime: `nest-backend` as a true Tauri sidecar built as a self-contained Node executable.
 - Alternate packaged desktop runtime: `express-backend` as a true Tauri sidecar built the same way.
 - Alternate packaged desktop runtime: `spring-backend` as a true Tauri sidecar using the GraalVM native executable.
-- Rollback path kept intentionally: legacy Nest packaging with `bundle.resources` and bundled `node.exe`.
-
-That means the repo now supports both packaging models discussed in this document:
-
-- Tauri `bundle.externalBin` sidecars for Spring, Nest, and Express.
-- Tauri `bundle.resources` for the legacy Nest runtime kept for rollback and comparison.
+The current maintained desktop packaging model is Tauri `bundle.externalBin` sidecars for Spring, Nest, and Express. The older Nest `bundle.resources` path is now treated as historical evaluation context, not as an exposed package target.
 
 ## Packaging Clarification
 
 After checking the current repo against the latest official Tauri and Node.js documentation and then implementing the follow-up migration work:
 
 - The repo now packages Spring, Nest, and Express backend processes as true Tauri `sidecar`s for packaged desktop variants.
-- The repo also still supports a legacy Nest runtime packaged as Tauri `bundle.resources` and resolved from Tauri's resource directory at runtime.
 - A true Tauri sidecar uses `bundle.externalBin` plus the shell plugin permission model, which is now what the packaged Spring/Nest/Express sidecar variants use.
 
 That distinction matters for future desktop decisions:
@@ -51,7 +45,7 @@ In other words:
 
 1. **Java backend with GraalVM**: valid and aligned with the sidecar model.
 2. **Node backend with `node.exe`**: viable only as `node.exe` plus backend assets, or by turning the backend into a self-contained executable first.
-3. **All backends as sidecars**: now implemented for the Spring, Nest, and Express packaged variants, while the old Nest resource runtime remains available as a rollback path.
+3. **All backends as sidecars**: now implemented for the Spring, Nest, and Express packaged variants.
 
 ## What Changed
 
@@ -69,7 +63,7 @@ In other words:
   - `spring-backend.exe` as a GraalVM sidecar
   - `nest-backend.exe` as a self-contained Node sidecar
   - `express-backend.exe` as a self-contained Node sidecar
-- Kept the legacy Nest packaged runtime path available as a `bundle.resources` rollback option that still launches `node main.js`.
+- Used the original Nest packaged runtime path as the historical `bundle.resources` baseline for comparison.
 - Added Rust-side packaged runtime metadata handling so the Tauri shell can launch either resource-backed runtimes or true sidecars from the same manifest shape.
 - Added Windows feasibility scripts for:
   - baseline packaged-runtime measurement
@@ -80,11 +74,11 @@ In other words:
 Note:
 
 - The original measured Spring comparison remains valid, but the runtime-launch architecture has since been migrated so Spring, Nest, and Express packaged variants now use Tauri `externalBin` sidecars.
-- The legacy Nest resource path is retained on purpose for rollback and side-by-side comparison.
+- The legacy Nest resource path remains useful for interpreting the historical measurements, but the exposed package targets now use sidecars.
 
 ### Packaging blocker isolated
 
-The repo's existing baseline Tauri package flow was blocked by updater bundle configuration requiring a `pubkey`. To keep the evaluation additive and avoid changing dev/build behavior, the PoC adds `apps/tauri-shell/src-tauri/tauri.package.conf.json` for baseline packaging only. It disables updater artifact generation during the feasibility package run.
+The repo's original baseline Tauri package flow was blocked by updater bundle configuration requiring a `pubkey`. During the PoC, a separate package config was used for baseline measurement only. Current local sidecar package configs disable updater artifact generation, while the release workflow uses a dedicated release config for updater artifacts.
 
 ## Measured Results
 
@@ -212,13 +206,10 @@ Implication for CI:
 - `mvn -f pom.xml test`
 - `pnpm run build-spring-native`
 - `pnpm run smoke-spring-native`
-- `pnpm run desktop:materialize-runtime:legacy-nest`
-- `pnpm run desktop:smoke-runtime:legacy-nest`
 - `pnpm run desktop:measure-baseline`
 - `pnpm run desktop:materialize-spring-native-runtime`
 - `pnpm run desktop:measure-spring-native`
 - `pnpm run desktop:build:spring-native`
-- `pnpm run desktop:package:legacy-nest`
 - `pnpm run desktop:measure-package`
 - `pnpm run desktop:package:spring-native`
 - `pnpm run desktop:measure-package:spring-native`
@@ -230,7 +221,6 @@ Implication for CI:
 - `pnpm run desktop:smoke-runtime:express-sidecar`
 - `pnpm run desktop:build:express-sidecar`
 - `pnpm run desktop:package:express-sidecar`
-- `pnpm run desktop:build:legacy-nest`
 
 ## References
 

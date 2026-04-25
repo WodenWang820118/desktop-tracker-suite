@@ -15,13 +15,6 @@
         "{workspaceRoot}/apps/tauri-shell/src-tauri/binaries"
       ]
     },
-    "materialize-backend-runtime-legacy": {
-      "executor": "nx:run-commands",
-      "options": {
-        "command": "pnpm exec nx build ng-tracker --configuration production && pnpm exec nx build nest-backend --configuration production && node tools/tauri/materialize-backend-runtime.ts"
-      },
-      "outputs": ["{workspaceRoot}/dist/tauri-shell/resources"]
-    },
     "materialize-express-sidecar-runtime": {
       "executor": "nx:run-commands",
       "options": {
@@ -42,12 +35,9 @@
     "smoke": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "node tools/tauri/smoke-backend-runtime.ts"
+        "command": "node tools/tauri/smoke-node-sidecar-runtime.ts nest"
       },
       "configurations": {
-        "backend-runtime": {
-          "command": "node tools/tauri/smoke-backend-runtime.ts"
-        },
         "express-sidecar": {
           "command": "node tools/tauri/smoke-node-sidecar-runtime.ts express"
         },
@@ -81,14 +71,6 @@
       },
       "outputs": ["{workspaceRoot}/apps/tauri-shell/src-tauri/target/debug"]
     },
-    "build-legacy-nest": {
-      "executor": "nx:run-commands",
-      "dependsOn": ["materialize-backend-runtime-legacy"],
-      "options": {
-        "command": "node tools/tauri/build.ts build nest-legacy"
-      },
-      "outputs": ["{workspaceRoot}/apps/tauri-shell/src-tauri/target/debug"]
-    },
     "build-spring-native": {
       "executor": "nx:run-commands",
       "dependsOn": ["materialize-spring-native-runtime"],
@@ -110,14 +92,6 @@
       "dependsOn": ["materialize-express-sidecar-runtime"],
       "options": {
         "command": "node tools/tauri/build.ts package express"
-      },
-      "outputs": ["{workspaceRoot}/apps/tauri-shell/src-tauri/target/release/bundle"]
-    },
-    "package-legacy-nest": {
-      "executor": "nx:run-commands",
-      "dependsOn": ["materialize-backend-runtime-legacy"],
-      "options": {
-        "command": "node tools/tauri/build.ts package nest-legacy"
       },
       "outputs": ["{workspaceRoot}/apps/tauri-shell/src-tauri/target/release/bundle"]
     },

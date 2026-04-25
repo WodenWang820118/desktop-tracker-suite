@@ -8,7 +8,7 @@ import {
 } from '../tauri/runtime-target.ts';
 import { writeMetricSnapshot, pathSize } from './common.ts';
 
-type RuntimeMode = 'express' | 'nest' | 'nest-legacy' | 'spring-native';
+type RuntimeMode = 'express' | 'nest' | 'spring-native';
 
 type BundleArtifact = {
   relativePath: string;
@@ -37,9 +37,7 @@ async function main() {
       ? 'Desktop Tracker Suite Spring Native PoC'
       : runtimeMode === 'express'
         ? 'Desktop Tracker Suite Express Sidecar PoC'
-        : runtimeMode === 'nest-legacy'
-          ? 'Desktop Tracker Suite Legacy Nest Runtime'
-          : 'Desktop Tracker Suite';
+        : 'Desktop Tracker Suite';
   const bundleArtifacts = await collectBundleArtifacts(bundleRoot, productName);
 
   if (bundleArtifacts.length === 0) {
@@ -58,9 +56,7 @@ async function main() {
         ? 'spring-native-tauri-bundle'
         : runtimeMode === 'express'
           ? 'express-node-sidecar-tauri-bundle'
-          : runtimeMode === 'nest-legacy'
-            ? 'nest-node-legacy-tauri-bundle'
-            : 'nest-node-sidecar-tauri-bundle',
+          : 'nest-node-sidecar-tauri-bundle',
     desktopTarget: target.profile,
     productName,
     bundleRoot,
@@ -79,9 +75,7 @@ async function main() {
       ? 'desktop-spring-native-package.json'
       : runtimeMode === 'express'
         ? 'desktop-express-sidecar-package.json'
-        : runtimeMode === 'nest-legacy'
-          ? 'desktop-legacy-nest-package.json'
-          : 'desktop-baseline-package.json',
+        : 'desktop-baseline-package.json',
     metrics,
   );
 }
@@ -99,12 +93,8 @@ function parseRuntimeMode(value: string | undefined): RuntimeMode {
     return 'express';
   }
 
-  if (value === 'nest-legacy') {
-    return 'nest-legacy';
-  }
-
   throw new Error(
-    `Unsupported runtime mode "${value}". Expected "nest", "express", "nest-legacy", or "spring-native".`,
+    `Unsupported runtime mode "${value}". Expected "nest", "express", or "spring-native".`,
   );
 }
 
