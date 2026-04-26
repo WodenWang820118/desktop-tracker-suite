@@ -10,13 +10,13 @@
 - Use `product-and-scope-review` when the prompt is solution-framed, `qa-verification` when the implementation needs verification evidence, and `release-readiness` when the work needs a final handoff story.
 - Keep the review session on a Claude-family model when possible.
 - When using Copilot CLI, prefer a Claude-family orchestrator and run `/experimental` so Rubber Duck can provide a second opinion.
-- For plan, test, and non-low-risk implementation reviews, the auto-routed review wrappers should prefer Gemini CLI before Copilot GPT-5 mini. Low-risk `implementation` or `pre-merge` auto routing may try the matching Codex reviewer first only when the review context includes an explicit small non-sensitive changed-file list that exactly matches the repo's current changed-file set. Keep the Copilot-only fallback chain only when the review is explicitly pinned to `--provider copilot`.
+- For non-low-risk implementation reviews, the auto-routed review wrappers should prefer Gemini CLI before Copilot GPT-5 mini. Plan and test checkpoints use the Copilot Claude preferred path with Gemini fallback unless local availability requires another fallback. Low-risk `implementation` or `pre-merge` auto routing may try the matching Codex reviewer first only when the review context includes an explicit small non-sensitive changed-file list that exactly matches the repo's current changed-file set. Keep the Copilot-only fallback chain only when the review is explicitly pinned to `--provider copilot`.
 - Force a Rubber Duck or second-opinion review after a drafted plan, after any implementation review that was escalated from Gemini, and after tests are written but before they are executed.
 - If Rubber Duck is not available for the current model/account, use the matching reviewer in `.github/agents`.
 - If the user asks for `critique`, `review`, `second opinion`, or `rubber duck`, always trigger a second-opinion pass.
 - Use `pnpm review:plan` for the normal Copilot plan-review path, `pnpm review:test` for the normal Copilot test-review path, `pnpm review:implementation` for the normal implementation auto-routing path, and `pnpm review:copilot` when an implementation review needs explicit Copilot escalation.
 - If a plan review passes and implementation should begin, open the gate with `pnpm review:approve-pre-implementation -- --reviewer <copilot-claude|copilot-gpt-5-mini|gemini-2.5-pro|codex-subagent> --focus <area> --summary "<approval summary>"`.
 - If the gate should be closed again, run `pnpm review:reset`.
-- For browser-verifiable or desktop-visible UI verification requests, use `qa-verification` and capture a concrete verification story tied to a real user or operator flow.
+- For browser-verifiable or desktop-visible UI verification requests, use `qa-verification` and capture a concrete verification story tied to a real user or operator flow. Load `.agents/references/verification-targets.md` for repo-specific target routing.
 - Run workspace tasks through `pnpm nx ...` and inspect project configuration before guessing targets or flags.
-- Keep repo topology in mind: Angular, React, and Vue frontends; NestJS, Express, and Spring backends; and the Tauri desktop shell under `apps/tauri-shell`.
+- Load `.agents/references/repo-map.md` when repo topology matters.
