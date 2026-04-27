@@ -14,16 +14,17 @@ const PACKAGED_BACKEND_PORT: u16 = 5000;
 pub(crate) fn build_tauri_app() -> Result<App> {
     let backend_state =
         BackendProcessState::new().context("failed to initialize backend process state")?;
-    let mut updater_builder = tauri_plugin_updater::Builder::new();
-    if let Some(pubkey) =
-        option_env!("TAURI_UPDATER_PUBKEY").filter(|value| !value.trim().is_empty())
-    {
-        updater_builder = updater_builder.pubkey(pubkey);
-    }
+    let builder = tauri::Builder::default().plugin(tauri_plugin_shell::init());
+    let builder = if let Some(pubkey) = compile_time_updater_pubkey() {
+        builder.plugin(tauri_plugin_updater::Builder::new().pubkey(pubkey).build())
+    } else {
+        trace_step(
+            "updater plugin disabled because TAURI_UPDATER_PUBKEY was not provided at compile time",
+        );
+        builder
+    };
 
-    tauri::Builder::default()
-        .plugin(tauri_plugin_shell::init())
-        .plugin(updater_builder.build())
+    builder
         .manage(backend_state)
         .setup(|app| {
             let app_handle = app.handle().clone();
@@ -42,6 +43,14 @@ pub(crate) fn build_tauri_app() -> Result<App> {
         // `generate_context!` resolves the same `tauri.conf.json` for both lib and bin targets.
         .build(tauri::generate_context!())
         .context("error while building Tauri application")
+}
+
+fn compile_time_updater_pubkey() -> Option<&'static str> {
+    normalize_updater_pubkey(option_env!("TAURI_UPDATER_PUBKEY"))
+}
+
+fn normalize_updater_pubkey(value: Option<&'static str>) -> Option<&'static str> {
+    value.filter(|pubkey| !pubkey.trim().is_empty())
 }
 
 async fn launch_application(app: AppHandle) -> Result<()> {
@@ -83,4 +92,24 @@ async fn launch_application(app: AppHandle) -> Result<()> {
     create_main_window(&app, &task_api_url)?;
     trace_step("main window created");
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::normalize_updater_pubkey;
+
+    #[test]
+    fn normalize_updater_pubkey_rejects_missing_values() {
+        assert_eq!(normalize_updater_pubkey(None), None);
+    }
+
+    #[test]
+    fn normalize_updater_pubkey_rejects_blank_values() {
+        assert_eq!(normalize_updater_pubkey(Some("   ")), None);
+    }
+
+    #[test]
+    fn normalize_updater_pubkey_accepts_configured_values() {
+        assert_eq!(normalize_updater_pubkey(Some("pubkey")), Some("pubkey"));
+    }
 }

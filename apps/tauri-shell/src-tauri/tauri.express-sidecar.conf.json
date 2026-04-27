@@ -37,6 +37,8 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ],
-    "resources": ["../../../dist/tauri-shell-express-sidecar/resources/metadata"]
+    "resources": {
+      "../../../dist/tauri-shell-express-sidecar/resources/metadata": "metadata"
+    }
   }
 }
