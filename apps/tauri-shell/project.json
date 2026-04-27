@@ -49,6 +49,37 @@
         }
       }
     },
+    "grid-prepare-one": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "node tools/tauri/grid-build.ts prepare"
+      }
+    },
+    "grid-verify-one": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "node tools/tauri/grid-build.ts build"
+      },
+      "outputs": ["{workspaceRoot}/apps/tauri-shell/src-tauri/target/debug"]
+    },
+    "grid-verify": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "node tools/tauri/grid-build.ts verify"
+      },
+      "outputs": ["{workspaceRoot}/apps/tauri-shell/src-tauri/target/debug"]
+    },
+    "grid-package-one": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "node tools/tauri/grid-build.ts package"
+      },
+      "outputs": ["{workspaceRoot}/apps/tauri-shell/src-tauri/target/release/bundle"]
+    },
     "dev": {
       "executor": "nx:run-commands",
       "options": {

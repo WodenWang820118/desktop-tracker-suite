@@ -15,13 +15,13 @@ permissions:
   contents: write
 
 jobs:
-  release:
-    name: Release ${{ matrix.desktop_target }}
-    runs-on: ${{ matrix.runner }}
+  package:
+    name: Package ${{ matrix.target.desktop_target }} ${{ matrix.frontend }}+${{ matrix.backend }}
+    runs-on: ${{ matrix.target.runner }}
     strategy:
       fail-fast: false
       matrix:
-        include:
+        target:
           - runner: windows-latest
             desktop_target: windows-x64
             rust_target: x86_64-pc-windows-msvc
@@ -31,10 +31,21 @@ jobs:
           - runner: macos-latest
             desktop_target: darwin-arm64
             rust_target: aarch64-apple-darwin
+        frontend:
+          - ng
+          - react
+          - vue
+        backend:
+          - nest
+          - express
+          - spring-native
 
     env:
       RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.release_tag || github.ref_name }}
-      TAURI_DESKTOP_TARGET: ${{ matrix.desktop_target }}
+      TAURI_DESKTOP_TARGET: ${{ matrix.target.desktop_target }}
+      TAURI_GRID_FRONTEND: ${{ matrix.frontend }}
+      TAURI_GRID_BACKEND: ${{ matrix.backend }}
+      TAURI_GRID_CONFIG: src-tauri/generated-grid-configs/${{ matrix.frontend }}-${{ matrix.backend }}.conf.json
       TAURI_UPDATER_PUBKEY: ${{ secrets.TAURI_UPDATER_PUBKEY }}
       TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
       TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
@@ -62,16 +73,30 @@ jobs:
           node-version: 24.11.1
           cache: pnpm
 
+      - name: Setup GraalVM for Spring native
+        if: matrix.backend == 'spring-native'
+        uses: graalvm/setup-graalvm@v1
+        with:
+          java-version: '25'
+          distribution: graalvm
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          native-image-job-reports: 'true'
+
+      - name: Preflight Spring native toolchain
+        if: matrix.backend == 'spring-native'
+        run: native-image --version
+
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9
         with:
           toolchain: stable
-          targets: ${{ matrix.rust_target }}
+          targets: ${{ matrix.target.rust_target }}
 
       - name: Restore Rust cache
         uses: Swatinem/rust-cache@42dc69e1aa15d09112580998cf2ef0119e2e91ae
         with:
           workspaces: apps/tauri-shell/src-tauri -> target
+          key: ${{ matrix.target.desktop_target }}-${{ matrix.frontend }}-${{ matrix.backend }}
 
       - name: Install Linux desktop dependencies
         if: runner.os == 'Linux'
@@ -91,11 +116,8 @@ jobs:
       - name: Install workspace dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Synchronize desktop version files
-        run: node tools/tauri/sync-version.ts
-
-      - name: Materialize packaged backend runtime
-        run: pnpm run desktop:materialize-runtime
+      - name: Prepare desktop grid variant
+        run: pnpm run desktop:grid:prepare:one
 
       - name: Import Windows signing certificate
         if: runner.os == 'Windows' && env.WINDOWS_CERTIFICATE != '' && env.WINDOWS_CERTIFICATE_PASSWORD != ''
@@ -115,7 +137,17 @@ jobs:
           $windowsConfig | Add-Member -NotePropertyName timestampUrl -NotePropertyValue 'http://timestamp.digicert.com' -Force
           $config | ConvertTo-Json -Depth 20 | Set-Content $configPath
 
-      - name: Build and publish Desktop Tracker Suite bundles
+      - name: Assert generated config leaves Windows signing overlay intact
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $configPath = "apps/tauri-shell/$env:TAURI_GRID_CONFIG"
+          $config = Get-Content $configPath -Raw | ConvertFrom-Json
+          if ($null -ne $config.bundle.windows) {
+            throw "Generated grid config must not define bundle.windows because it would override tauri.windows.conf.json signing settings."
+          }
+
+      - name: Build and publish Desktop Tracker Suite grid bundle
         uses: tauri-apps/tauri-action@84b9d35b5fc46c1e45415bdb6144030364f7ebc5
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -132,14 +164,68 @@ jobs:
           projectPath: apps/tauri-shell
           tagName: ${{ env.RELEASE_TAG }}
           releaseName: Desktop Tracker Suite ${{ env.RELEASE_TAG }}
-          releaseBody: See the release assets for the latest Desktop Tracker Suite desktop installers and updater metadata.
+          releaseBody: See the release assets for Desktop Tracker Suite grid desktop installers, updater metadata, and signatures.
           releaseDraft: true
           prerelease: false
           generateReleaseNotes: true
-          uploadUpdaterJson: true
+          uploadUpdaterJson: false
           updaterJsonPreferNsis: true
           uploadWorkflowArtifacts: true
-          workflowArtifactNamePattern: desktop-tracker-suite-[version]-[platform]-[arch]-[bundle]
-          releaseAssetNamePattern: desktop-tracker-suite-[version]-[platform]-[arch][setup][ext]
-          # Tauri staples macOS notarization tickets by default unless --skip-stapling is passed.
-          args: --config src-tauri/tauri.release.conf.json --target ${{ matrix.rust_target }}
+          uploadUpdaterSignatures: true
+          workflowArtifactNamePattern: desktop-tracker-suite-${{ matrix.frontend }}-${{ matrix.backend }}-[version]-[platform]-[arch]-[bundle]
+          releaseAssetNamePattern: desktop-tracker-suite-${{ matrix.frontend }}-${{ matrix.backend }}-[version]-[platform]-[arch][setup][ext]
+          # The release stays draft until aggregate-updater-manifests uploads all latest*.json files.
+          args: --config ${{ env.TAURI_GRID_CONFIG }} --target ${{ matrix.target.rust_target }}
+
+  aggregate-updater-manifests:
+    name: Aggregate updater manifests
+    runs-on: ubuntu-22.04
+    needs: package
+    if: needs.package.result == 'success'
+    env:
+      RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.release_tag || github.ref_name }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@f40ffcd9367d9f12939873eb1018b921a783ffaa
+        with:
+          version: 10.28.2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 24.11.1
+          cache: pnpm
+
+      - name: Install workspace dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Download renamed release assets and signatures
+        run: |
+          for attempt in 1 2 3 4 5; do
+            rm -rf dist/release-assets
+            mkdir -p dist/release-assets
+            if gh release download "$RELEASE_TAG" --dir dist/release-assets --pattern 'desktop-tracker-suite-*'; then
+              exit 0
+            fi
+
+            if [ "$attempt" -eq 5 ]; then
+              exit 1
+            fi
+
+            echo "Release assets are not fully available yet; retrying in 30s (attempt $attempt/5)."
+            sleep 30
+          done
+
+      - name: Generate updater manifests
+        run: node tools/tauri/generate-updater-manifests.ts --release-tag "$RELEASE_TAG" --release-dir dist/release-assets --output-dir dist/tauri-updater-manifests
+
+      - name: Upload updater manifests to draft release
+        run: |
+          test -f dist/tauri-updater-manifests/latest.json
+          test -f dist/tauri-updater-manifests/latest-ng-nest.json
+          gh release upload "$RELEASE_TAG" dist/tauri-updater-manifests/latest*.json --clobber

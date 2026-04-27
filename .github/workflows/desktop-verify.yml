@@ -10,22 +10,9 @@ permissions:
   contents: read
 
 jobs:
-  verify:
-    name: Verify ${{ matrix.desktop_target }}
-    runs-on: ${{ matrix.runner }}
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - runner: windows-latest
-            desktop_target: windows-x64
-          - runner: ubuntu-22.04
-            desktop_target: linux-x64
-          - runner: macos-latest
-            desktop_target: darwin-arm64
-
-    env:
-      TAURI_DESKTOP_TARGET: ${{ matrix.desktop_target }}
+  tooling-tests:
+    name: Desktop tooling tests
+    runs-on: ubuntu-22.04
 
     steps:
       - name: Checkout
@@ -42,16 +29,82 @@ jobs:
           node-version: 24.11.1
           cache: pnpm
 
+      - name: Install workspace dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run desktop tooling tests
+        run: pnpm run desktop:test:tooling
+
+  verify:
+    name: Verify ${{ matrix.target.desktop_target }} ${{ matrix.frontend }}+${{ matrix.backend }}
+    runs-on: ${{ matrix.target.runner }}
+    needs: tooling-tests
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - runner: windows-latest
+            desktop_target: windows-x64
+            rust_target: x86_64-pc-windows-msvc
+          - runner: ubuntu-22.04
+            desktop_target: linux-x64
+            rust_target: x86_64-unknown-linux-gnu
+          - runner: macos-latest
+            desktop_target: darwin-arm64
+            rust_target: aarch64-apple-darwin
+        frontend:
+          - ng
+          - react
+          - vue
+        backend:
+          - nest
+          - express
+          - spring-native
+
+    env:
+      TAURI_DESKTOP_TARGET: ${{ matrix.target.desktop_target }}
+      TAURI_GRID_FRONTEND: ${{ matrix.frontend }}
+      TAURI_GRID_BACKEND: ${{ matrix.backend }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@f40ffcd9367d9f12939873eb1018b921a783ffaa
+        with:
+          version: 10.28.2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 24.11.1
+          cache: pnpm
+
+      - name: Setup GraalVM for Spring native
+        if: matrix.backend == 'spring-native'
+        uses: graalvm/setup-graalvm@v1
+        with:
+          java-version: '25'
+          distribution: graalvm
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          native-image-job-reports: 'true'
+
+      - name: Preflight Spring native toolchain
+        if: matrix.backend == 'spring-native'
+        run: native-image --version
+
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9
         with:
           toolchain: stable
-          targets: ${{ matrix.desktop_target == 'windows-x64' && 'x86_64-pc-windows-msvc' || matrix.desktop_target == 'linux-x64' && 'x86_64-unknown-linux-gnu' || 'aarch64-apple-darwin' }}
+          targets: ${{ matrix.target.rust_target }}
 
       - name: Restore Rust cache
         uses: Swatinem/rust-cache@42dc69e1aa15d09112580998cf2ef0119e2e91ae
         with:
           workspaces: apps/tauri-shell/src-tauri -> target
+          key: ${{ matrix.target.desktop_target }}-${{ matrix.frontend }}-${{ matrix.backend }}
 
       - name: Install Linux desktop dependencies
         if: runner.os == 'Linux'
@@ -71,14 +124,5 @@ jobs:
       - name: Install workspace dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Run desktop tooling tests
-        run: pnpm run desktop:test:tooling
-
-      - name: Materialize packaged backend runtime
-        run: pnpm run desktop:materialize-runtime
-
-      - name: Smoke test packaged backend runtime
-        run: pnpm run desktop:smoke-runtime
-
-      - name: Build desktop shell without bundling
-        run: pnpm run desktop:build
+      - name: Verify desktop grid variant
+        run: pnpm run desktop:grid:verify:one
