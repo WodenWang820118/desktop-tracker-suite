@@ -14,7 +14,8 @@ The ideal review path:
 
 If the scripted Copilot Claude path is unavailable, prefer Gemini CLI before
 Copilot GPT-5 mini where this workflow routes an automatic second reviewer.
-Otherwise use the matching local reviewer persona or Codex reviewer subagent.
+Otherwise use the matching tool-native reviewer profile, prompt, or Codex
+reviewer subagent.
 
 ## Required Checkpoints
 
@@ -33,9 +34,9 @@ After writing tests but before running the broad sign-off suite or using those
 tests as approval evidence, send the test strategy and assertions to a second
 reviewer.
 
-Default: GitHub Copilot Claude Sonnet 4.6 via the repo wrapper `pnpm review:test`. If both local CLIs are
-unavailable, use the matching local reviewer persona or Codex reviewer subagent
-instead of silently self-approving.
+Default: use the repo wrapper `pnpm review:test`. If both local CLIs are
+unavailable, use the matching tool-native reviewer profile, prompt, or Codex
+reviewer subagent instead of silently self-approving.
 
 ### Implementation Review
 
@@ -74,8 +75,6 @@ execution, network behavior, or public contracts.
 <area> --summary "<approval summary>"` after the plan review passes.
 - Use `pnpm review:status` to inspect the gate and `pnpm review:reset` to clear
   it manually when needed.
-
-Load `.agents/references/verification-targets.md` for repo-specific browser, desktop, backend smoke, and workspace verification routing detail.
 
 ## Checkpoint Commands
 

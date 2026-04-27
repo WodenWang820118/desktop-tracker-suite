@@ -1,4 +1,7 @@
 import assert from 'node:assert/strict';
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import test from 'node:test';
 
 import {
@@ -802,6 +805,36 @@ test('buildReviewPrompt includes the checkpoint, focus, and supplied context', (
   assert.match(prompt, /Checkpoint: implementation/);
   assert.match(prompt, /Primary focus: security/);
   assert.match(prompt, /Changed files: tools\/scripts\/review-gate\/shared\.ts/);
+});
+
+test('buildReviewPrompt includes the shared review contract when present', () => {
+  const repoRoot = mkdtempSync(join(tmpdir(), 'checkpoint-contract-'));
+  const originalCwd = process.cwd();
+
+  try {
+    mkdirSync(join(repoRoot, '.agents', 'reviewers'), { recursive: true });
+    writeFileSync(
+      join(repoRoot, '.agents', 'reviewers', 'common-review-contract.toml'),
+      'developer_instructions = """\nShared contract text.\n"""',
+    );
+    process.chdir(repoRoot);
+
+    const prompt = buildReviewPrompt(
+      {
+        checkpoint: 'implementation',
+        provider: 'gemini',
+        focus: 'agent-governance',
+        model: 'gemini-3-flash-preview',
+      },
+      'Changed files: .gemini/settings.json',
+    );
+
+    assert.match(prompt, /Shared review contract:/);
+    assert.match(prompt, /Shared contract text\./);
+  } finally {
+    process.chdir(originalCwd);
+    rmSync(repoRoot, { force: true, recursive: true });
+  }
 });
 
 test('createCheckpointReviewTelemetryContext keeps checkpoint buckets distinct', () => {

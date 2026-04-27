@@ -22,6 +22,14 @@ test('resolveCodexReviewerId routes checkpoints and focus to the expected review
 
   assert.equal(
     resolveCodexReviewerId({
+      checkpoint: 'implementation',
+      focus: 'process untrusted input',
+    }),
+    'security-reviewer',
+  );
+
+  assert.equal(
+    resolveCodexReviewerId({
       checkpoint: 'test',
       focus: 'tests',
     }),

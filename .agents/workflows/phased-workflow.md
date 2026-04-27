@@ -72,8 +72,8 @@ data, or require broad exploration.
 - Load specialist skills on demand for the current slice, such as
   `frontend-ui-engineering`, `api-and-interface-design`,
   `security-and-hardening`, or repo-specific Nx skills.
-- Load `.agents/stack-conventions.md` only when the task involves Angular,
-  React, Vue, NestJS, Express, Java, or Tauri runtime code.
+- Load the matching file under `.agents/references/stack-conventions/` only
+  when the task involves Angular, NestJS, Java, or Python.
 - Keep checkpoint and release-closeout skills unloaded until the work reaches
   their checkpoint.
 
@@ -142,9 +142,13 @@ or final handoff.
 - Load `.agents/skills/qa-verification/SKILL.md` when a completed change needs
   browser proof, smoke verification, report-only QA, or fix-enabled
   verification.
+- Use `.agents/skills/proofshot/SKILL.md` only as a browser-only helper when
+  `qa-verification` or the user request calls for proof artifacts.
 - Load `.agents/skills/code-review-and-quality/SKILL.md` when preparing for or
   responding to implementation review.
 - Load `.agents/skills/release-readiness/SKILL.md` when the work needs docs
   freshness, a final verification story, or a clean handoff summary.
-- Load reviewer personas from `.agents/reviewers` only for the active
-  checkpoint, adding specialist reviewers when a change crosses categories.
+- Apply `.agents/reviewers/common-review-contract.toml` for every review
+  checkpoint, then use the active tool-native reviewer profile or prompt for
+  specialist coverage. Do not recreate or load legacy
+  `.agents/reviewers/*-reviewer.md` personas.

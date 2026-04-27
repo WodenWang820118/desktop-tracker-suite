@@ -23,6 +23,7 @@ import {
   probeGeminiCliHealth,
   runGeminiReview,
 } from '../providers/gemini.ts';
+import { readCommonReviewContract } from '../shared/common-review-contract.ts';
 
 export type ReviewCheckpoint = 'plan' | 'implementation' | 'test' | 'pre-merge';
 export type ReviewProvider = 'auto' | 'copilot' | 'gemini' | 'codex';
@@ -523,12 +524,17 @@ export function buildReviewPrompt(
   execution: ReviewExecution,
   context: string,
 ): string {
+  const commonReviewContract = readCommonReviewContract(process.cwd());
   const reviewRules = [
     'You are the second-opinion reviewer for this repository.',
     `Checkpoint: ${execution.checkpoint}`,
     `Primary focus: ${execution.focus}`,
     execution.model ? `Requested model: ${execution.model}` : null,
     '',
+    commonReviewContract
+      ? ['Shared review contract:', commonReviewContract].join('\n')
+      : null,
+    commonReviewContract ? '' : null,
     'Review rules:',
     '- Findings first, ordered by severity',
     '- Call out correctness, security risk, workflow violations, contract drift, and missing tests',
@@ -595,6 +601,8 @@ async function runReviewExecution(
 
   if (execution.provider === 'copilot') {
     return runCopilotReview({
+      checkpoint: execution.checkpoint,
+      focus: execution.focus,
       model: execution.model,
       prompt,
       repoRoot: process.cwd(),
@@ -604,6 +612,8 @@ async function runReviewExecution(
 
   if (execution.provider === 'gemini') {
     return runGeminiReview({
+      checkpoint: execution.checkpoint,
+      focus: execution.focus,
       model: execution.model ?? getDefaultGeminiModel(execution.checkpoint),
       prompt,
       repoRoot: process.cwd(),

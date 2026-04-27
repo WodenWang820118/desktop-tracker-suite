@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { mkdtempSync, rmSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
@@ -91,6 +91,65 @@ test('runGeminiReview records a successful first attempt with wait-before-start 
   assert.equal(recorded[0]?.attempt, 0);
   assert.equal(recorded[0]?.waitBeforeStartMs, 1_500);
   assert.equal(recorded[0]?.success, true);
+});
+
+test('runGeminiReview wraps prompts with the selected reviewer profile', async () => {
+  const recorded: Array<Record<string, unknown>> = [];
+  const repoRoot = mkdtempSync(join(tmpdir(), 'gemini-reviewer-profile-'));
+  let capturedInput = '';
+
+  try {
+    mkdirSync(join(repoRoot, '.github', 'agents'), { recursive: true });
+    writeFileSync(
+      join(repoRoot, '.github', 'agents', 'test-reviewer.agent.md'),
+      ['---', 'name: test-reviewer', '---', '', 'Test profile text.'].join(
+        '\n',
+      ),
+    );
+
+    const review = await runGeminiReview(
+      {
+        checkpoint: 'test',
+        focus: 'tests',
+        model: 'gemini-2.5-pro',
+        prompt: 'Original test context.',
+        repoRoot,
+      },
+      {
+        acquireLock: async () => () => undefined,
+        getInterRequestDelay: () => 0,
+        loadRateLimitState: () => ({ models: {} }),
+        recordObservation(observation) {
+          recorded.push(observation as unknown as Record<string, unknown>);
+          return observation;
+        },
+        recordRequestStart() {
+          return undefined;
+        },
+        runCommand: (input) => {
+          capturedInput = input.input ?? '';
+          return {
+            error: undefined,
+            status: 0,
+            stderr: '',
+            stdout: 'Reviewed.',
+          };
+        },
+        sleep: async () => undefined,
+      },
+    );
+
+    assert.equal(review, 'Reviewed.');
+    assert.match(
+      capturedInput,
+      /Use the gemini reviewer specialist lens: test-reviewer/,
+    );
+    assert.match(capturedInput, /Test profile text\./);
+    assert.match(capturedInput, /Original test context\./);
+    assert.equal(recorded[0]?.promptChars, capturedInput.length);
+  } finally {
+    rmSync(repoRoot, { force: true, recursive: true });
+  }
 });
 
 test('runGeminiReview records capacity-triggered retries with retry delay metadata', async () => {

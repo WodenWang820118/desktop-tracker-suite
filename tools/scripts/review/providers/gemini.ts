@@ -24,6 +24,10 @@ import {
   type LocalCliCommandInput,
   type LocalCliCommandResult,
 } from './local-cli.ts';
+import {
+  buildReviewPromptWithReviewerProfile,
+  type ReviewCheckpoint,
+} from '../shared/reviewer-profile.ts';
 
 type GeminiObservationRecorder = (
   input: ProviderObservationInput,
@@ -34,6 +38,8 @@ type GeminiCommandRunner = (
 ) => LocalCliCommandResult;
 
 interface GeminiReviewInput {
+  checkpoint?: ReviewCheckpoint;
+  focus?: string;
   model: string;
   prompt: string;
   repoRoot?: string;
@@ -162,10 +168,21 @@ export async function runGeminiReview(
   input: GeminiReviewInput,
   dependencies: GeminiProviderDependencies = {},
 ): Promise<string> {
+  const repoRoot = input.repoRoot ?? process.cwd();
+  const reviewPrompt = buildReviewPromptWithReviewerProfile({
+    checkpoint: input.checkpoint,
+    focus: input.focus,
+    prompt: input.prompt,
+    provider: 'gemini',
+    repoRoot,
+  });
+
   return runGeminiTextCommand(
     {
       ...input,
       operation: 'review-attempt',
+      prompt: reviewPrompt,
+      repoRoot,
     },
     dependencies,
   );

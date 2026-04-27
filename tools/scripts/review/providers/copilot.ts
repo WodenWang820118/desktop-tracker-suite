@@ -1,6 +1,10 @@
 import { resolve } from 'node:path';
 
 import {
+  buildReviewPromptWithReviewerProfile,
+  type ReviewCheckpoint,
+} from '../shared/reviewer-profile.ts';
+import {
   cacheProviderHealth,
   getCachedProviderHealth,
   type ReviewProviderHealthResult,
@@ -32,6 +36,8 @@ type CopilotCommandRunner = (
 ) => LocalCliCommandResult;
 
 interface CopilotReviewInput {
+  checkpoint?: ReviewCheckpoint;
+  focus?: string;
   model?: string;
   prompt: string;
   repoRoot?: string;
@@ -219,10 +225,17 @@ export function runCopilotReview(
   const reasoningEffortSupportCache =
     dependencies.reasoningEffortSupportCache ??
     DEFAULT_REASONING_EFFORT_SUPPORT_CACHE;
+  const reviewPrompt = buildReviewPromptWithReviewerProfile({
+    checkpoint: input.checkpoint,
+    focus: input.focus,
+    prompt: input.prompt,
+    provider: 'copilot',
+    repoRoot,
+  });
   const reviewArgs = buildCopilotReviewCommandArgs(
     {
       model: input.model,
-      prompt: input.prompt,
+      prompt: reviewPrompt,
       repoRoot,
       telemetryContext,
     },
@@ -262,7 +275,7 @@ export function runCopilotReview(
         ),
         model: input.model,
         operation: 'review',
-        promptChars: input.prompt.length,
+        promptChars: reviewPrompt.length,
         provider: 'copilot',
         success: false,
         timedOut: isCopilotTimedOut(result, output),
@@ -277,7 +290,7 @@ export function runCopilotReview(
       args: buildCopilotCommandArgs({
         experimental: true,
         model: input.model,
-        prompt: input.prompt,
+        prompt: reviewPrompt,
       }),
       cwd: repoRoot,
       timeoutMs: COPILOT_REVIEW_TIMEOUT_MS,
@@ -299,7 +312,7 @@ export function runCopilotReview(
               : classifyCopilotErrorCategory(output, result.error?.message),
         model: input.model,
         operation: 'review',
-        promptChars: input.prompt.length,
+        promptChars: reviewPrompt.length,
         provider: 'copilot',
         success: !result.error && result.status === 0 && output.trim().length > 0,
         timedOut: isCopilotTimedOut(result, output),
@@ -336,7 +349,7 @@ export function runCopilotReview(
           : classifyCopilotErrorCategory(output, result.error?.message),
       model: input.model,
       operation: 'review',
-      promptChars: input.prompt.length,
+      promptChars: reviewPrompt.length,
       provider: 'copilot',
       success: reviewSucceeded,
       timedOut: isCopilotTimedOut(result, output),

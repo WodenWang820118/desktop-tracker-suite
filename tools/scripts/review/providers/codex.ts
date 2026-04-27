@@ -117,8 +117,10 @@ export function resolveCodexReviewerId(input: {
     focus.includes('auth') ||
     focus.includes('secret') ||
     focus.includes('shell') ||
+    focus.includes('process') ||
     focus.includes('network') ||
-    focus.includes('filesystem')
+    focus.includes('filesystem') ||
+    focus.includes('untrusted')
   ) {
     return 'security-reviewer';
   }

@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { mkdtempSync, rmSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import test from 'node:test';
@@ -253,6 +253,66 @@ test('runCopilotReview falls back cleanly when the support probe fails', () => {
   assert.ok(reviewCall);
   assert.equal(reviewCall?.includes('--reasoning-effort'), false);
   assert.equal(reviewCall?.includes('--effort'), false);
+});
+
+test('runCopilotReview wraps prompts with the selected reviewer profile', () => {
+  const recorded: Array<Record<string, unknown>> = [];
+  const repoRoot = mkdtempSync(join(tmpdir(), 'copilot-reviewer-profile-'));
+  let capturedArgs: string[] | undefined;
+
+  try {
+    mkdirSync(join(repoRoot, '.github', 'agents'), { recursive: true });
+    writeFileSync(
+      join(repoRoot, '.github', 'agents', 'security-reviewer.agent.md'),
+      [
+        '---',
+        'name: security-reviewer',
+        '---',
+        '',
+        'Security profile text.',
+      ].join('\n'),
+    );
+
+    const review = runCopilotReview(
+      {
+        checkpoint: 'implementation',
+        focus: 'security',
+        model: 'gpt-5-mini',
+        prompt: 'Original context.',
+        repoRoot,
+      },
+      {
+        recordObservation(observation) {
+          recorded.push(observation as unknown as Record<string, unknown>);
+          return observation;
+        },
+        reasoningEffortSupportCache: new Map([[resolve(repoRoot), null]]),
+        runCommand: (input) => {
+          capturedArgs = [...input.args];
+          return {
+            error: undefined,
+            status: 0,
+            stderr: '',
+            stdout: 'Reviewed.',
+          };
+        },
+      },
+    );
+
+    const promptIndex = capturedArgs?.indexOf('-p') ?? -1;
+    const capturedPrompt = capturedArgs?.[promptIndex + 1] ?? '';
+
+    assert.equal(review, 'Reviewed.');
+    assert.match(
+      capturedPrompt,
+      /Use the copilot reviewer specialist lens: security-reviewer/,
+    );
+    assert.match(capturedPrompt, /Security profile text\./);
+    assert.match(capturedPrompt, /Original context\./);
+    assert.equal(recorded[0]?.promptChars, capturedPrompt.length);
+  } finally {
+    rmSync(repoRoot, { force: true, recursive: true });
+  }
 });
 
 test('runCopilotReview retries without reasoning flags when the review command rejects them', () => {
