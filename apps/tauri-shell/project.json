@@ -8,7 +8,7 @@
     "materialize-backend-runtime": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "pnpm exec nx build ng-tracker --configuration production && pnpm exec nx build nest-backend --configuration production && node tools/tauri/materialize-node-sidecar-runtime.ts nest"
+        "command": "pnpm exec nx build ng-tracker --configuration tauri && pnpm exec nx build nest-backend --configuration production && node tools/tauri/materialize-node-sidecar-runtime.ts nest"
       },
       "outputs": [
         "{workspaceRoot}/dist/tauri-shell-nest-sidecar/resources",
@@ -18,7 +18,7 @@
     "materialize-express-sidecar-runtime": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "pnpm exec nx build ng-tracker --configuration production && pnpm exec nx build express-backend --configuration production && node tools/tauri/materialize-node-sidecar-runtime.ts express"
+        "command": "pnpm exec nx build ng-tracker --configuration tauri && pnpm exec nx build express-backend --configuration production && node tools/tauri/materialize-node-sidecar-runtime.ts express"
       },
       "outputs": [
         "{workspaceRoot}/dist/tauri-shell-express-sidecar/resources",
@@ -28,7 +28,7 @@
     "materialize-spring-native-runtime": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "pnpm exec nx build ng-tracker --configuration production && pnpm exec nx run spring-backend:native-build && node tools/tauri/materialize-spring-native-runtime.ts"
+        "command": "pnpm exec nx build ng-tracker --configuration tauri && pnpm exec nx run spring-backend:native-build && node tools/tauri/materialize-spring-native-runtime.ts"
       },
       "outputs": ["{workspaceRoot}/dist/tauri-shell-spring-native/resources"]
     },
