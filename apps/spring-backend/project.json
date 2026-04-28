@@ -28,7 +28,7 @@
     "native-build": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "mvn -f pom.xml -pl apps/spring-backend -am -Pnative -DskipTests spring-boot:process-aot native:compile && node tools/prepare-spring-native-dist.ts"
+        "command": "mvn -f pom.xml -pl apps/spring-backend -am -Pnative -DskipTests compile spring-boot:process-aot native:compile && node tools/prepare-spring-native-dist.ts"
       },
       "outputs": ["{workspaceRoot}/dist/spring-backend-native"]
     },
