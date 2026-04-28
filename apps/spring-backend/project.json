@@ -25,6 +25,21 @@
       },
       "outputs": ["{workspaceRoot}/dist/spring-backend"]
     },
+    "native-build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "mvn -f pom.xml -pl apps/spring-backend -am -Pnative -DskipTests compile spring-boot:process-aot native:compile && node tools/prepare-spring-native-dist.ts"
+      },
+      "outputs": ["{workspaceRoot}/dist/spring-backend-native"]
+    },
+    "smoke-native": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["native-build"],
+      "options": {
+        "command": "node tools/feasibility/smoke-spring-native.ts"
+      },
+      "outputs": ["{workspaceRoot}/dist/feasibility/graalvm-desktop/windows"]
+    },
     "test": {
       "executor": "nx:run-commands",
       "options": {

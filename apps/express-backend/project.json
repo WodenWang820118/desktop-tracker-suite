@@ -47,13 +47,6 @@
           "buildTarget": "express-backend:build:production"
         }
       }
-    },
-    "test": {
-      "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
-      "options": {
-        "jestConfig": "apps/express-backend/jest.config.ts"
-      }
     }
   }
 }

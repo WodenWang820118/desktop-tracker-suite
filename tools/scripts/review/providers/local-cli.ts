@@ -1,0 +1,93 @@
+import { spawnSync, type SpawnSyncOptionsWithStringEncoding } from 'node:child_process';
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
+
+import { resolveWindowsPowerShellPath } from '../windows-cli.ts';
+
+export { resolveWindowsPowerShellPath };
+
+export interface LocalCliCommandInput {
+  args: string[];
+  command: string;
+  cwd?: string;
+  input?: string;
+  timeoutMs?: number;
+  windowsScriptName?: string;
+}
+
+export interface LocalCliCommandResult {
+  error?: Error;
+  signal?: NodeJS.Signals | null;
+  status: number | null;
+  stderr: string;
+  stdout: string;
+}
+
+export function runLocalCliCommand(
+  input: LocalCliCommandInput,
+): LocalCliCommandResult {
+  const stdio: ['pipe', 'pipe', 'pipe'] = ['pipe', 'pipe', 'pipe'];
+  const options: SpawnSyncOptionsWithStringEncoding = {
+    cwd: input.cwd,
+    encoding: 'utf8' as const,
+    input: input.input,
+    stdio,
+    timeout: input.timeoutMs,
+  };
+
+  if (process.platform === 'win32' && input.windowsScriptName) {
+    const scriptPath = resolveWindowsScriptPath(input.windowsScriptName);
+    const powershellPath = resolveWindowsPowerShellPath();
+
+    if (scriptPath && powershellPath) {
+      return spawnSync(
+        powershellPath,
+        [
+          '-NoProfile',
+          '-NonInteractive',
+          '-ExecutionPolicy',
+          'Bypass',
+          '-File',
+          scriptPath,
+          ...input.args,
+        ],
+        options,
+      ) as LocalCliCommandResult;
+    }
+  }
+
+  return spawnSync(input.command, input.args, options) as LocalCliCommandResult;
+}
+
+export function resolveWindowsScriptPath(scriptName: string): string | null {
+  if (process.platform !== 'win32') {
+    return null;
+  }
+
+  const candidates = [
+    process.env.APPDATA ? join(process.env.APPDATA, 'npm', scriptName) : null,
+    process.env.NVM_SYMLINK ? join(process.env.NVM_SYMLINK, scriptName) : null,
+  ].filter((candidate): candidate is string => Boolean(candidate));
+
+  for (const candidate of candidates) {
+    if (existsSync(candidate)) {
+      return candidate;
+    }
+  }
+
+  const whereResult = spawnSync('where.exe', [scriptName], {
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
+
+  if (whereResult.error || whereResult.status !== 0) {
+    return null;
+  }
+
+  return (
+    whereResult.stdout
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .find((line) => line.length > 0 && existsSync(line)) ?? null
+  );
+}

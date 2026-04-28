@@ -5,22 +5,13 @@ export default [
   ...nx.configs['flat/typescript'],
   ...nx.configs['flat/javascript'],
   {
-    files: ['src/**/*.ts'],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.json'],
-      },
-    },
-  },
-  {
-      "ignores": [
-        "**/dist",
-        "**/node_modules",
-        "**/coverage/**",
-        "**/*.html",
-        "**/vite.config.*.timestamp*",
-        "**/vitest.config.*.timestamp*"
-      ]
+    ignores: [
+      '**/dist',
+      '**/node_modules',
+      '**/coverage/**',
+      '**/vite.config.*.timestamp*',
+      '**/vitest.config.*.timestamp*',
+    ],
   },
   {
     files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx', '**/*.vue'],
@@ -29,7 +20,7 @@ export default [
         'error',
         {
           enforceBuildableLibDependency: true,
-          allow: ['^.*/eslint(\\.base)?\\.config\\.[cm]?js$'],
+          allow: ['^.*/eslint\\.config\\.[cm]?[jt]s$'],
           depConstraints: [
             {
               sourceTag: '*',

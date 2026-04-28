@@ -1,0 +1,138 @@
+{
+  "name": "tauri-shell",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "sourceRoot": "apps/tauri-shell/src-tauri/src",
+  "tags": ["desktop", "tauri"],
+  "targets": {
+    "materialize-backend-runtime": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm exec nx build ng-tracker --configuration tauri && pnpm exec nx build nest-backend --configuration production && node tools/tauri/materialize-node-sidecar-runtime.ts nest"
+      },
+      "outputs": [
+        "{workspaceRoot}/dist/tauri-shell-nest-sidecar/resources",
+        "{workspaceRoot}/apps/tauri-shell/src-tauri/binaries"
+      ]
+    },
+    "materialize-express-sidecar-runtime": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm exec nx build ng-tracker --configuration tauri && pnpm exec nx build express-backend --configuration production && node tools/tauri/materialize-node-sidecar-runtime.ts express"
+      },
+      "outputs": [
+        "{workspaceRoot}/dist/tauri-shell-express-sidecar/resources",
+        "{workspaceRoot}/apps/tauri-shell/src-tauri/binaries"
+      ]
+    },
+    "materialize-spring-native-runtime": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm exec nx build ng-tracker --configuration tauri && pnpm exec nx run spring-backend:native-build && node tools/tauri/materialize-spring-native-runtime.ts"
+      },
+      "outputs": ["{workspaceRoot}/dist/tauri-shell-spring-native/resources"]
+    },
+    "smoke": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node tools/tauri/smoke-node-sidecar-runtime.ts nest"
+      },
+      "configurations": {
+        "express-sidecar": {
+          "command": "node tools/tauri/smoke-node-sidecar-runtime.ts express"
+        },
+        "nest-sidecar": {
+          "command": "node tools/tauri/smoke-node-sidecar-runtime.ts nest"
+        },
+        "spring-native-runtime": {
+          "command": "node tools/tauri/smoke-spring-native-runtime.ts"
+        }
+      }
+    },
+    "grid-prepare-one": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "node tools/tauri/grid-build.ts prepare"
+      }
+    },
+    "grid-verify-one": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "node tools/tauri/grid-build.ts build"
+      },
+      "outputs": ["{workspaceRoot}/apps/tauri-shell/src-tauri/target/debug"]
+    },
+    "grid-verify": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "node tools/tauri/grid-build.ts verify"
+      },
+      "outputs": ["{workspaceRoot}/apps/tauri-shell/src-tauri/target/debug"]
+    },
+    "grid-package-one": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "node tools/tauri/grid-build.ts package"
+      },
+      "outputs": ["{workspaceRoot}/apps/tauri-shell/src-tauri/target/release/bundle"]
+    },
+    "dev": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node tools/tauri/dev.ts"
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["materialize-backend-runtime"],
+      "options": {
+        "command": "node tools/tauri/build.ts build nest"
+      },
+      "outputs": ["{workspaceRoot}/apps/tauri-shell/src-tauri/target/debug"]
+    },
+    "build-express-sidecar": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["materialize-express-sidecar-runtime"],
+      "options": {
+        "command": "node tools/tauri/build.ts build express"
+      },
+      "outputs": ["{workspaceRoot}/apps/tauri-shell/src-tauri/target/debug"]
+    },
+    "build-spring-native": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["materialize-spring-native-runtime"],
+      "options": {
+        "command": "node tools/tauri/build.ts build spring-native"
+      },
+      "outputs": ["{workspaceRoot}/apps/tauri-shell/src-tauri/target/debug"]
+    },
+    "package": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["materialize-backend-runtime"],
+      "options": {
+        "command": "node tools/tauri/build.ts package nest"
+      },
+      "outputs": ["{workspaceRoot}/apps/tauri-shell/src-tauri/target/release/bundle"]
+    },
+    "package-express-sidecar": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["materialize-express-sidecar-runtime"],
+      "options": {
+        "command": "node tools/tauri/build.ts package express"
+      },
+      "outputs": ["{workspaceRoot}/apps/tauri-shell/src-tauri/target/release/bundle"]
+    },
+    "package-spring-native": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["materialize-spring-native-runtime"],
+      "options": {
+        "command": "node tools/tauri/build.ts package spring-native"
+      },
+      "outputs": ["{workspaceRoot}/apps/tauri-shell/src-tauri/target/release/bundle"]
+    }
+  }
+}

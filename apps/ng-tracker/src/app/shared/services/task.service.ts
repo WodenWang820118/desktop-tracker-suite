@@ -6,18 +6,7 @@ import { environment } from '../../../environments/environment';
 import { formatDatabaseError } from '../utils/error-formatter';
 
 function resolveTaskApiUrl(): string {
-  // In Electron we have nodeIntegration enabled for the main window, so env vars are accessible.
-  try {
-    const envTaskApiUrl = (globalThis as any)?.process?.env?.TASK_API_URL;
-    if (typeof envTaskApiUrl === 'string' && envTaskApiUrl) return envTaskApiUrl;
-
-    const envPort = (globalThis as any)?.process?.env?.PORT;
-    if (typeof envPort === 'string' && envPort) return `http://localhost:${envPort}/tasks`;
-  } catch {
-    // ignore
-  }
-
-  // Electron can pass overrides via query string: index.html?taskApiUrl=http://localhost:5000/tasks
+  // Desktop Tracker Suite passes desktop overrides via query string: index.html?taskApiUrl=http://localhost:5000/tasks
   try {
     const search = (globalThis as any)?.location?.search;
     if (typeof search === 'string' && search) {

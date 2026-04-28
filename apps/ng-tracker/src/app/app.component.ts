@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { afterNextRender, Component, inject } from '@angular/core';
 // Import symbols for components/directives used inside the deferrable view
 // without adding them to @Component.imports, so the compiler can lazy-load them.
 import { RouterOutlet } from '@angular/router';
@@ -6,6 +6,7 @@ import { HeaderComponent } from './shared/components/header.component';
 import { FooterComponent } from './shared/components/footer.component';
 import { ConfirmDialogComponent } from './shared/components/confirm-dialog.component';
 import { ThemeService } from './shared/services/theme.service';
+import { DesktopUpdateService } from './shared/services/desktop-update.service';
 import { ToastModule } from 'primeng/toast';
 @Component({
   selector: 'app-root',
@@ -56,4 +57,11 @@ import { ToastModule } from 'primeng/toast';
 })
 export class AppComponent {
   readonly theme = inject(ThemeService);
+  private readonly desktopUpdate = inject(DesktopUpdateService);
+
+  constructor() {
+    afterNextRender(() => {
+      void this.desktopUpdate.checkForUpdatesOnStartup();
+    });
+  }
 }

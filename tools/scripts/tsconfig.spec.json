@@ -1,0 +1,9 @@
+{
+  "extends": "./tsconfig.json",
+  "include": [
+    "./review/**/*.test.ts",
+    "./review/**/*.spec.ts",
+    "./review-gate/**/*.test.ts"
+  ],
+  "exclude": []
+}
