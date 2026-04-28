@@ -26,8 +26,7 @@ export const GENERATED_GRID_CONFIG_DIR = join(
 const PRODUCT_NAME = 'Desktop Tracker Suite';
 const REPOSITORY_RELEASE_DOWNLOAD_BASE =
   'https://github.com/WodenWang820118/nx-electron/releases/latest/download';
-const GENERATED_CONFIG_ROOT_PREFIX = '../../../..';
-const GENERATED_CONFIG_SRC_TAURI_PREFIX = '..';
+const GENERATED_CONFIG_ROOT_PREFIX = '../../..';
 const DEFAULT_DEV_URL =
   'http://localhost:4200/?taskApiUrl=http%3A%2F%2Flocalhost%3A3000%2Ftasks';
 const DEFAULT_CSP =
@@ -125,7 +124,7 @@ const FRONTEND_DEFINITIONS: Record<GridFrontend, GridFrontendDefinition> = {
 const BACKEND_DEFINITIONS: Record<GridBackend, GridBackendDefinition> = {
   express: {
     buildArgs: ['exec', 'nx', 'build', 'express-backend', '--configuration', 'production'],
-    externalBin: [`${GENERATED_CONFIG_SRC_TAURI_PREFIX}/binaries/express-backend`],
+    externalBin: ['binaries/express-backend'],
     label: 'Express',
     materializeArgs: ['tools/tauri/materialize-node-sidecar-runtime.ts', 'express'],
     resources: {
@@ -136,7 +135,7 @@ const BACKEND_DEFINITIONS: Record<GridBackend, GridBackendDefinition> = {
   },
   nest: {
     buildArgs: ['exec', 'nx', 'build', 'nest-backend', '--configuration', 'production'],
-    externalBin: [`${GENERATED_CONFIG_SRC_TAURI_PREFIX}/binaries/nest-backend`],
+    externalBin: ['binaries/nest-backend'],
     label: 'Nest',
     materializeArgs: ['tools/tauri/materialize-node-sidecar-runtime.ts', 'nest'],
     resources: {
@@ -147,7 +146,7 @@ const BACKEND_DEFINITIONS: Record<GridBackend, GridBackendDefinition> = {
   },
   'spring-native': {
     buildArgs: ['exec', 'nx', 'run', 'spring-backend:native-build'],
-    externalBin: [`${GENERATED_CONFIG_SRC_TAURI_PREFIX}/binaries/spring-backend`],
+    externalBin: ['binaries/spring-backend'],
     label: 'Spring Native',
     materializeArgs: ['tools/tauri/materialize-spring-native-runtime.ts'],
     resources: {
@@ -274,11 +273,11 @@ export function buildGeneratedTauriConfig(input: {
       createUpdaterArtifacts: true,
       externalBin: backend.externalBin,
       icon: [
-        `${GENERATED_CONFIG_SRC_TAURI_PREFIX}/icons/32x32.png`,
-        `${GENERATED_CONFIG_SRC_TAURI_PREFIX}/icons/128x128.png`,
-        `${GENERATED_CONFIG_SRC_TAURI_PREFIX}/icons/128x128@2x.png`,
-        `${GENERATED_CONFIG_SRC_TAURI_PREFIX}/icons/icon.icns`,
-        `${GENERATED_CONFIG_SRC_TAURI_PREFIX}/icons/icon.ico`,
+        'icons/32x32.png',
+        'icons/128x128.png',
+        'icons/128x128@2x.png',
+        'icons/icon.icns',
+        'icons/icon.ico',
       ],
       resources: backend.resources,
     },
