@@ -2,8 +2,19 @@ name: Desktop Release
 
 on:
   push:
+    branches:
+      - main
     tags:
       - 'v*.*.*'
+    paths:
+      - '.github/workflows/desktop-release.yml'
+      - 'apps/**'
+      - 'tools/tauri/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'pom.xml'
+      - 'nx.json'
+      - 'tsconfig*.json'
   workflow_dispatch:
     inputs:
       release_tag:
@@ -11,13 +22,101 @@ on:
         required: true
         type: string
 
+concurrency:
+  group: desktop-release
+  cancel-in-progress: false
+
 permissions:
   contents: write
 
 jobs:
+  resolve-release-tag:
+    name: Resolve release tag
+    runs-on: ubuntu-22.04
+    outputs:
+      release_commitish: ${{ steps.release-tag.outputs.release_commitish }}
+      release_tag: ${{ steps.release-tag.outputs.release_tag }}
+      skip: ${{ steps.release-tag.outputs.skip }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+
+      - name: Resolve release tag
+        id: release-tag
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          INPUT_RELEASE_TAG: ${{ inputs.release_tag || '' }}
+          REF_NAME: ${{ github.ref_name }}
+          REF_TYPE: ${{ github.ref_type }}
+          RELEASE_COMMITISH: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+
+          skip=false
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            release_tag="$INPUT_RELEASE_TAG"
+          elif [ "$REF_TYPE" = "tag" ]; then
+            release_tag="$REF_NAME"
+          elif [ "$REF_TYPE" = "branch" ]; then
+            version="$(node -p "require('./package.json').version")"
+            release_tag="v$version"
+          else
+            echo "::error::Unsupported ref type '$REF_TYPE' for desktop release."
+            exit 1
+          fi
+
+          if [[ ! "$release_tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$ ]]; then
+            echo "::error::Release tag must look like v1.2.3, got '$release_tag'."
+            exit 1
+          fi
+
+          release_error="$(mktemp)"
+          release_exists=false
+          if release_is_draft="$(gh release view "$release_tag" --json isDraft --jq '.isDraft' 2>"$release_error")"; then
+            release_exists=true
+            release_target="$(gh release view "$release_tag" --json targetCommitish --jq '.targetCommitish')"
+
+            if [ "$release_is_draft" != "true" ]; then
+              echo "::notice::Release $release_tag is already published; skipping desktop release."
+              skip=true
+            elif [ "$release_target" != "$RELEASE_COMMITISH" ]; then
+              echo "::error::Draft release $release_tag targets $release_target, expected $RELEASE_COMMITISH. Finish or delete the stale draft before rerunning."
+              exit 1
+            fi
+          elif grep -qi "not found" "$release_error"; then
+            release_exists=false
+          else
+            cat "$release_error" >&2
+            exit 1
+          fi
+
+          if [ "$EVENT_NAME" = "push" ] && [ "$REF_TYPE" = "branch" ] && [ "$release_exists" = "false" ]; then
+            tag_status=0
+            git ls-remote --exit-code --tags origin "refs/tags/$release_tag" >/dev/null 2>&1 || tag_status=$?
+
+            if [ "$tag_status" -eq 0 ]; then
+              echo "::notice::Tag $release_tag already exists without a matching draft release; skipping automatic desktop release."
+              skip=true
+            elif [ "$tag_status" -ne 2 ]; then
+              echo "::error::Failed to check whether tag $release_tag exists."
+              exit 1
+            fi
+          fi
+
+          {
+            echo "release_commitish=$RELEASE_COMMITISH"
+            echo "release_tag=$release_tag"
+            echo "skip=$skip"
+          } >> "$GITHUB_OUTPUT"
+
   package:
     name: Package ${{ matrix.target.desktop_target }} ${{ matrix.frontend }}+${{ matrix.backend }}
     runs-on: ${{ matrix.target.runner }}
+    needs: resolve-release-tag
+    if: needs.resolve-release-tag.outputs.skip != 'true'
     strategy:
       fail-fast: false
       matrix:
@@ -41,7 +140,8 @@ jobs:
           - spring-native
 
     env:
-      RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.release_tag || github.ref_name }}
+      RELEASE_COMMITISH: ${{ needs.resolve-release-tag.outputs.release_commitish }}
+      RELEASE_TAG: ${{ needs.resolve-release-tag.outputs.release_tag }}
       TAURI_DESKTOP_TARGET: ${{ matrix.target.desktop_target }}
       TAURI_GRID_FRONTEND: ${{ matrix.frontend }}
       TAURI_GRID_BACKEND: ${{ matrix.backend }}
@@ -61,6 +161,33 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+
+      - name: Guard release target is mutable
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          release_error="$(mktemp)"
+          if release_is_draft="$(gh release view "$RELEASE_TAG" --json isDraft --jq '.isDraft' 2>"$release_error")"; then
+            release_target="$(gh release view "$RELEASE_TAG" --json targetCommitish --jq '.targetCommitish')"
+
+            if [ "$release_is_draft" != "true" ]; then
+              echo "::error::Release $RELEASE_TAG is already published; refusing to upload package assets."
+              exit 1
+            fi
+
+            if [ "$release_target" != "$RELEASE_COMMITISH" ]; then
+              echo "::error::Draft release $RELEASE_TAG targets $release_target, expected $RELEASE_COMMITISH."
+              exit 1
+            fi
+          elif grep -qi "not found" "$release_error"; then
+            true
+          else
+            cat "$release_error" >&2
+            exit 1
+          fi
 
       - name: Setup pnpm
         uses: pnpm/action-setup@f40ffcd9367d9f12939873eb1018b921a783ffaa
@@ -163,6 +290,7 @@ jobs:
         with:
           projectPath: apps/tauri-shell
           tagName: ${{ env.RELEASE_TAG }}
+          releaseCommitish: ${{ env.RELEASE_COMMITISH }}
           releaseName: Desktop Tracker Suite ${{ env.RELEASE_TAG }}
           releaseBody: See the release assets for Desktop Tracker Suite grid desktop installers, updater metadata, and signatures.
           releaseDraft: true
@@ -174,16 +302,19 @@ jobs:
           uploadUpdaterSignatures: true
           workflowArtifactNamePattern: desktop-tracker-suite-${{ matrix.frontend }}-${{ matrix.backend }}-[version]-[platform]-[arch]-[bundle]
           releaseAssetNamePattern: desktop-tracker-suite-${{ matrix.frontend }}-${{ matrix.backend }}-[version]-[platform]-[arch][setup][ext]
-          # The release stays draft until aggregate-updater-manifests uploads all latest*.json files.
+          # The release is published only after all package jobs finish and aggregate-updater-manifests uploads latest*.json files.
           args: --config ${{ env.TAURI_GRID_CONFIG }} --target ${{ matrix.target.rust_target }}
 
   aggregate-updater-manifests:
     name: Aggregate updater manifests
     runs-on: ubuntu-22.04
-    needs: package
-    if: needs.package.result == 'success'
+    needs:
+      - resolve-release-tag
+      - package
+    if: needs.resolve-release-tag.result == 'success' && needs.package.result == 'success' && needs.resolve-release-tag.outputs.skip != 'true'
     env:
-      RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.release_tag || github.ref_name }}
+      RELEASE_COMMITISH: ${{ needs.resolve-release-tag.outputs.release_commitish }}
+      RELEASE_TAG: ${{ needs.resolve-release-tag.outputs.release_tag }}
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
@@ -224,8 +355,28 @@ jobs:
       - name: Generate updater manifests
         run: node tools/tauri/generate-updater-manifests.ts --release-tag "$RELEASE_TAG" --release-dir dist/release-assets --output-dir dist/tauri-updater-manifests
 
+      - name: Assert draft release is still mutable
+        run: |
+          set -euo pipefail
+
+          release_is_draft="$(gh release view "$RELEASE_TAG" --json isDraft --jq '.isDraft')"
+          release_target="$(gh release view "$RELEASE_TAG" --json targetCommitish --jq '.targetCommitish')"
+
+          if [ "$release_is_draft" != "true" ]; then
+            echo "::error::Release $RELEASE_TAG is already published; refusing to update manifests."
+            exit 1
+          fi
+
+          if [ "$release_target" != "$RELEASE_COMMITISH" ]; then
+            echo "::error::Draft release $RELEASE_TAG targets $release_target, expected $RELEASE_COMMITISH."
+            exit 1
+          fi
+
       - name: Upload updater manifests to draft release
         run: |
           test -f dist/tauri-updater-manifests/latest.json
           test -f dist/tauri-updater-manifests/latest-ng-nest.json
           gh release upload "$RELEASE_TAG" dist/tauri-updater-manifests/latest*.json --clobber
+
+      - name: Publish release
+        run: gh release edit "$RELEASE_TAG" --draft=false
