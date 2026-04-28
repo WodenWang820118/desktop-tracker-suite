@@ -14,7 +14,11 @@ export type GridFrontend = (typeof GRID_FRONTENDS)[number];
 export const GRID_BACKENDS = ['nest', 'express', 'spring-native'] as const;
 export type GridBackend = (typeof GRID_BACKENDS)[number];
 
-export const GRID_DESKTOP_TARGETS = ['windows-x64', 'linux-x64', 'darwin-arm64'] as const;
+export const GRID_DESKTOP_TARGETS = [
+  'windows-x64',
+  'linux-x64',
+  'darwin-arm64',
+] as const;
 export type GridDesktopTarget = (typeof GRID_DESKTOP_TARGETS)[number];
 
 export const GENERATED_GRID_CONFIG_DIR_NAME = 'generated-grid-configs';
@@ -94,6 +98,7 @@ export type TauriConfig = {
   plugins: {
     updater: {
       endpoints: string[];
+      pubkey?: string;
       windows: {
         installMode: 'passive';
       };
@@ -105,7 +110,14 @@ export type TauriConfig = {
 
 const FRONTEND_DEFINITIONS: Record<GridFrontend, GridFrontendDefinition> = {
   ng: {
-    buildArgs: ['exec', 'nx', 'build', 'ng-tracker', '--configuration', 'tauri'],
+    buildArgs: [
+      'exec',
+      'nx',
+      'build',
+      'ng-tracker',
+      '--configuration',
+      'tauri',
+    ],
     distPathFromGeneratedConfig: `${GENERATED_CONFIG_ROOT_PREFIX}/dist/ng-tracker/browser`,
     label: 'Angular',
   },
@@ -123,10 +135,20 @@ const FRONTEND_DEFINITIONS: Record<GridFrontend, GridFrontendDefinition> = {
 
 const BACKEND_DEFINITIONS: Record<GridBackend, GridBackendDefinition> = {
   express: {
-    buildArgs: ['exec', 'nx', 'build', 'express-backend', '--configuration', 'production'],
+    buildArgs: [
+      'exec',
+      'nx',
+      'build',
+      'express-backend',
+      '--configuration',
+      'production',
+    ],
     externalBin: ['binaries/express-backend'],
     label: 'Express',
-    materializeArgs: ['tools/tauri/materialize-node-sidecar-runtime.ts', 'express'],
+    materializeArgs: [
+      'tools/tauri/materialize-node-sidecar-runtime.ts',
+      'express',
+    ],
     resources: {
       [`${GENERATED_CONFIG_ROOT_PREFIX}/dist/tauri-shell-express-sidecar/resources/metadata`]:
         'metadata',
@@ -134,10 +156,20 @@ const BACKEND_DEFINITIONS: Record<GridBackend, GridBackendDefinition> = {
     smokeArgs: ['tools/tauri/smoke-node-sidecar-runtime.ts', 'express'],
   },
   nest: {
-    buildArgs: ['exec', 'nx', 'build', 'nest-backend', '--configuration', 'production'],
+    buildArgs: [
+      'exec',
+      'nx',
+      'build',
+      'nest-backend',
+      '--configuration',
+      'production',
+    ],
     externalBin: ['binaries/nest-backend'],
     label: 'Nest',
-    materializeArgs: ['tools/tauri/materialize-node-sidecar-runtime.ts', 'nest'],
+    materializeArgs: [
+      'tools/tauri/materialize-node-sidecar-runtime.ts',
+      'nest',
+    ],
     resources: {
       [`${GENERATED_CONFIG_ROOT_PREFIX}/dist/tauri-shell-nest-sidecar/resources/metadata`]:
         'metadata',
@@ -159,11 +191,15 @@ const BACKEND_DEFINITIONS: Record<GridBackend, GridBackendDefinition> = {
   },
 };
 
-export function getFrontendDefinition(frontend: GridFrontend): GridFrontendDefinition {
+export function getFrontendDefinition(
+  frontend: GridFrontend,
+): GridFrontendDefinition {
   return FRONTEND_DEFINITIONS[frontend];
 }
 
-export function getBackendDefinition(backend: GridBackend): GridBackendDefinition {
+export function getBackendDefinition(
+  backend: GridBackend,
+): GridBackendDefinition {
   return BACKEND_DEFINITIONS[backend];
 }
 
@@ -200,16 +236,25 @@ export function resolveGridSelectionFromEnv(
   });
 }
 
-export function getGridVariantKey({ backend, frontend }: GridSelection): string {
+export function getGridVariantKey({
+  backend,
+  frontend,
+}: GridSelection): string {
   return `${frontend}-${backend}`;
 }
 
-export function getGeneratedConfigProjectPath(selection: GridSelection): string {
+export function getGeneratedConfigProjectPath(
+  selection: GridSelection,
+): string {
   return `src-tauri/${GENERATED_GRID_CONFIG_DIR_NAME}/${getGridVariantKey(selection)}.conf.json`;
 }
 
 export function getGeneratedConfigPath(selection: GridSelection): string {
-  return join(TAURI_SRC_TAURI_ROOT, GENERATED_GRID_CONFIG_DIR_NAME, `${getGridVariantKey(selection)}.conf.json`);
+  return join(
+    TAURI_SRC_TAURI_ROOT,
+    GENERATED_GRID_CONFIG_DIR_NAME,
+    `${getGridVariantKey(selection)}.conf.json`,
+  );
 }
 
 export function getUpdaterManifestFileName(selection: GridSelection): string {
@@ -227,6 +272,7 @@ export function isCanonicalGridSelection(selection: GridSelection): boolean {
 export function buildGeneratedTauriConfig(input: {
   backend: GridBackend;
   frontend: GridFrontend;
+  updaterPubkey?: string;
   version: string;
 }): TauriConfig {
   const selection = {
@@ -239,6 +285,7 @@ export function buildGeneratedTauriConfig(input: {
   const manifestFileName = isCanonicalGridSelection(selection)
     ? getCanonicalUpdaterManifestFileName()
     : getUpdaterManifestFileName(selection);
+  const updaterPubkey = input.updaterPubkey?.trim();
 
   return {
     $schema: `${GENERATED_CONFIG_ROOT_PREFIX}/node_modules/@tauri-apps/cli/config.schema.json`,
@@ -284,6 +331,7 @@ export function buildGeneratedTauriConfig(input: {
     plugins: {
       updater: {
         endpoints: [`${REPOSITORY_RELEASE_DOWNLOAD_BASE}/${manifestFileName}`],
+        ...(updaterPubkey ? { pubkey: updaterPubkey } : {}),
         windows: {
           installMode: 'passive',
         },
@@ -295,13 +343,17 @@ export function buildGeneratedTauriConfig(input: {
 export async function writeGeneratedTauriConfig(input: {
   backend: GridBackend;
   frontend: GridFrontend;
+  updaterPubkey?: string;
   version: string;
 }): Promise<GeneratedGridConfigResult> {
   const selection = {
     backend: input.backend,
     frontend: input.frontend,
   };
-  const config = buildGeneratedTauriConfig(input);
+  const config = buildGeneratedTauriConfig({
+    ...input,
+    updaterPubkey: input.updaterPubkey ?? process.env.TAURI_UPDATER_PUBKEY,
+  });
   const configPath = getGeneratedConfigPath(selection);
   await ensureDir(GENERATED_GRID_CONFIG_DIR);
   await writeJson(configPath, config);
@@ -314,7 +366,9 @@ export async function writeGeneratedTauriConfig(input: {
 }
 
 export async function readWorkspaceVersion(): Promise<string> {
-  const packageJson = await readJson<{ version?: string }>(join(WORKSPACE_ROOT, 'package.json'));
+  const packageJson = await readJson<{ version?: string }>(
+    join(WORKSPACE_ROOT, 'package.json'),
+  );
   const version = packageJson.version?.trim();
   if (!version) {
     throw new Error('The root package.json is missing a version field.');
@@ -358,14 +412,18 @@ function parseGridValue<const TValue extends readonly string[]>(
 ): TValue[number] {
   const normalized = value?.trim().toLowerCase();
   if (!normalized) {
-    throw new Error(`${envName} is required. Expected one of: ${allowedValues.join(', ')}.`);
+    throw new Error(
+      `${envName} is required. Expected one of: ${allowedValues.join(', ')}.`,
+    );
   }
 
   if ((allowedValues as readonly string[]).includes(normalized)) {
     return normalized as TValue[number];
   }
 
-  throw new Error(`Unsupported ${envName} "${value}". Expected one of: ${allowedValues.join(', ')}.`);
+  throw new Error(
+    `Unsupported ${envName} "${value}". Expected one of: ${allowedValues.join(', ')}.`,
+  );
 }
 
 function normalizeBackendForIdentifier(backend: GridBackend): string {
@@ -373,5 +431,8 @@ function normalizeBackendForIdentifier(backend: GridBackend): string {
 }
 
 function normalizePathForTauriProject(path: string): string {
-  return relative(join(WORKSPACE_ROOT, 'apps', 'tauri-shell'), path).replaceAll('\\', '/');
+  return relative(join(WORKSPACE_ROOT, 'apps', 'tauri-shell'), path).replaceAll(
+    '\\',
+    '/',
+  );
 }
