@@ -48,6 +48,8 @@ jobs:
         env:
           EVENT_NAME: ${{ github.event_name }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          HAS_TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY != '' }}
+          HAS_TAURI_UPDATER_PUBKEY: ${{ secrets.TAURI_UPDATER_PUBKEY != '' }}
           INPUT_RELEASE_TAG: ${{ inputs.release_tag || '' }}
           REF_NAME: ${{ github.ref_name }}
           REF_TYPE: ${{ github.ref_type }}
@@ -73,36 +75,62 @@ jobs:
             exit 1
           fi
 
-          release_error="$(mktemp)"
-          release_exists=false
-          if release_is_draft="$(gh release view "$release_tag" --json isDraft --jq '.isDraft' 2>"$release_error")"; then
-            release_exists=true
-            release_target="$(gh release view "$release_tag" --json targetCommitish --jq '.targetCommitish')"
-
-            if [ "$release_is_draft" != "true" ]; then
-              echo "::notice::Release $release_tag is already published; skipping desktop release."
-              skip=true
-            elif [ "$release_target" != "$RELEASE_COMMITISH" ]; then
-              echo "::error::Draft release $release_tag targets $release_target, expected $RELEASE_COMMITISH. Finish or delete the stale draft before rerunning."
-              exit 1
+          missing_release_secrets=""
+          if [ "${HAS_TAURI_UPDATER_PUBKEY:-false}" != "true" ]; then
+            missing_release_secrets="TAURI_UPDATER_PUBKEY"
+          fi
+          if [ "${HAS_TAURI_SIGNING_PRIVATE_KEY:-false}" != "true" ]; then
+            if [ -n "$missing_release_secrets" ]; then
+              missing_release_secrets="$missing_release_secrets, TAURI_SIGNING_PRIVATE_KEY"
+            else
+              missing_release_secrets="TAURI_SIGNING_PRIVATE_KEY"
             fi
-          elif grep -qi "not found" "$release_error"; then
-            release_exists=false
-          else
-            cat "$release_error" >&2
-            exit 1
           fi
 
-          if [ "$EVENT_NAME" = "push" ] && [ "$REF_TYPE" = "branch" ] && [ "$release_exists" = "false" ]; then
-            tag_status=0
-            git ls-remote --exit-code --tags origin "refs/tags/$release_tag" >/dev/null 2>&1 || tag_status=$?
+          if [ -n "$missing_release_secrets" ]; then
+            signing_message="Missing desktop updater signing secret(s): $missing_release_secrets. Set TAURI_UPDATER_PUBKEY and TAURI_SIGNING_PRIVATE_KEY before publishing desktop updater artifacts. If the private key is password-protected, also set TAURI_SIGNING_PRIVATE_KEY_PASSWORD."
 
-            if [ "$tag_status" -eq 0 ]; then
-              echo "::notice::Tag $release_tag already exists without a matching draft release; skipping automatic desktop release."
+            if [ "$EVENT_NAME" = "push" ] && [ "$REF_TYPE" = "branch" ]; then
+              echo "::notice::$signing_message Skipping automatic desktop release for branch push."
               skip=true
-            elif [ "$tag_status" -ne 2 ]; then
-              echo "::error::Failed to check whether tag $release_tag exists."
+            else
+              echo "::error::$signing_message"
               exit 1
+            fi
+          fi
+
+          if [ "$skip" != "true" ]; then
+            release_error="$(mktemp)"
+            release_exists=false
+            if release_is_draft="$(gh release view "$release_tag" --json isDraft --jq '.isDraft' 2>"$release_error")"; then
+              release_exists=true
+              release_target="$(gh release view "$release_tag" --json targetCommitish --jq '.targetCommitish')"
+
+              if [ "$release_is_draft" != "true" ]; then
+                echo "::notice::Release $release_tag is already published; skipping desktop release."
+                skip=true
+              elif [ "$release_target" != "$RELEASE_COMMITISH" ]; then
+                echo "::error::Draft release $release_tag targets $release_target, expected $RELEASE_COMMITISH. Finish or delete the stale draft before rerunning."
+                exit 1
+              fi
+            elif grep -qi "not found" "$release_error"; then
+              release_exists=false
+            else
+              cat "$release_error" >&2
+              exit 1
+            fi
+
+            if [ "$EVENT_NAME" = "push" ] && [ "$REF_TYPE" = "branch" ] && [ "$release_exists" = "false" ]; then
+              tag_status=0
+              git ls-remote --exit-code --tags origin "refs/tags/$release_tag" >/dev/null 2>&1 || tag_status=$?
+
+              if [ "$tag_status" -eq 0 ]; then
+                echo "::notice::Tag $release_tag already exists without a matching draft release; skipping automatic desktop release."
+                skip=true
+              elif [ "$tag_status" -ne 2 ]; then
+                echo "::error::Failed to check whether tag $release_tag exists."
+                exit 1
+              fi
             fi
           fi
 
@@ -116,7 +144,7 @@ jobs:
     name: Package ${{ matrix.target.desktop_target }} ${{ matrix.frontend }}+${{ matrix.backend }}
     runs-on: ${{ matrix.target.runner }}
     needs: resolve-release-tag
-    if: needs.resolve-release-tag.outputs.skip != 'true'
+    if: needs.resolve-release-tag.outputs.skip != 'true' && needs.resolve-release-tag.outputs.release_tag != ''
     strategy:
       fail-fast: false
       matrix:
@@ -161,6 +189,28 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+
+      - name: Assert updater signing is configured
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          missing_release_secrets=""
+          if [ -z "${TAURI_UPDATER_PUBKEY:-}" ]; then
+            missing_release_secrets="TAURI_UPDATER_PUBKEY"
+          fi
+          if [ -z "${TAURI_SIGNING_PRIVATE_KEY:-}" ]; then
+            if [ -n "$missing_release_secrets" ]; then
+              missing_release_secrets="$missing_release_secrets, TAURI_SIGNING_PRIVATE_KEY"
+            else
+              missing_release_secrets="TAURI_SIGNING_PRIVATE_KEY"
+            fi
+          fi
+
+          if [ -n "$missing_release_secrets" ]; then
+            echo "::error::Missing desktop updater signing secret(s): $missing_release_secrets. TAURI_UPDATER_PUBKEY and TAURI_SIGNING_PRIVATE_KEY are required because generated grid configs enable updater artifacts. If the private key is password-protected, also set TAURI_SIGNING_PRIVATE_KEY_PASSWORD."
+            exit 1
+          fi
 
       - name: Guard release target is mutable
         shell: bash
@@ -243,14 +293,6 @@ jobs:
       - name: Install workspace dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Assert updater public key is configured
-        shell: bash
-        run: |
-          if [ -z "${TAURI_UPDATER_PUBKEY}" ]; then
-            echo "::error::TAURI_UPDATER_PUBKEY is required because generated grid configs enable updater artifacts."
-            exit 1
-          fi
-
       - name: Prepare desktop grid variant
         run: pnpm run desktop:grid:prepare:one
 
@@ -319,7 +361,7 @@ jobs:
     needs:
       - resolve-release-tag
       - package
-    if: needs.resolve-release-tag.result == 'success' && needs.package.result == 'success' && needs.resolve-release-tag.outputs.skip != 'true'
+    if: needs.resolve-release-tag.result == 'success' && needs.package.result == 'success' && needs.resolve-release-tag.outputs.skip != 'true' && needs.resolve-release-tag.outputs.release_tag != ''
     env:
       RELEASE_COMMITISH: ${{ needs.resolve-release-tag.outputs.release_commitish }}
       RELEASE_TAG: ${{ needs.resolve-release-tag.outputs.release_tag }}
