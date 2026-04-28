@@ -243,6 +243,14 @@ jobs:
       - name: Install workspace dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Assert updater public key is configured
+        shell: bash
+        run: |
+          if [ -z "${TAURI_UPDATER_PUBKEY}" ]; then
+            echo "::error::TAURI_UPDATER_PUBKEY is required because generated grid configs enable updater artifacts."
+            exit 1
+          fi
+
       - name: Prepare desktop grid variant
         run: pnpm run desktop:grid:prepare:one
 
