@@ -17,7 +17,6 @@ export type GridBackend = (typeof GRID_BACKENDS)[number];
 export const GRID_DESKTOP_TARGETS = [
   'windows-x64',
   'linux-x64',
-  'darwin-arm64',
 ] as const;
 export type GridDesktopTarget = (typeof GRID_DESKTOP_TARGETS)[number];
 
