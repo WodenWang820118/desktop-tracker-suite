@@ -48,7 +48,8 @@ export type GenerateUpdaterManifestsInput = {
   version?: string;
 };
 
-const RELEASE_DOWNLOAD_BASE = 'https://github.com/WodenWang820118/nx-electron/releases/download';
+const RELEASE_DOWNLOAD_BASE =
+  'https://github.com/WodenWang820118/desktop-tracker-suite/releases/download';
 
 const TARGET_PLATFORM_KEYS: Record<GridDesktopTarget, string> = {
   'linux-x64': 'linux-x86_64',
