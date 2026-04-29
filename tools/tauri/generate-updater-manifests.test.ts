@@ -23,18 +23,27 @@ import {
 import { WORKSPACE_ROOT } from './common.ts';
 
 test('parseReleaseArtifact extracts variant and desktop target from asset names', () => {
-  const darwinSignature = parseReleaseArtifact(
-    join(
-      'release',
-      'desktop-tracker-suite-react-spring-native-1.4.2-darwin-aarch64.app.tar.gz.sig',
+  assert.equal(
+    parseReleaseArtifact(
+      join(
+        'release',
+        'desktop-tracker-suite-react-spring-native-1.4.2-darwin-aarch64.app.tar.gz.sig',
+      ),
     ),
+    null,
   );
-
-  assert.ok(darwinSignature);
-  assert.equal(darwinSignature.selection.frontend, 'react');
-  assert.equal(darwinSignature.selection.backend, 'spring-native');
-  assert.equal(darwinSignature.desktopTarget, 'darwin-arm64');
-  assert.equal(darwinSignature.isSignature, true);
+  assert.equal(
+    parseReleaseArtifact(
+      join('release', 'desktop-tracker-suite-ng-nest-1.4.2-darwin-aarch64.app.tar.gz'),
+    ),
+    null,
+  );
+  assert.equal(
+    parseReleaseArtifact(
+      join('release', 'desktop-tracker-suite-ng-nest-1.4.2-darwin-x64.app.tar.gz'),
+    ),
+    null,
+  );
 
   const windowsAsset = parseReleaseArtifact(
     join('release', 'desktop-tracker-suite-ng-nest-1.4.2-windows-x64-setup.exe'),
@@ -73,6 +82,12 @@ test('selectUpdaterArtifactPair prefers the highest priority Windows signature p
 
 test('buildUpdaterManifestContents emits all variant manifests and canonical alias content', async () => {
   const releaseDir = await createCompleteReleaseArtifactTree();
+  // The unsupported darwin pair must be ignored by the react-express manifest below.
+  await writeUnsupportedDarwinArtifactPair({
+    backend: 'express',
+    frontend: 'react',
+    root: releaseDir,
+  });
   const manifests = await buildUpdaterManifestContents({
     now: new Date('2026-04-27T00:00:00.000Z'),
     releaseDir,
@@ -96,7 +111,6 @@ test('buildUpdaterManifestContents emits all variant manifests and canonical ali
   assert.equal(reactExpress.version, '1.4.2');
   assert.equal(reactExpress.pub_date, '2026-04-27T00:00:00.000Z');
   assert.deepEqual(Object.keys(reactExpress.platforms).sort(), [
-    'darwin-aarch64',
     'linux-x86_64',
     'windows-x86_64',
   ]);
@@ -112,6 +126,11 @@ test('buildUpdaterManifestContents emits all variant manifests and canonical ali
 
 test('generateUpdaterManifestFiles copies latest-ng-nest.json byte-for-byte to latest.json', async () => {
   const releaseDir = await createCompleteReleaseArtifactTree();
+  await writeUnsupportedDarwinArtifactPair({
+    backend: 'nest',
+    frontend: 'ng',
+    root: releaseDir,
+  });
   const outputRoot = join(WORKSPACE_ROOT, 'tmp');
   await mkdir(outputRoot, { recursive: true });
   const outputDir = join(await mkdtemp(join(outputRoot, 'tauri-updater-output-')), 'manifests');
@@ -148,6 +167,14 @@ test('generateUpdaterManifestFiles copies latest-ng-nest.json byte-for-byte to l
     join(outputDir, getCanonicalUpdaterManifestFileName()),
   );
   assert.deepEqual(canonicalAlias, canonicalVariant);
+
+  const canonicalManifest = JSON.parse(canonicalVariant.toString('utf8')) as {
+    platforms: Record<string, { signature: string; url: string }>;
+  };
+  assert.deepEqual(Object.keys(canonicalManifest.platforms).sort(), [
+    'linux-x86_64',
+    'windows-x86_64',
+  ]);
 });
 
 test('buildUpdaterManifestContents fails when a required platform artifact is missing', async () => {
@@ -162,6 +189,7 @@ test('buildUpdaterManifestContents fails when a required platform artifact is mi
   await assert.rejects(
     () =>
       buildUpdaterManifestContents({
+        now: new Date('2026-04-27T00:00:00.000Z'),
         releaseDir,
         releaseTag: 'v1.4.2',
         version: '1.4.2',
@@ -219,6 +247,22 @@ async function writeArtifactPair(input: {
   );
 }
 
+async function writeUnsupportedDarwinArtifactPair(input: {
+  backend: GridBackend;
+  frontend: GridFrontend;
+  root: string;
+}) {
+  const variantDir = join(input.root, `${input.frontend}-${input.backend}`);
+  await mkdir(variantDir, { recursive: true });
+  const assetName = `desktop-tracker-suite-${input.frontend}-${input.backend}-1.4.2-darwin-aarch64.app.tar.gz`;
+  await writeFile(join(variantDir, assetName), `${assetName}\n`, 'utf8');
+  await writeFile(
+    join(variantDir, `${assetName}.sig`),
+    `signature ${input.frontend}-${input.backend} unsupported-darwin`,
+    'utf8',
+  );
+}
+
 function buildSampleAssetName(input: {
   backend: GridBackend;
   desktopTarget: GridDesktopTarget;
@@ -233,7 +277,8 @@ function buildSampleAssetName(input: {
     return `${prefix}-linux-x64.AppImage.tar.gz`;
   }
 
-  return `${prefix}-darwin-aarch64.app.tar.gz`;
+  const exhaustive: never = input.desktopTarget;
+  throw new Error(`Unsupported sample desktop target: ${exhaustive}`);
 }
 
 function releaseArtifact(fileName: string, isSignature = false) {

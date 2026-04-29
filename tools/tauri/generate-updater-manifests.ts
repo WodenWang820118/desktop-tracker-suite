@@ -51,16 +51,11 @@ export type GenerateUpdaterManifestsInput = {
 const RELEASE_DOWNLOAD_BASE = 'https://github.com/WodenWang820118/nx-electron/releases/download';
 
 const TARGET_PLATFORM_KEYS: Record<GridDesktopTarget, string> = {
-  'darwin-arm64': 'darwin-aarch64',
   'linux-x64': 'linux-x86_64',
   'windows-x64': 'windows-x86_64',
 };
 
 const TARGET_NAME_PARTS: Record<GridDesktopTarget, { arch: string[]; platform: string[] }> = {
-  'darwin-arm64': {
-    arch: ['aarch64', 'arm64'],
-    platform: ['darwin', 'macos'],
-  },
   'linux-x64': {
     arch: ['x64', 'x86_64', 'amd64'],
     platform: ['linux'],
@@ -273,11 +268,6 @@ function signaturePriority(fileName: string, desktopTarget: GridDesktopTarget): 
   if (desktopTarget === 'linux-x64') {
     if (fileName.endsWith('.AppImage.tar.gz.sig')) return 100;
     if (fileName.endsWith('.AppImage.sig')) return 90;
-  }
-
-  if (desktopTarget === 'darwin-arm64') {
-    if (fileName.endsWith('.app.tar.gz.sig')) return 100;
-    if (fileName.endsWith('.dmg.sig')) return 80;
   }
 
   return 0;
