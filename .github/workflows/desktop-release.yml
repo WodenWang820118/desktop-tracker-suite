@@ -331,12 +331,9 @@ jobs:
           releaseDraft: true
           prerelease: false
           generateReleaseNotes: true
-          uploadUpdaterJson: false
+          includeUpdaterJson: false
           updaterJsonPreferNsis: true
-          uploadWorkflowArtifacts: true
-          uploadUpdaterSignatures: true
-          workflowArtifactNamePattern: desktop-tracker-suite-${{ matrix.frontend }}-${{ matrix.backend }}-[version]-[platform]-[arch]-[bundle]
-          releaseAssetNamePattern: desktop-tracker-suite-${{ matrix.frontend }}-${{ matrix.backend }}-[version]-[platform]-[arch][setup][ext]
+          assetNamePattern: desktop-tracker-suite-${{ matrix.frontend }}-${{ matrix.backend }}-[version]-[platform]-[arch][setup][ext]
           # The release is published only after all package jobs finish and aggregate-updater-manifests uploads latest*.json files.
           args: --config ${{ env.TAURI_GRID_CONFIG }} --target ${{ matrix.target.rust_target }}
 

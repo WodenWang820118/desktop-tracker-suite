@@ -116,7 +116,7 @@ test('buildUpdaterManifestContents emits all variant manifests and canonical ali
   ]);
   assert.equal(
     reactExpress.platforms['windows-x86_64'].url,
-    'https://github.com/WodenWang820118/nx-electron/releases/download/v1.4.2/desktop-tracker-suite-react-express-1.4.2-windows-x64-setup.exe',
+    'https://github.com/WodenWang820118/desktop-tracker-suite/releases/download/v1.4.2/desktop-tracker-suite-react-express-1.4.2-windows-x64-setup.exe',
   );
   assert.equal(
     reactExpress.platforms['linux-x86_64'].signature,

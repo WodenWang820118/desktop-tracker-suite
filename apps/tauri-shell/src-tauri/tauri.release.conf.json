@@ -44,7 +44,7 @@
   "plugins": {
     "updater": {
       "endpoints": [
-        "https://github.com/WodenWang820118/nx-electron/releases/latest/download/latest.json"
+        "https://github.com/WodenWang820118/desktop-tracker-suite/releases/latest/download/latest.json"
       ],
       "windows": {
         "installMode": "passive"

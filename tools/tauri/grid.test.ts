@@ -18,7 +18,7 @@ import {
 import { TAURI_SRC_TAURI_ROOT, WORKSPACE_ROOT } from './common.ts';
 
 const RELEASE_DOWNLOAD_BASE =
-  'https://github.com/WodenWang820118/nx-electron/releases/latest/download';
+  'https://github.com/WodenWang820118/desktop-tracker-suite/releases/latest/download';
 
 test('grid selector parsing accepts supported frontend and backend ids', () => {
   assert.equal(parseGridFrontend('ng'), 'ng');
@@ -89,7 +89,7 @@ test('canonical ng-nest generated config preserves production identity and updat
     'icons/icon.ico',
   ]);
   assert.deepEqual(config.plugins.updater.endpoints, [
-    'https://github.com/WodenWang820118/nx-electron/releases/latest/download/latest.json',
+    'https://github.com/WodenWang820118/desktop-tracker-suite/releases/latest/download/latest.json',
   ]);
 });
 
@@ -237,7 +237,7 @@ test('ng-spring-native preserves the legacy PoC identity and adds variant update
     '../../../dist/tauri-shell-spring-native/resources/metadata': 'metadata',
   });
   assert.deepEqual(config.plugins.updater.endpoints, [
-    'https://github.com/WodenWang820118/nx-electron/releases/latest/download/latest-ng-spring-native.json',
+    'https://github.com/WodenWang820118/desktop-tracker-suite/releases/latest/download/latest-ng-spring-native.json',
   ]);
 });
 

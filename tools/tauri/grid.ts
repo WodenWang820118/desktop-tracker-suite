@@ -28,7 +28,7 @@ export const GENERATED_GRID_CONFIG_DIR = join(
 
 const PRODUCT_NAME = 'Desktop Tracker Suite';
 const REPOSITORY_RELEASE_DOWNLOAD_BASE =
-  'https://github.com/WodenWang820118/nx-electron/releases/latest/download';
+  'https://github.com/WodenWang820118/desktop-tracker-suite/releases/latest/download';
 const GENERATED_CONFIG_ROOT_PREFIX = '../../..';
 const DEFAULT_DEV_URL =
   'http://localhost:4200/?taskApiUrl=http%3A%2F%2Flocalhost%3A3000%2Ftasks';
