@@ -183,7 +183,6 @@ export interface InstallStagedProductionDependenciesOptions {
 const STAGED_PRODUCTION_DEPENDENCY_INSTALL_ARGS = [
   'install',
   '--prod',
-  '--ignore-workspace',
   '--no-lockfile',
 ] as const;
 
@@ -214,10 +213,22 @@ export async function installStagedProductionDependencies({
   platform = process.platform,
   run = runSharedCommand,
 }: InstallStagedProductionDependenciesOptions): Promise<void> {
+  const workspaceConfigPath = join(cwd, 'pnpm-workspace.yaml');
+  if (!existsSync(workspaceConfigPath)) {
+    throw new Error(
+      `Staged pnpm workspace config is missing at ${workspaceConfigPath}. ` +
+        'Write pnpm-workspace.yaml before installing staged production dependencies.',
+    );
+  }
+
+  // Keep --ignore-workspace off: pnpm 11 must read the staged allowBuilds
+  // policy. Callers anchor the stage with packages: [] in pnpm-workspace.yaml.
   const installEnv = {
     ...process.env,
     ...env,
     CI: 'true',
+    // Defense in depth; the canonical staged pnpm policy lives in
+    // pnpm-workspace.yaml so build-script approvals are versioned together.
     npm_config_node_linker: 'hoisted',
     npm_config_confirm_modules_purge: 'false',
   };

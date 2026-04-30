@@ -25,7 +25,7 @@ import {
 } from './common.ts';
 import {
   buildPackagedNodeBackendPackageJson,
-  NODE_BACKEND_INSTALL_NPMRC,
+  NODE_BACKEND_INSTALL_WORKSPACE_CONFIG,
 } from './node-backend-packaging.ts';
 import {
   assertHostCanBuildDesktopTarget,
@@ -109,8 +109,8 @@ async function main() {
     }),
   );
   await writeTextFile(
-    join(BACKEND_RUNTIME_DIR, '.npmrc'),
-    NODE_BACKEND_INSTALL_NPMRC,
+    join(BACKEND_RUNTIME_DIR, 'pnpm-workspace.yaml'),
+    NODE_BACKEND_INSTALL_WORKSPACE_CONFIG,
   );
   await writeTextFile(join(BACKEND_RUNTIME_DIR, '.tauri-desktop-target'), `${target.profile}\n`);
   await writeTextFile(join(BACKEND_RUNTIME_DIR, '.tauri-database-name'), `${DATABASE_FILE_NAME}\n`);

@@ -14,11 +14,16 @@ export type NodeSidecarPkgConfig = {
   ignore?: string[];
 };
 
-export const NODE_BACKEND_INSTALL_NPMRC =
+export const NODE_BACKEND_INSTALL_WORKSPACE_CONFIG =
   [
-    'node-linker=hoisted',
-    'only-built-dependencies[]=@nestjs/core',
-    'only-built-dependencies[]=sqlite3',
+    'packages: []',
+    '',
+    'nodeLinker: hoisted',
+    '',
+    'allowBuilds:',
+    "  '@nestjs/core': true",
+    "  '@scarf/scarf': false",
+    '  sqlite3: true',
   ].join('\n') + '\n';
 
 export function buildPackagedNodeBackendPackageJson(input: {

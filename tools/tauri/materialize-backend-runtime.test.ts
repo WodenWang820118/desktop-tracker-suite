@@ -13,7 +13,7 @@ test('buildPackagedBackendPackageJson adds sqlite3 and preserves existing depend
         '@nestjs/common': '11.1.12',
       },
     },
-    packageManager: 'pnpm@10.28.2',
+    packageManager: 'pnpm@11.0.1',
     sqliteVersion: '5.1.7',
   });
 
@@ -22,14 +22,14 @@ test('buildPackagedBackendPackageJson adds sqlite3 and preserves existing depend
       '@nestjs/common': '11.1.12',
       sqlite3: '5.1.7',
     },
-    packageManager: 'pnpm@10.28.2',
+    packageManager: 'pnpm@11.0.1',
   });
 });
 
 test('buildPackagedBackendPackageJson handles missing dependencies object', () => {
   const packagedJson = buildPackagedBackendPackageJson({
     backendPackageJson: {},
-    packageManager: 'pnpm@10.28.2',
+    packageManager: 'pnpm@11.0.1',
     sqliteVersion: '5.1.7',
   });
 
@@ -37,14 +37,14 @@ test('buildPackagedBackendPackageJson handles missing dependencies object', () =
     dependencies: {
       sqlite3: '5.1.7',
     },
-    packageManager: 'pnpm@10.28.2',
+    packageManager: 'pnpm@11.0.1',
   });
 });
 
 test('buildPackagedBackendPackageJson trims sqlite3 versions', () => {
   const packagedJson = buildPackagedBackendPackageJson({
     backendPackageJson: {},
-    packageManager: 'pnpm@10.28.2',
+    packageManager: 'pnpm@11.0.1',
     sqliteVersion: '  5.1.7  ',
   });
 
@@ -56,7 +56,7 @@ test('buildPackagedBackendPackageJson rejects missing sqlite3 versions', () => {
     () =>
       buildPackagedBackendPackageJson({
         backendPackageJson: {},
-        packageManager: 'pnpm@10.28.2',
+        packageManager: 'pnpm@11.0.1',
         sqliteVersion: '   ',
       }),
     /sqlite3 is missing from the installed workspace dependencies\./u,
