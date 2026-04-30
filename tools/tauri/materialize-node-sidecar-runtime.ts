@@ -10,7 +10,6 @@ import {
   NEST_BACKEND_SIDECAR_NAME,
   NEST_DIST_DIR,
   NODE_SIDECAR_STAGE_ROOT,
-  PNPM_COMMAND,
   TAURI_BINARIES_DIR,
   TAURI_EXPRESS_SIDECAR_DIST_ROOT,
   TAURI_EXPRESS_SIDECAR_METADATA_DIR,
@@ -87,9 +86,10 @@ export type NodeSidecarCacheKeyInput = {
   profile: string;
   rustTarget: string;
   sidecarName: string;
+  workspaceConfig: string;
 };
 
-const NODE_SIDECAR_CACHE_SCHEMA_VERSION = 1;
+const NODE_SIDECAR_CACHE_SCHEMA_VERSION = 2;
 const NODE_SIDECAR_CACHE_MANIFEST_NAME = 'materialize-cache.json';
 
 const NODE_SIDECAR_RUNTIME_DEFINITIONS: Record<
@@ -150,6 +150,18 @@ export function buildNodeSidecarCacheManifest(input: {
   };
 }
 
+export function getWorkspaceBinaryPath(
+  binaryName: string,
+  platform: NodeJS.Platform = process.platform,
+): string {
+  return join(
+    WORKSPACE_ROOT,
+    'node_modules',
+    '.bin',
+    platform === 'win32' ? `${binaryName}.cmd` : binaryName,
+  );
+}
+
 async function main() {
   const runtimeMode = parseRuntimeMode(process.argv[2]);
   const runtimeDefinition = resolveNodeSidecarRuntimeDefinition(runtimeMode);
@@ -201,6 +213,7 @@ async function main() {
     profile: target.profile,
     rustTarget: target.rustTarget,
     sidecarName: runtimeDefinition.sidecarName,
+    workspaceConfig: NODE_BACKEND_INSTALL_WORKSPACE_CONFIG,
   });
 
   const cachedSidecar = await resolveCachedSidecar({
@@ -257,9 +270,14 @@ async function main() {
 
   await ensureCleanDir(sidecarBuildDir);
   logStep(`Packaging the ${runtimeDefinition.label} backend into a self-contained sidecar executable`);
+  const pkgCommand = getWorkspaceBinaryPath('pkg');
+  if (!(await fileExists(pkgCommand))) {
+    throw new Error(`Workspace pkg binary is missing at ${pkgCommand}. Run pnpm install first.`);
+  }
+
   await runCommand(
-    PNPM_COMMAND,
-    ['exec', 'pkg', '.', '--targets', 'host', '--fallback-to-source', '--output', outputBasePath],
+    pkgCommand,
+    ['.', '--targets', 'host', '--fallback-to-source', '--output', outputBasePath],
     {
       cwd: stageRoot,
       env: {

@@ -16,10 +16,13 @@ export type NodeSidecarPkgConfig = {
 
 export const NODE_BACKEND_INSTALL_WORKSPACE_CONFIG =
   [
+    'packages: []',
+    '',
     'nodeLinker: hoisted',
     '',
     'allowBuilds:',
     "  '@nestjs/core': true",
+    "  '@scarf/scarf': false",
     '  sqlite3: true',
   ].join('\n') + '\n';
 
