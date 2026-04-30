@@ -11,6 +11,7 @@ import {
 import {
   buildNodeSidecarPackageJson,
   buildNodeSidecarPkgConfig,
+  NODE_BACKEND_INSTALL_WORKSPACE_CONFIG,
 } from './node-backend-packaging.ts';
 
 test('buildDesktopRuntimeMetadata records the Nest sidecar manifest fields', () => {
@@ -187,7 +188,7 @@ test('buildNodeSidecarPackageJson adds pkg metadata and sqlite3 to the runtime p
       main: 'main.js',
       version: '0.0.1',
     },
-    packageManager: 'pnpm@10.28.2',
+    packageManager: 'pnpm@11.0.1',
     sidecarName: 'nest-backend',
     sqliteVersion: '5.1.7',
   });
@@ -195,7 +196,7 @@ test('buildNodeSidecarPackageJson adds pkg metadata and sqlite3 to the runtime p
   assert.equal(packagedJson.bin, 'main.js');
   assert.equal(packagedJson.name, 'nest-backend');
   assert.equal(packagedJson.private, true);
-  assert.equal(packagedJson.packageManager, 'pnpm@10.28.2');
+  assert.equal(packagedJson.packageManager, 'pnpm@11.0.1');
   assert.deepEqual(packagedJson.dependencies, {
     sqlite3: '5.1.7',
     typeorm: '0.3.28',
@@ -225,6 +226,17 @@ test('buildNodeSidecarPkgConfig includes json assets and native addons', () => {
   });
 });
 
+test('NODE_BACKEND_INSTALL_WORKSPACE_CONFIG uses pnpm 11 workspace settings', () => {
+  assert.match(NODE_BACKEND_INSTALL_WORKSPACE_CONFIG, /nodeLinker: hoisted/u);
+  assert.match(NODE_BACKEND_INSTALL_WORKSPACE_CONFIG, /allowBuilds:/u);
+  assert.match(NODE_BACKEND_INSTALL_WORKSPACE_CONFIG, /'@nestjs\/core': true/u);
+  assert.match(NODE_BACKEND_INSTALL_WORKSPACE_CONFIG, /sqlite3: true/u);
+  assert.doesNotMatch(
+    NODE_BACKEND_INSTALL_WORKSPACE_CONFIG,
+    /node-linker|only-built-dependencies|onlyBuiltDependencies|ignoredBuiltDependencies/u,
+  );
+});
+
 function buildCacheKeyInput(): NodeSidecarCacheKeyInput {
   return {
     backendDistHash: 'backend-dist-hash',
@@ -235,7 +247,7 @@ function buildCacheKeyInput(): NodeSidecarCacheKeyInput {
       npm_config_confirm_modules_purge: 'false',
       npm_config_node_linker: 'hoisted',
     },
-    packageManager: 'pnpm@10.28.2',
+    packageManager: 'pnpm@11.0.1',
     packagedPackageJson: {
       bin: 'main.js',
       dependencies: {

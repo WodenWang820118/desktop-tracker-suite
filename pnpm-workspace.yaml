@@ -2,16 +2,16 @@ packages:
   - apps/*
   - libs/*
 
-ignoredBuiltDependencies:
-  - '@parcel/watcher'
-  - '@scarf/scarf'
-  - lmdb
-  - msgpackr-extract
-  - unrs-resolver
+nodeLinker: hoisted
 
-onlyBuiltDependencies:
-  - '@nestjs/core'
-  - '@swc/core'
-  - esbuild
-  - nx
-  - sqlite3
+allowBuilds:
+  '@nestjs/core': true
+  '@parcel/watcher': false
+  '@scarf/scarf': false
+  '@swc/core': true
+  esbuild: true
+  lmdb: false
+  msgpackr-extract: false
+  nx: true
+  sqlite3: true
+  unrs-resolver: false

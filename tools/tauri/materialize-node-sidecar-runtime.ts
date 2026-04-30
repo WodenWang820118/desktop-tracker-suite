@@ -33,7 +33,7 @@ import {
 } from './common.ts';
 import {
   buildNodeSidecarPackageJson,
-  NODE_BACKEND_INSTALL_NPMRC,
+  NODE_BACKEND_INSTALL_WORKSPACE_CONFIG,
 } from './node-backend-packaging.ts';
 import {
   assertHostCanBuildDesktopTarget,
@@ -228,7 +228,10 @@ async function main() {
     join(stageRoot, 'package.json'),
     packagedPackageJson,
   );
-  await writeTextFile(join(stageRoot, '.npmrc'), NODE_BACKEND_INSTALL_NPMRC);
+  await writeTextFile(
+    join(stageRoot, 'pnpm-workspace.yaml'),
+    NODE_BACKEND_INSTALL_WORKSPACE_CONFIG,
+  );
 
   logStep(
     `Installing production dependencies for the packaged ${runtimeDefinition.label} sidecar (${target.profile})`,

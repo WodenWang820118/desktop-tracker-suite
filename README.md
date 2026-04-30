@@ -33,7 +33,7 @@ The workspace also keeps alternative browser and backend implementations for com
 ## Prerequisites
 
 - Node.js 24+
-- pnpm
+- pnpm 11.0.1 (the workspace is pinned via `packageManager`)
 - Rust toolchain for Tauri desktop builds
 - JDK 25+ and Maven if you work on the Spring backend
 
@@ -115,16 +115,19 @@ pnpm run test-back:cov
 
 ## Troubleshooting
 
-If native SQLite dependencies are blocked during install, run:
+If native dependencies are blocked during install, run:
 
 ```bash
 pnpm approve-builds
 ```
 
+Approved and blocked dependency build scripts are recorded in
+`pnpm-workspace.yaml` under `allowBuilds`.
+
 ## Project Configuration
 
 - Monorepo: Nx
-- Package manager: pnpm
+- Package manager: pnpm 11
 - Desktop shell: Tauri
 - Web build tools: Angular CLI, Vite, Rspack
 - Backend build tools: Nx Node tooling, Maven
