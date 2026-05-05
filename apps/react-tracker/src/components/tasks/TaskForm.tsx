@@ -5,7 +5,7 @@ import { Button } from 'primereact/button';
 import { Calendar } from 'primereact/calendar';
 import { Checkbox } from 'primereact/checkbox';
 import { taskService } from '../../services/task.service';
-import type { Task } from '../../interfaces/task.interface';
+import type { Task } from '@task-domain';
 
 export const TaskForm = () => {
   const navigate = useNavigate();
@@ -29,16 +29,12 @@ export const TaskForm = () => {
     const newTask: Task = {
       id: uuidv4(),
       text: taskText,
-      day: taskDate,
+      day: taskDate.toISOString(),
       reminder: taskReminder,
     };
 
     try {
-      const taskPayload = {
-        ...newTask,
-        day: newTask.day instanceof Date ? newTask.day.toISOString() : newTask.day,
-      };
-      await taskService.addTask(taskPayload as Task);
+      await taskService.addTask(newTask);
       navigate('/');
     } catch (error) {
       console.error('Failed to add task:', error);

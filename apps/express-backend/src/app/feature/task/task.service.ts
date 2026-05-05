@@ -1,5 +1,5 @@
 import { Repository, Like } from 'typeorm';
-import { Task } from './task.entity';
+import { TaskEntity as Task } from '@task-domain';
 import {
   CreateTaskDto,
   UpdateTaskDto,

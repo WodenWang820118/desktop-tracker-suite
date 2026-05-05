@@ -3,8 +3,8 @@ import type {
   Task,
   CreateTaskDto,
   PaginatedResponse,
-  TaskQueryParams,
-} from '../interfaces/task.interface';
+  PaginationQuery,
+} from '@task-domain';
 import { environment } from '../config/environment';
 
 const http = axios.create({
@@ -30,7 +30,7 @@ http.interceptors.request.use(
   (error) => {
     console.error('Request interceptor error:', error);
     return Promise.reject(error);
-  }
+  },
 );
 
 // Add response interceptor for debugging
@@ -55,11 +55,11 @@ http.interceptors.response.use(
       },
     });
     return Promise.reject(error);
-  }
+  },
 );
 
 export const taskService = {
-  async getTasks(params?: TaskQueryParams): Promise<PaginatedResponse<Task>> {
+  async getTasks(params?: PaginationQuery): Promise<PaginatedResponse<Task>> {
     try {
       const response = await http.get<PaginatedResponse<Task>>('', { params });
       return response.data;

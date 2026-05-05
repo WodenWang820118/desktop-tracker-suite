@@ -1,5 +1,5 @@
 import { Component, computed, input, output, inject } from '@angular/core';
-import { Task } from '../../../interfaces/task.interface';
+import { Task } from '@task-domain';
 import { DatePipe, NgClass } from '@angular/common';
 import { TaskService } from '../../../shared/services/task.service';
 import { take } from 'rxjs';
@@ -19,7 +19,7 @@ import { ConfirmService } from '../../../shared/services/confirm.service';
         'hover:shadow-xl': true,
         'transition-all': true,
         'duration-300': true,
-        'cursor-pointer': true
+        'cursor-pointer': true,
       }"
       [pTooltip]="'Tip: Double-click to toggle reminder'"
       tooltipPosition="top"
@@ -37,15 +37,16 @@ import { ConfirmService } from '../../../shared/services/confirm.service';
             class="text-sm text-gray-600 dark:text-slate-300 flex items-center gap-2"
           >
             <i class="pi pi-calendar text-blue-600 dark:text-blue-400"></i>
-            {{ task().day | date : 'medium' }}
+            {{ task().day | date: 'medium' }}
           </p>
           @if (task().reminder) {
-          <div class="mt-2 flex items-center gap-2">
-            <i class="pi pi-bell text-amber-500"></i>
-            <span class="text-xs text-amber-600 dark:text-amber-400 font-medium"
-              >Reminder Set</span
-            >
-          </div>
+            <div class="mt-2 flex items-center gap-2">
+              <i class="pi pi-bell text-amber-500"></i>
+              <span
+                class="text-xs text-amber-600 dark:text-amber-400 font-medium"
+                >Reminder Set</span
+              >
+            </div>
           }
         </div>
         <p-button

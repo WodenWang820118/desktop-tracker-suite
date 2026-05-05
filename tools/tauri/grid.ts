@@ -216,6 +216,18 @@ export function parseGridBackend(value: string | undefined): GridBackend {
   return parseGridValue(value, GRID_BACKENDS, 'TAURI_GRID_BACKEND');
 }
 
+/**
+ * Parse a command-line runtime mode string.
+ * Defaults to 'nest' when no value is provided (backward-compatible).
+ */
+export function parseRuntimeMode(value: string | undefined): GridBackend {
+  if (!value) {
+    return 'nest';
+  }
+
+  return parseGridBackend(value);
+}
+
 export function parseGridSelection(input: {
   backend?: string;
   frontend?: string;
