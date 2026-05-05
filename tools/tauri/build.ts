@@ -4,9 +4,12 @@ import {
   assertHostCanBuildDesktopTarget,
   resolveDesktopTargetInfo,
 } from './runtime-target.ts';
+import {
+  parseRuntimeMode,
+  type GridBackend,
+} from './grid.ts';
 
 type BuildMode = 'build' | 'package';
-type DesktopRuntimeMode = 'express' | 'nest' | 'spring-native';
 
 async function main() {
   const mode = parseBuildMode(process.argv[2]);
@@ -52,25 +55,7 @@ function parseBuildMode(value: string | undefined): BuildMode {
   throw new Error(`Unsupported build mode "${value}". Expected "build" or "package".`);
 }
 
-function parseRuntimeMode(value: string | undefined): DesktopRuntimeMode {
-  if (!value || value === 'nest') {
-    return 'nest';
-  }
-
-  if (value === 'express') {
-    return 'express';
-  }
-
-  if (value === 'spring-native') {
-    return 'spring-native';
-  }
-
-  throw new Error(
-    `Unsupported runtime mode "${value}". Expected "nest", "express", or "spring-native".`,
-  );
-}
-
-function resolveConfigPath(_mode: BuildMode, runtimeMode: DesktopRuntimeMode) {
+function resolveConfigPath(_mode: BuildMode, runtimeMode: GridBackend) {
   if (runtimeMode === 'nest') {
     return 'src-tauri/tauri.nest-sidecar.conf.json';
   }

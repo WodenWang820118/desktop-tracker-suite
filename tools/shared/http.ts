@@ -37,3 +37,30 @@ export async function waitForUrl(
 
   throw new Error(`Timed out waiting for ${url}`);
 }
+
+export interface FetchJsonResponse<T> {
+  body: T;
+  status: number;
+}
+
+export async function fetchJson<T>(url: string, init?: RequestInit): Promise<T> {
+  const response = await fetchJsonResponse<T>(url, init);
+  return response.body;
+}
+
+export async function fetchJsonResponse<T>(
+  url: string,
+  init?: RequestInit,
+): Promise<FetchJsonResponse<T>> {
+  const response = await fetch(url, init);
+  if (!response.ok) {
+    throw new Error(
+      `Request to ${url} failed with ${response.status} ${response.statusText}.`,
+    );
+  }
+
+  return {
+    body: (await response.json()) as T,
+    status: response.status,
+  };
+}

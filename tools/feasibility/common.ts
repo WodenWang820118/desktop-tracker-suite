@@ -1,13 +1,13 @@
 import { type ChildProcess, type SpawnOptions } from 'node:child_process';
 import { readdir, stat } from 'node:fs/promises';
-import { createServer } from 'node:net';
 import { join } from 'node:path';
 
 import {
   ensureDir,
   writeJson as writeSharedJson,
 } from '../shared/fs.ts';
-import { waitForUrl as waitForSharedUrl } from '../shared/http.ts';
+import { fetchJson as fetchSharedJson, waitForUrl as waitForSharedUrl } from '../shared/http.ts';
+import { reserveOpenPort as reserveSharedPort } from '../shared/net.ts';
 import {
   spawnLogged as spawnSharedLogged,
   terminateChildProcess as terminateSharedChildProcess,
@@ -52,27 +52,7 @@ export async function pathSize(path: string): Promise<number> {
 }
 
 export async function reserveOpenPort() {
-  return await new Promise<number>((resolvePromise, rejectPromise) => {
-    const server = createServer();
-
-    server.on('error', rejectPromise);
-    server.listen(0, '127.0.0.1', () => {
-      const address = server.address();
-      if (!address || typeof address === 'string') {
-        rejectPromise(new Error('Failed to reserve an open port.'));
-        return;
-      }
-
-      server.close((error) => {
-        if (error) {
-          rejectPromise(error);
-          return;
-        }
-
-        resolvePromise(address.port);
-      });
-    });
-  });
+  return await reserveSharedPort();
 }
 
 export async function waitForUrl(
@@ -109,10 +89,5 @@ export async function terminateChildProcess(
 }
 
 export async function fetchJson<T>(url: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(url, init);
-  if (!response.ok) {
-    throw new Error(`${init?.method ?? 'GET'} ${url} returned ${response.status}`);
-  }
-
-  return (await response.json()) as T;
+  return await fetchSharedJson<T>(url, init);
 }

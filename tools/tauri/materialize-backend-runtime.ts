@@ -1,3 +1,10 @@
+/**
+ * @deprecated Legacy Nest resource-mode packaging path.
+ * Prefer materialize-node-sidecar-runtime.ts for new work.
+ * The grid system (grid-build.ts) uses the sidecar path exclusively.
+ * This module is retained for backward compatibility only.
+ */
+
 import { rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';

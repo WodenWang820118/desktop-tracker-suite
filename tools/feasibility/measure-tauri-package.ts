@@ -6,9 +6,8 @@ import {
   assertHostCanBuildDesktopTarget,
   resolveDesktopTargetInfo,
 } from '../tauri/runtime-target.ts';
+import { parseRuntimeMode, type GridBackend } from '../tauri/grid.ts';
 import { writeMetricSnapshot, pathSize } from './common.ts';
-
-type RuntimeMode = 'express' | 'nest' | 'spring-native';
 
 type BundleArtifact = {
   relativePath: string;
@@ -77,24 +76,6 @@ async function main() {
         ? 'desktop-express-sidecar-package.json'
         : 'desktop-baseline-package.json',
     metrics,
-  );
-}
-
-function parseRuntimeMode(value: string | undefined): RuntimeMode {
-  if (!value || value === 'nest') {
-    return 'nest';
-  }
-
-  if (value === 'spring-native') {
-    return 'spring-native';
-  }
-
-  if (value === 'express') {
-    return 'express';
-  }
-
-  throw new Error(
-    `Unsupported runtime mode "${value}". Expected "nest", "express", or "spring-native".`,
   );
 }
 
