@@ -3,7 +3,7 @@ import { Button } from 'primereact/button';
 import { Tooltip } from 'primereact/tooltip';
 import { taskService } from '../../services/task.service';
 import { useConfirm } from '../../hooks/useConfirm';
-import type { Task } from '../../interfaces/task.interface';
+import type { Task } from '@task-domain';
 
 interface TaskItemProps {
   task: Task;
@@ -39,7 +39,7 @@ export const TaskItem = ({ task, onTaskChanged }: TaskItemProps) => {
     }
   };
 
-  const formatDate = (date: Date | null) => {
+  const formatDate = (date: string) => {
     if (!date) return '';
     return new Date(date).toLocaleString('en-US', {
       year: 'numeric',

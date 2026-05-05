@@ -4,7 +4,7 @@ import Card from 'primevue/card';
 import Button from 'primevue/button';
 import { taskService } from '../../services/task.service';
 import { useConfirmService } from '../../composables/useConfirm';
-import type { Task } from '../../interfaces/task.interface';
+import type { Task } from '@task-domain';
 
 const props = defineProps<{
   task: Task;
@@ -53,7 +53,7 @@ const toggleReminder = async () => {
   }
 };
 
-const formatDate = (date: Date | null) => {
+const formatDate = (date: string) => {
   if (!date) return '';
   return new Date(date).toLocaleString('en-US', {
     year: 'numeric',

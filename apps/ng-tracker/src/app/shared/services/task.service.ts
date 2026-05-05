@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { catchError, Observable } from 'rxjs';
-import { Task } from '../../interfaces/task.interface';
+import { Task, PaginatedResponse, PaginationQuery } from '@task-domain';
 import { environment } from '../../../environments/environment';
 import { formatDatabaseError } from '../utils/error-formatter';
 
@@ -22,20 +22,6 @@ function resolveTaskApiUrl(): string {
 
 const TASK_API_URL = resolveTaskApiUrl();
 
-export interface PaginatedResponse<T> {
-  data: T[];
-  total: number;
-  page: number;
-  limit: number;
-  totalPages: number;
-}
-
-export interface TaskQueryParams {
-  page?: number;
-  limit?: number;
-  search?: string;
-}
-
 const httpOptions = {
   headers: new HttpHeaders({
     'Content-Type': 'application/json',
@@ -48,9 +34,9 @@ const httpOptions = {
 export class TaskService {
   constructor(private readonly http: HttpClient) {}
 
-  getTasks(params?: TaskQueryParams): Observable<PaginatedResponse<Task>> {
+  getTasks(params?: PaginationQuery): Observable<PaginatedResponse<Task>> {
     let httpParams = new HttpParams();
-    
+
     if (params?.page) {
       httpParams = httpParams.set('page', params.page.toString());
     }
@@ -68,7 +54,7 @@ export class TaskService {
           console.error('Task API Error:', formatDatabaseError(error));
           console.error('Full error details:', error);
           throw error;
-        })
+        }),
       );
   }
 
@@ -78,7 +64,7 @@ export class TaskService {
         console.error('Delete Task Error:', formatDatabaseError(error));
         console.error('Full error details:', error);
         return [];
-      })
+      }),
     );
   }
 
@@ -90,7 +76,7 @@ export class TaskService {
           console.error('Update Task Error:', formatDatabaseError(error));
           console.error('Full error details:', error);
           return [];
-        })
+        }),
       );
   }
 
@@ -102,7 +88,7 @@ export class TaskService {
           console.error('Add Task Error:', formatDatabaseError(error));
           console.error('Full error details:', error);
           return [];
-        })
+        }),
       );
   }
 }

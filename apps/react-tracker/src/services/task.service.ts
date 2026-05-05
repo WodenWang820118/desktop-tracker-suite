@@ -1,9 +1,5 @@
 import axios from 'axios';
-import type {
-  Task,
-  PaginatedResponse,
-  TaskQueryParams,
-} from '../interfaces/task.interface';
+import type { Task, PaginatedResponse, PaginationQuery } from '@task-domain';
 import { environment } from '../config/environment';
 
 const viteTaskApiUrl = import.meta.env.VITE_TASK_API_URL as string | undefined;
@@ -23,7 +19,7 @@ const http = axios.create({
 });
 
 export const taskService = {
-  async getTasks(params?: TaskQueryParams): Promise<PaginatedResponse<Task>> {
+  async getTasks(params?: PaginationQuery): Promise<PaginatedResponse<Task>> {
     try {
       const response = await http.get<PaginatedResponse<Task>>('', { params });
       return response.data;

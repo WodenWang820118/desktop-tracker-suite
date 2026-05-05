@@ -1,6 +1,6 @@
 import { Component, signal } from '@angular/core';
 import { TaskService } from '../../../shared/services/task.service';
-import { Task } from '../../../interfaces/task.interface';
+import { Task } from '@task-domain';
 import { formatDatabaseError } from '../../../shared/utils/error-formatter';
 import { MessageService } from 'primeng/api';
 import { TaskItemComponent } from './task-item.component';
@@ -53,45 +53,52 @@ import { debounceTime, Subject } from 'rxjs';
       </div>
 
       @if (loading()) {
-      <div class="flex justify-center items-center py-12">
+        <div class="flex justify-center items-center py-12">
+          <div
+            class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-blue-400"
+          ></div>
+        </div>
+      }
+      @if (error()) {
         <div
-          class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-blue-400"
-        ></div>
-      </div>
-      } @if (error()) {
-      <div
-        class="bg-red-50 dark:bg-red-950 border border-red-300 dark:border-red-700 text-red-800 dark:text-red-300 px-4 py-3 rounded-lg mb-4"
-        role="alert"
-      >
-        <strong class="font-bold">Error:</strong>
-        <span class="block sm:inline ml-2">{{ error() }}</span>
-      </div>
-      } @if (!loading() && !error() && tasks().length === 0) {
-      <div class="text-center py-12">
-        <p class="text-gray-500 dark:text-slate-400 text-lg">
-          No tasks found. {{ searchQuery ? 'Try a different search.' : 'Add one to get started!' }}
-        </p>
-      </div>
+          class="bg-red-50 dark:bg-red-950 border border-red-300 dark:border-red-700 text-red-800 dark:text-red-300 px-4 py-3 rounded-lg mb-4"
+          role="alert"
+        >
+          <strong class="font-bold">Error:</strong>
+          <span class="block sm:inline ml-2">{{ error() }}</span>
+        </div>
+      }
+      @if (!loading() && !error() && tasks().length === 0) {
+        <div class="text-center py-12">
+          <p class="text-gray-500 dark:text-slate-400 text-lg">
+            No tasks found.
+            {{
+              searchQuery
+                ? 'Try a different search.'
+                : 'Add one to get started!'
+            }}
+          </p>
+        </div>
       }
       <div class="grid gap-4 md:grid-cols-1 lg:grid-cols-2">
         @for (task of tasks(); track task.id) {
-        <app-task-item
-          [task]="task"
-          (taskChanged)="refreshTasks()"
-        ></app-task-item>
+          <app-task-item
+            [task]="task"
+            (taskChanged)="refreshTasks()"
+          ></app-task-item>
         }
       </div>
 
       @if (!loading() && tasks().length > 0) {
-      <div class="mt-6">
-        <p-paginator
-          [first]="first()"
-          [rows]="rows()"
-          [totalRecords]="totalRecords()"
-          [rowsPerPageOptions]="[5, 10, 20, 50]"
-          (onPageChange)="onPageChange($event)"
-        ></p-paginator>
-      </div>
+        <div class="mt-6">
+          <p-paginator
+            [first]="first()"
+            [rows]="rows()"
+            [totalRecords]="totalRecords()"
+            [rowsPerPageOptions]="[5, 10, 20, 50]"
+            (onPageChange)="onPageChange($event)"
+          ></p-paginator>
+        </div>
       }
     </div>
   `,
@@ -101,20 +108,20 @@ export class TasksComponent {
   tasks = signal<Task[]>([]);
   loading = signal(false);
   error = signal<string | null>(null);
-  
+
   // Pagination state
   first = signal(0); // First record index
   rows = signal(10); // Records per page
   totalRecords = signal(0);
   currentPage = signal(1);
-  
+
   // Search state
   searchQuery = '';
   private readonly searchSubject = new Subject<string>();
 
   constructor(
     private taskService: TaskService,
-    private messageService: MessageService
+    private messageService: MessageService,
   ) {
     // Set up debounced search
     this.searchSubject.pipe(debounceTime(300)).subscribe((query) => {

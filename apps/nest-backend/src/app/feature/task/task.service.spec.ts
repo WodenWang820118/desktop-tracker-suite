@@ -16,11 +16,11 @@ const { MockTaskEntity } = vi.hoisted(() => {
   };
 });
 
-vi.mock('./entities/task.entity', () => ({
-  Task: MockTaskEntity,
+vi.mock('@task-domain', () => ({
+  TaskEntity: MockTaskEntity,
 }));
 
-import { Task } from './entities/task.entity';
+import { TaskEntity as Task } from '@task-domain';
 
 describe('TaskService', () => {
   let service: TaskService;
@@ -97,7 +97,7 @@ describe('TaskService', () => {
         order: {
           createdAt: 'DESC',
         },
-      })
+      }),
     );
     expect(result).toEqual({
       data: expectedTasks,
@@ -126,7 +126,7 @@ describe('TaskService', () => {
         order: {
           createdAt: 'DESC',
         },
-      })
+      }),
     );
     expect(result).toEqual({
       data: [],
@@ -137,7 +137,9 @@ describe('TaskService', () => {
     });
   });
   it('should surface repository errors during findAll', async () => {
-    mockTaskRepository.findAndCount.mockRejectedValue(new Error('query failed'));
+    mockTaskRepository.findAndCount.mockRejectedValue(
+      new Error('query failed'),
+    );
 
     await expect(service.findAll()).rejects.toThrow('query failed');
   });
@@ -160,7 +162,7 @@ describe('TaskService', () => {
         order: {
           createdAt: 'DESC',
         },
-      })
+      }),
     );
     expect(result).toEqual({
       data: expectedTasks,
@@ -245,7 +247,7 @@ describe('TaskService', () => {
     mockTaskRepository.update.mockRejectedValue(new Error('update failed'));
 
     await expect(service.update('1', updateTaskDto)).rejects.toThrow(
-      'update failed'
+      'update failed',
     );
   });
   it('should surface repository errors when reloading an updated task', async () => {
@@ -259,7 +261,7 @@ describe('TaskService', () => {
     mockTaskRepository.findOne.mockRejectedValue(new Error('reload failed'));
 
     await expect(service.update('1', updateTaskDto)).rejects.toThrow(
-      'reload failed'
+      'reload failed',
     );
   });
   it('should remove a task by id', async () => {
@@ -323,7 +325,7 @@ describe('TaskService', () => {
     mockTaskRepository.delete.mockRejectedValue(new Error('delete failed'));
 
     await expect(service.removeByName('missing')).rejects.toThrow(
-      'delete failed'
+      'delete failed',
     );
   });
 });
