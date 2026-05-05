@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { Task } from '../../../interfaces/task.interface';
+import { Task } from '@task-domain';
 import { FormBuilder, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { TaskService } from '../../../shared/services/task.service';
@@ -120,7 +120,7 @@ export class TaskFormComponent {
   constructor(
     private readonly fb: FormBuilder,
     private readonly router: Router,
-    private readonly taskService: TaskService
+    private readonly taskService: TaskService,
   ) {}
 
   cancelAddTask() {
@@ -136,7 +136,7 @@ export class TaskFormComponent {
     const newTask: Task = {
       id: uuidv4(),
       text: this.taskForm.value.text,
-      day: this.taskForm.value.date,
+      day: this.taskForm.value.date?.toISOString() ?? '',
       reminder: this.taskForm.value.reminder || false,
     };
 
@@ -145,7 +145,7 @@ export class TaskFormComponent {
       .pipe(
         tap(() => {
           this.router.navigate(['/']);
-        })
+        }),
       )
       .subscribe();
   }

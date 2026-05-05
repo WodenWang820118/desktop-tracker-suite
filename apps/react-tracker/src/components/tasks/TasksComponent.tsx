@@ -6,7 +6,7 @@ import { Button } from 'primereact/button';
 import { IconField } from 'primereact/iconfield';
 import { InputIcon } from 'primereact/inputicon';
 import { Paginator, PaginatorPageChangeEvent } from 'primereact/paginator';
-import type { Task } from '../../interfaces/task.interface';
+import type { Task } from '@task-domain';
 
 export const TasksComponent = () => {
   const [tasks, setTasks] = useState<Task[]>([]);

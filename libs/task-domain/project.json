@@ -1,0 +1,12 @@
+{
+  "name": "task-domain",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/task-domain/src",
+  "projectType": "library",
+  "tags": ["domain", "shared"],
+  "targets": {
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}

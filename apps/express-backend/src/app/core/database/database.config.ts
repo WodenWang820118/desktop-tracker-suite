@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { cwd } from 'node:process';
 import { DataSourceOptions } from 'typeorm';
-import { Task } from '../../feature/task/task.entity';
+import { TaskEntity as Task } from '@task-domain';
 
 const DATABASE_NAME = 'database.sqlite3';
 

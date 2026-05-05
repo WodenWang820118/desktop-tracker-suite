@@ -4,5 +4,49 @@
   "projectType": "application",
   "sourceRoot": "apps/vue-tracker/src",
   "// targets": "to see all targets run: nx show project vue-tracker --web",
-  "targets": {}
+  "targets": {
+    "build": {
+      "executor": "@nx/vite:build",
+      "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
+      "options": {
+        "outputPath": "dist/vue-tracker"
+      },
+      "configurations": {
+        "development": {
+          "mode": "development"
+        },
+        "production": {
+          "mode": "production"
+        }
+      }
+    },
+    "serve": {
+      "executor": "@nx/vite:dev-server",
+      "defaultConfiguration": "development",
+      "options": {
+        "buildTarget": "vue-tracker:build"
+      },
+      "configurations": {
+        "development": {
+          "buildTarget": "vue-tracker:build:development",
+          "hmr": true
+        },
+        "production": {
+          "buildTarget": "vue-tracker:build:production",
+          "hmr": false
+        }
+      }
+    },
+    "test": {
+      "executor": "@nx/vite:test",
+      "outputs": ["{options.reportsDirectory}"],
+      "options": {
+        "reportsDirectory": "../../coverage/vue-tracker"
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
 }

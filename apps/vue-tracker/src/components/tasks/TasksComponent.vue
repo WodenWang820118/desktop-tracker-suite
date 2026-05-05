@@ -8,7 +8,7 @@ import Button from 'primevue/button';
 import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
 import Paginator from 'primevue/paginator';
-import type { Task } from '../../interfaces/task.interface';
+import type { Task } from '@task-domain';
 import type { PageState } from 'primevue/paginator';
 
 const tasks = ref<Task[]>([]);

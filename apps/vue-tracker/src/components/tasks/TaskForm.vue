@@ -7,7 +7,7 @@ import InputText from 'primevue/inputtext';
 import DatePicker from 'primevue/datepicker';
 import Checkbox from 'primevue/checkbox';
 import { taskService } from '../../services/task.service';
-import type { CreateTaskDto } from '../../interfaces/task.interface';
+import type { CreateTaskDto } from '@task-domain';
 
 const router = useRouter();
 

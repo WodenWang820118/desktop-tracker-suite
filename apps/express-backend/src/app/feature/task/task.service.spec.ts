@@ -3,26 +3,28 @@ import 'reflect-metadata';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Like } from 'typeorm';
 
-const { MockTaskEntity, mockGetRepository, mockTaskRepository } = vi.hoisted(() => {
-  class TaskEntityMock {}
-  const repository = {
-    create: vi.fn(),
-    save: vi.fn(),
-    findAndCount: vi.fn(),
-    findOne: vi.fn(),
-    update: vi.fn(),
-    delete: vi.fn(),
-  };
+const { MockTaskEntity, mockGetRepository, mockTaskRepository } = vi.hoisted(
+  () => {
+    class TaskEntityMock {}
+    const repository = {
+      create: vi.fn(),
+      save: vi.fn(),
+      findAndCount: vi.fn(),
+      findOne: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn(),
+    };
 
-  return {
-    MockTaskEntity: TaskEntityMock,
-    mockGetRepository: vi.fn(() => repository),
-    mockTaskRepository: repository,
-  };
-});
+    return {
+      MockTaskEntity: TaskEntityMock,
+      mockGetRepository: vi.fn(() => repository),
+      mockTaskRepository: repository,
+    };
+  },
+);
 
-vi.mock('./task.entity', () => ({
-  Task: MockTaskEntity,
+vi.mock('@task-domain', () => ({
+  TaskEntity: MockTaskEntity,
 }));
 
 vi.mock('../../core/database/database', () => ({
@@ -31,7 +33,7 @@ vi.mock('../../core/database/database', () => ({
   },
 }));
 
-import { Task } from './task.entity';
+import { TaskEntity as Task } from '@task-domain';
 import { TaskService } from './task.service';
 
 describe('TaskService', () => {
@@ -152,7 +154,9 @@ describe('TaskService', () => {
   });
 
   it('surfaces repository errors during findAll', async () => {
-    mockTaskRepository.findAndCount.mockRejectedValue(new Error('query failed'));
+    mockTaskRepository.findAndCount.mockRejectedValue(
+      new Error('query failed'),
+    );
 
     await expect(service.findAll()).rejects.toThrow('query failed');
   });
