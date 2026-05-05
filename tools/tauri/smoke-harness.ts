@@ -52,7 +52,9 @@ export interface SmokeTestConfig {
  * POST /tasks/create → GET /tasks/:id → verify round-trip → verify database →
  * terminate process.
  */
-export async function runBackendSmokeTest(config: SmokeTestConfig): Promise<void> {
+export async function runBackendSmokeTest(
+  config: SmokeTestConfig,
+): Promise<void> {
   const smokeRoot = await mkdtemp(join(tmpdir(), config.smokeRootPrefix));
   const databaseRoot = join(smokeRoot, 'data');
   await ensureDir(databaseRoot, { root: smokeRoot });

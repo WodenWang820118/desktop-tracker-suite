@@ -1,13 +1,15 @@
 import { syncDesktopVersionFiles } from './sync-version.ts';
-import { logStep, PNPM_COMMAND, runCommand, TAURI_PROJECT_ROOT } from './common.ts';
+import {
+  logStep,
+  PNPM_COMMAND,
+  runCommand,
+  TAURI_PROJECT_ROOT,
+} from './common.ts';
 import {
   assertHostCanBuildDesktopTarget,
   resolveDesktopTargetInfo,
 } from './runtime-target.ts';
-import {
-  parseRuntimeMode,
-  type GridBackend,
-} from './grid.ts';
+import { parseRuntimeMode, type GridBackend } from './grid.ts';
 
 type BuildMode = 'build' | 'package';
 
@@ -37,7 +39,9 @@ async function main() {
     tauriArgs.push('--debug', '--no-bundle');
   }
 
-  logStep(`Running Tauri ${mode} for ${target.profile} (${target.rustTarget}, runtime=${runtimeMode})`);
+  logStep(
+    `Running Tauri ${mode} for ${target.profile} (${target.rustTarget}, runtime=${runtimeMode})`,
+  );
   await runCommand(PNPM_COMMAND, tauriArgs, {
     cwd: TAURI_PROJECT_ROOT,
   });
@@ -52,7 +56,9 @@ function parseBuildMode(value: string | undefined): BuildMode {
     return 'package';
   }
 
-  throw new Error(`Unsupported build mode "${value}". Expected "build" or "package".`);
+  throw new Error(
+    `Unsupported build mode "${value}". Expected "build" or "package".`,
+  );
 }
 
 function resolveConfigPath(_mode: BuildMode, runtimeMode: GridBackend) {
@@ -72,6 +78,8 @@ function resolveConfigPath(_mode: BuildMode, runtimeMode: GridBackend) {
 }
 
 main().catch((error) => {
-  console.error(error instanceof Error ? error.stack ?? error.message : String(error));
+  console.error(
+    error instanceof Error ? (error.stack ?? error.message) : String(error),
+  );
   process.exitCode = 1;
 });

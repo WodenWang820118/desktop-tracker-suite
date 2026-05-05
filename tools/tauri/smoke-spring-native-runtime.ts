@@ -27,7 +27,10 @@ async function main() {
   });
 }
 
-function buildLibrarySearchPath(libraryDir: string, existingValue: string | undefined) {
+function buildLibrarySearchPath(
+  libraryDir: string,
+  existingValue: string | undefined,
+) {
   const separator = process.platform === 'win32' ? ';' : ':';
   return [libraryDir, existingValue ?? ''].filter(Boolean).join(separator);
 }
@@ -50,12 +53,17 @@ function buildNativeLibraryEnv(libraryDir: string): Record<string, string> {
   }
 
   return {
-    LD_LIBRARY_PATH: buildLibrarySearchPath(libraryDir, process.env.LD_LIBRARY_PATH),
+    LD_LIBRARY_PATH: buildLibrarySearchPath(
+      libraryDir,
+      process.env.LD_LIBRARY_PATH,
+    ),
     PATH: process.env.PATH ?? '',
   };
 }
 
 main().catch((error) => {
-  console.error(error instanceof Error ? error.stack ?? error.message : String(error));
+  console.error(
+    error instanceof Error ? (error.stack ?? error.message) : String(error),
+  );
   process.exitCode = 1;
 });

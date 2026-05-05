@@ -14,7 +14,15 @@ type BundleArtifact = {
   sizeBytes: number;
 };
 
-const PRIMARY_BUNDLE_EXTENSIONS = new Set(['.exe', '.msi', '.appimage', '.deb', '.rpm', '.dmg', '.zip']);
+const PRIMARY_BUNDLE_EXTENSIONS = new Set([
+  '.exe',
+  '.msi',
+  '.appimage',
+  '.deb',
+  '.rpm',
+  '.dmg',
+  '.zip',
+]);
 
 async function main() {
   const runtimeMode = parseRuntimeMode(process.argv[2]);
@@ -60,7 +68,10 @@ async function main() {
     productName,
     bundleRoot,
     artifactCount: bundleArtifacts.length,
-    artifactTotalSizeBytes: bundleArtifacts.reduce((total, artifact) => total + artifact.sizeBytes, 0),
+    artifactTotalSizeBytes: bundleArtifacts.reduce(
+      (total, artifact) => total + artifact.sizeBytes,
+      0,
+    ),
     primaryArtifactCount: primaryArtifacts.length,
     primaryArtifactTotalSizeBytes: primaryArtifacts.reduce(
       (total, artifact) => total + artifact.sizeBytes,
@@ -79,7 +90,10 @@ async function main() {
   );
 }
 
-async function collectBundleArtifacts(root: string, productName: string): Promise<BundleArtifact[]> {
+async function collectBundleArtifacts(
+  root: string,
+  productName: string,
+): Promise<BundleArtifact[]> {
   const matches: BundleArtifact[] = [];
   await walkBundleArtifacts(root, root, productName.toLowerCase(), matches);
   return matches;
@@ -95,7 +109,12 @@ async function walkBundleArtifacts(
   for (const entry of entries) {
     const entryPath = join(currentPath, entry.name);
     if (entry.isDirectory()) {
-      await walkBundleArtifacts(root, entryPath, normalizedProductName, matches);
+      await walkBundleArtifacts(
+        root,
+        entryPath,
+        normalizedProductName,
+        matches,
+      );
       continue;
     }
 
@@ -115,6 +134,8 @@ async function walkBundleArtifacts(
 }
 
 main().catch((error) => {
-  console.error(error instanceof Error ? error.stack ?? error.message : String(error));
+  console.error(
+    error instanceof Error ? (error.stack ?? error.message) : String(error),
+  );
   process.exitCode = 1;
 });

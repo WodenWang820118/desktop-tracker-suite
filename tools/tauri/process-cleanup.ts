@@ -30,7 +30,9 @@ export async function stopStaleTauriBackendProcesses() {
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      logStep(`Ignoring stale backend shutdown failure for pid ${pid}: ${message}`);
+      logStep(
+        `Ignoring stale backend shutdown failure for pid ${pid}: ${message}`,
+      );
     }
   }
 
@@ -44,7 +46,13 @@ function runWindowsPowerShell(script: string) {
   const systemRoot = process.env.SystemRoot ?? 'C:\\Windows';
   const shellCandidates = [
     join(systemRoot, 'System32', 'WindowsPowerShell', 'v1.0', 'powershell.exe'),
-    join(systemRoot, 'Sysnative', 'WindowsPowerShell', 'v1.0', 'powershell.exe'),
+    join(
+      systemRoot,
+      'Sysnative',
+      'WindowsPowerShell',
+      'v1.0',
+      'powershell.exe',
+    ),
     'powershell.exe',
     'powershell',
     'pwsh.exe',
@@ -65,7 +73,9 @@ function runWindowsPowerShell(script: string) {
     return result;
   }
 
-  throw lastError ?? new Error('Could not find a PowerShell executable on PATH.');
+  throw (
+    lastError ?? new Error('Could not find a PowerShell executable on PATH.')
+  );
 }
 
 function inspectWindowsStaleBackendProcesses() {
@@ -76,10 +86,10 @@ function inspectWindowsStaleBackendProcesses() {
       "$nestSidecarSuffix = '\\apps\\tauri-shell\\src-tauri\\binaries\\nest-backend-'",
       "$expressSidecarSuffix = '\\apps\\tauri-shell\\src-tauri\\binaries\\express-backend-'",
       '$processes = Get-CimInstance Win32_Process | Where-Object { ' +
-        "($_.Name -ieq 'node.exe' -and $null -ne $_.CommandLine -and $_.CommandLine -like \"*$legacyNodeSuffix*\") -or " +
-        "($_.Name -like 'spring-backend-*.exe' -and $null -ne $_.CommandLine -and $_.CommandLine -like \"*$springSidecarSuffix*\") -or " +
-        "($_.Name -like 'nest-backend-*.exe' -and $null -ne $_.CommandLine -and $_.CommandLine -like \"*$nestSidecarSuffix*\") -or " +
-        "($_.Name -like 'express-backend-*.exe' -and $null -ne $_.CommandLine -and $_.CommandLine -like \"*$expressSidecarSuffix*\") }",
+        '($_.Name -ieq \'node.exe\' -and $null -ne $_.CommandLine -and $_.CommandLine -like "*$legacyNodeSuffix*") -or ' +
+        '($_.Name -like \'spring-backend-*.exe\' -and $null -ne $_.CommandLine -and $_.CommandLine -like "*$springSidecarSuffix*") -or ' +
+        '($_.Name -like \'nest-backend-*.exe\' -and $null -ne $_.CommandLine -and $_.CommandLine -like "*$nestSidecarSuffix*") -or ' +
+        '($_.Name -like \'express-backend-*.exe\' -and $null -ne $_.CommandLine -and $_.CommandLine -like "*$expressSidecarSuffix*") }',
       '$processes | ForEach-Object { "$($_.ProcessId)`t$($_.CommandLine)" }',
     ].join('; '),
   );
@@ -143,12 +153,18 @@ function inspectPosixStaleBackendProcesses() {
     .filter(
       (entry): entry is { pid: string; commandLine: string } =>
         entry !== null &&
-        (
-          entry.commandLine.includes('/dist/tauri-shell/resources/backend-runtime/main.js') ||
-          entry.commandLine.includes('/apps/tauri-shell/src-tauri/binaries/spring-backend-') ||
-          entry.commandLine.includes('/apps/tauri-shell/src-tauri/binaries/nest-backend-') ||
-          entry.commandLine.includes('/apps/tauri-shell/src-tauri/binaries/express-backend-')
-        ),
+        (entry.commandLine.includes(
+          '/dist/tauri-shell/resources/backend-runtime/main.js',
+        ) ||
+          entry.commandLine.includes(
+            '/apps/tauri-shell/src-tauri/binaries/spring-backend-',
+          ) ||
+          entry.commandLine.includes(
+            '/apps/tauri-shell/src-tauri/binaries/nest-backend-',
+          ) ||
+          entry.commandLine.includes(
+            '/apps/tauri-shell/src-tauri/binaries/express-backend-',
+          )),
     );
 }
 

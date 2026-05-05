@@ -16,7 +16,10 @@ export const NODE_RUNTIME_DIR = join(TAURI_RESOURCE_ROOT, 'nodejs');
 export const TAURI_METADATA_DIR = join(TAURI_RESOURCE_ROOT, 'metadata');
 
 // ---- Nest sidecar dist paths ----
-export const TAURI_NEST_SIDECAR_DIST_ROOT = join(DIST_ROOT, 'tauri-shell-nest-sidecar');
+export const TAURI_NEST_SIDECAR_DIST_ROOT = join(
+  DIST_ROOT,
+  'tauri-shell-nest-sidecar',
+);
 export const TAURI_NEST_SIDECAR_RESOURCE_ROOT = join(
   TAURI_NEST_SIDECAR_DIST_ROOT,
   'resources',
@@ -42,10 +45,22 @@ export const TAURI_EXPRESS_SIDECAR_METADATA_DIR = join(
 
 // ---- Spring Native dist paths ----
 export const SPRING_NATIVE_DIST_DIR = join(DIST_ROOT, 'spring-backend-native');
-export const TAURI_SPRING_DIST_ROOT = join(DIST_ROOT, 'tauri-shell-spring-native');
-export const TAURI_SPRING_RESOURCE_ROOT = join(TAURI_SPRING_DIST_ROOT, 'resources');
-export const SPRING_NATIVE_RUNTIME_DIR = join(TAURI_SPRING_RESOURCE_ROOT, 'spring-native');
-export const TAURI_SPRING_METADATA_DIR = join(TAURI_SPRING_RESOURCE_ROOT, 'metadata');
+export const TAURI_SPRING_DIST_ROOT = join(
+  DIST_ROOT,
+  'tauri-shell-spring-native',
+);
+export const TAURI_SPRING_RESOURCE_ROOT = join(
+  TAURI_SPRING_DIST_ROOT,
+  'resources',
+);
+export const SPRING_NATIVE_RUNTIME_DIR = join(
+  TAURI_SPRING_RESOURCE_ROOT,
+  'spring-native',
+);
+export const TAURI_SPRING_METADATA_DIR = join(
+  TAURI_SPRING_RESOURCE_ROOT,
+  'metadata',
+);
 
 // ---- Cache & stage paths ----
 export const NODE_CACHE_DIR = join(WORKSPACE_ROOT, '.cache', 'tauri-shell');
