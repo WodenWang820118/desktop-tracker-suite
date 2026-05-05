@@ -14,10 +14,7 @@ export type GridFrontend = (typeof GRID_FRONTENDS)[number];
 export const GRID_BACKENDS = ['nest', 'express', 'spring-native'] as const;
 export type GridBackend = (typeof GRID_BACKENDS)[number];
 
-export const GRID_DESKTOP_TARGETS = [
-  'windows-x64',
-  'linux-x64',
-] as const;
+export const GRID_DESKTOP_TARGETS = ['windows-x64', 'linux-x64'] as const;
 export type GridDesktopTarget = (typeof GRID_DESKTOP_TARGETS)[number];
 
 export const GENERATED_GRID_CONFIG_DIR_NAME = 'generated-grid-configs';

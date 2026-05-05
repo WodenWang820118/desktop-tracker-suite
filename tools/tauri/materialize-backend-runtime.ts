@@ -82,7 +82,9 @@ export function buildDesktopRuntimeMetadata(target: {
 async function main() {
   const target = resolveDesktopTargetInfo();
   assertHostCanBuildDesktopTarget(target);
-  const rootPackageJson = await readJson<PackageJson>(join(WORKSPACE_ROOT, 'package.json'));
+  const rootPackageJson = await readJson<PackageJson>(
+    join(WORKSPACE_ROOT, 'package.json'),
+  );
   const sqlitePackageJson = await readJson<{ version?: string }>(
     join(WORKSPACE_ROOT, 'node_modules', 'sqlite3', 'package.json'),
   );
@@ -119,14 +121,22 @@ async function main() {
     join(BACKEND_RUNTIME_DIR, 'pnpm-workspace.yaml'),
     NODE_BACKEND_INSTALL_WORKSPACE_CONFIG,
   );
-  await writeTextFile(join(BACKEND_RUNTIME_DIR, '.tauri-desktop-target'), `${target.profile}\n`);
-  await writeTextFile(join(BACKEND_RUNTIME_DIR, '.tauri-database-name'), `${DATABASE_FILE_NAME}\n`);
+  await writeTextFile(
+    join(BACKEND_RUNTIME_DIR, '.tauri-desktop-target'),
+    `${target.profile}\n`,
+  );
+  await writeTextFile(
+    join(BACKEND_RUNTIME_DIR, '.tauri-database-name'),
+    `${DATABASE_FILE_NAME}\n`,
+  );
   await writeJson(
     join(TAURI_METADATA_DIR, 'desktop-runtime.json'),
     buildDesktopRuntimeMetadata(target),
   );
 
-  logStep(`Installing production dependencies for the packaged Nest runtime (${target.profile})`);
+  logStep(
+    `Installing production dependencies for the packaged Nest runtime (${target.profile})`,
+  );
   await installStagedProductionDependencies({
     cwd: BACKEND_RUNTIME_DIR,
     label: 'packaged Nest runtime',
@@ -147,9 +157,14 @@ async function main() {
 
   logStep(`Fetching and verifying the pinned ${target.profile} Node runtime`);
   const cachedNodeExecutable = await ensureNodeBinaryDownloaded(target);
-  await copyFileEnsured(cachedNodeExecutable, getPackagedNodeExecutablePath(target));
+  await copyFileEnsured(
+    cachedNodeExecutable,
+    getPackagedNodeExecutablePath(target),
+  );
 
-  logStep(`Tauri backend runtime materialized for ${target.profile} at ${TAURI_DIST_ROOT}`);
+  logStep(
+    `Tauri backend runtime materialized for ${target.profile} at ${TAURI_DIST_ROOT}`,
+  );
 }
 
 const isEntryPoint =
@@ -157,7 +172,9 @@ const isEntryPoint =
 
 if (isEntryPoint) {
   main().catch((error) => {
-    console.error(error instanceof Error ? error.stack ?? error.message : String(error));
+    console.error(
+      error instanceof Error ? (error.stack ?? error.message) : String(error),
+    );
     process.exitCode = 1;
   });
 }

@@ -1,15 +1,6 @@
-import {
-  type ChildProcess,
-  type SpawnOptions,
-} from 'node:child_process';
+import { type ChildProcess, type SpawnOptions } from 'node:child_process';
 import { existsSync } from 'node:fs';
-import {
-  copyFile,
-  cp,
-  readFile,
-  rm,
-  writeFile,
-} from 'node:fs/promises';
+import { copyFile, cp, readFile, rm, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 
 import {
@@ -105,7 +96,9 @@ export async function waitForUrl(
     delayMs,
     onRetry(event) {
       if (typeof event.status === 'number') {
-        logStep(`Wait for ${url} attempt ${event.attempt} returned ${event.status}`);
+        logStep(
+          `Wait for ${url} attempt ${event.attempt} returned ${event.status}`,
+        );
         return;
       }
 
@@ -205,18 +198,26 @@ export async function installStagedProductionDependencies({
     logStep(
       `Using online pnpm production dependency install for ${label} on Windows CI.`,
     );
-    await run(PNPM_COMMAND, buildStagedProductionDependencyInstallArgs({ offline: false }), {
-      ...baseOptions,
-      stdio: 'inherit',
-    });
+    await run(
+      PNPM_COMMAND,
+      buildStagedProductionDependencyInstallArgs({ offline: false }),
+      {
+        ...baseOptions,
+        stdio: 'inherit',
+      },
+    );
     return;
   }
 
   try {
-    await run(PNPM_COMMAND, buildStagedProductionDependencyInstallArgs({ offline: true }), {
-      ...baseOptions,
-      stdio: 'pipe',
-    });
+    await run(
+      PNPM_COMMAND,
+      buildStagedProductionDependencyInstallArgs({ offline: true }),
+      {
+        ...baseOptions,
+        stdio: 'pipe',
+      },
+    );
     return;
   } catch (error) {
     if (!isCi || !isPnpmOfflineMetadataMiss(error)) {
@@ -228,10 +229,14 @@ export async function installStagedProductionDependencies({
     );
 
     try {
-      await run(PNPM_COMMAND, buildStagedProductionDependencyInstallArgs({ offline: false }), {
-        ...baseOptions,
-        stdio: 'inherit',
-      });
+      await run(
+        PNPM_COMMAND,
+        buildStagedProductionDependencyInstallArgs({ offline: false }),
+        {
+          ...baseOptions,
+          stdio: 'inherit',
+        },
+      );
     } catch (fallbackError) {
       throw new Error(
         `Online pnpm install fallback failed after an offline metadata miss for ${label}.`,
@@ -252,7 +257,10 @@ export function spawnLogged(
   });
 }
 
-export async function terminateChildProcess(child: ChildProcess | undefined, label: string) {
+export async function terminateChildProcess(
+  child: ChildProcess | undefined,
+  label: string,
+) {
   await terminateSharedChildProcess(child, label, {
     log(message) {
       logStep(
@@ -281,7 +289,10 @@ export function getTauriSidecarBinaryPath(
   sidecarName: string,
   target: DesktopTargetInfo = resolveDesktopTargetInfo(),
 ) {
-  return join(TAURI_BINARIES_DIR, getTauriSidecarBinaryFileName(sidecarName, target));
+  return join(
+    TAURI_BINARIES_DIR,
+    getTauriSidecarBinaryFileName(sidecarName, target),
+  );
 }
 
 export function getPreparedSpringSidecarPath(
@@ -289,4 +300,3 @@ export function getPreparedSpringSidecarPath(
 ) {
   return getTauriSidecarBinaryPath(SPRING_BACKEND_SIDECAR_NAME, target);
 }
-

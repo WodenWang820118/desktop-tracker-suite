@@ -1,6 +1,13 @@
 import { createHash } from 'node:crypto';
 import { existsSync } from 'node:fs';
-import { chmod, copyFile, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import {
+  chmod,
+  copyFile,
+  mkdtemp,
+  readFile,
+  rm,
+  writeFile,
+} from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { tmpdir } from 'node:os';
 
@@ -11,11 +18,7 @@ import {
 } from './runtime-target.ts';
 import { ensureDir } from '../shared/fs.ts';
 import { runCommand as runSharedCommand } from '../shared/process.ts';
-import {
-  NODE_CACHE_DIR,
-  NODE_VERSION,
-  NODE_RUNTIME_DIR,
-} from './constants.ts';
+import { NODE_CACHE_DIR, NODE_VERSION, NODE_RUNTIME_DIR } from './constants.ts';
 
 // ---- Local helpers (avoid circular dep on common.ts) ----
 
@@ -50,16 +53,24 @@ export async function ensureNodeBinaryDownloaded(
   const shasumsUrl = `https://nodejs.org/dist/v${NODE_VERSION}/SHASUMS256.txt`;
   const distributionPath = target.nodeDistributionPath;
   const distributionUrl = `https://nodejs.org/dist/v${NODE_VERSION}/${distributionPath}`;
-  const expectedSha = await resolveNodeDistributionChecksum(shasumsUrl, distributionPath);
+  const expectedSha = await resolveNodeDistributionChecksum(
+    shasumsUrl,
+    distributionPath,
+  );
   const cachedExecutablePath = getCachedNodeExecutablePath(target);
 
   if (target.nodeArchiveFileName && target.nodeArchiveEntryPath) {
     const archivePath = getCachedNodeArchivePath(target);
     if (!archivePath) {
-      throw new Error(`Target ${target.profile} is missing a node archive path.`);
+      throw new Error(
+        `Target ${target.profile} is missing a node archive path.`,
+      );
     }
 
-    if (!existsSync(archivePath) || (await sha256(archivePath)) !== expectedSha) {
+    if (
+      !existsSync(archivePath) ||
+      (await sha256(archivePath)) !== expectedSha
+    ) {
       await downloadNodeArtifact(distributionUrl, archivePath);
     }
 
@@ -70,13 +81,20 @@ export async function ensureNodeBinaryDownloaded(
       );
     }
 
-    await extractNodeBinaryFromArchive(archivePath, target.nodeArchiveEntryPath, cachedExecutablePath);
+    await extractNodeBinaryFromArchive(
+      archivePath,
+      target.nodeArchiveEntryPath,
+      cachedExecutablePath,
+    );
     await ensureExecutablePermissions(cachedExecutablePath);
     nodeLog(`Pinned Node runtime is ready at ${cachedExecutablePath}`);
     return cachedExecutablePath;
   }
 
-  if (!existsSync(cachedExecutablePath) || (await sha256(cachedExecutablePath)) !== expectedSha) {
+  if (
+    !existsSync(cachedExecutablePath) ||
+    (await sha256(cachedExecutablePath)) !== expectedSha
+  ) {
     await downloadNodeArtifact(distributionUrl, cachedExecutablePath);
   }
 
@@ -110,17 +128,24 @@ async function downloadNodeArtifact(url: string, destinationPath: string) {
   nodeLog(`Downloading pinned Node runtime ${NODE_VERSION} from ${url}`);
   const response = await fetch(url);
   if (!response.ok) {
-    throw new Error(`Failed to download ${url}: ${response.status} ${response.statusText}`);
+    throw new Error(
+      `Failed to download ${url}: ${response.status} ${response.statusText}`,
+    );
   }
 
   const arrayBuffer = await response.arrayBuffer();
   await writeFile(destinationPath, Buffer.from(arrayBuffer));
 }
 
-async function resolveNodeDistributionChecksum(shasumsUrl: string, distributionPath: string) {
+async function resolveNodeDistributionChecksum(
+  shasumsUrl: string,
+  distributionPath: string,
+) {
   const response = await fetch(shasumsUrl);
   if (!response.ok) {
-    throw new Error(`Failed to download ${shasumsUrl}: ${response.status} ${response.statusText}`);
+    throw new Error(
+      `Failed to download ${shasumsUrl}: ${response.status} ${response.statusText}`,
+    );
   }
 
   const text = await response.text();
@@ -131,7 +156,9 @@ async function resolveNodeDistributionChecksum(shasumsUrl: string, distributionP
     .find((entry) => entry.endsWith(normalizedPath));
 
   if (!line) {
-    throw new Error(`Could not find the checksum for ${normalizedPath} in ${shasumsUrl}`);
+    throw new Error(
+      `Could not find the checksum for ${normalizedPath} in ${shasumsUrl}`,
+    );
   }
 
   const [checksum] = line.split(/\s+/u);
@@ -145,8 +172,17 @@ async function extractNodeBinaryFromArchive(
 ) {
   const extractionRoot = await mkdtemp(join(tmpdir(), 'tauri-node-runtime-'));
   try {
-    await runCommand('tar', ['-xzf', archivePath, '-C', extractionRoot, archiveEntryPath]);
-    await copyFileEnsured(join(extractionRoot, archiveEntryPath), destinationPath);
+    await runCommand('tar', [
+      '-xzf',
+      archivePath,
+      '-C',
+      extractionRoot,
+      archiveEntryPath,
+    ]);
+    await copyFileEnsured(
+      join(extractionRoot, archiveEntryPath),
+      destinationPath,
+    );
   } finally {
     await rm(extractionRoot, { recursive: true, force: true });
   }

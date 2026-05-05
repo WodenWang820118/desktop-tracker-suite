@@ -28,7 +28,8 @@ export async function waitForUrl(
 
       onRetry?.({ attempt, status: response.status, url });
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
       onRetry?.({ attempt, errorMessage, url });
     }
 
@@ -43,7 +44,10 @@ export interface FetchJsonResponse<T> {
   status: number;
 }
 
-export async function fetchJson<T>(url: string, init?: RequestInit): Promise<T> {
+export async function fetchJson<T>(
+  url: string,
+  init?: RequestInit,
+): Promise<T> {
   const response = await fetchJsonResponse<T>(url, init);
   return response.body;
 }

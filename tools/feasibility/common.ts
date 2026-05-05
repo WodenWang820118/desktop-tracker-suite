@@ -2,11 +2,11 @@ import { type ChildProcess, type SpawnOptions } from 'node:child_process';
 import { readdir, stat } from 'node:fs/promises';
 import { join } from 'node:path';
 
+import { ensureDir, writeJson as writeSharedJson } from '../shared/fs.ts';
 import {
-  ensureDir,
-  writeJson as writeSharedJson,
-} from '../shared/fs.ts';
-import { fetchJson as fetchSharedJson, waitForUrl as waitForSharedUrl } from '../shared/http.ts';
+  fetchJson as fetchSharedJson,
+  waitForUrl as waitForSharedUrl,
+} from '../shared/http.ts';
 import { reserveOpenPort as reserveSharedPort } from '../shared/net.ts';
 import {
   spawnLogged as spawnSharedLogged,
@@ -88,6 +88,9 @@ export async function terminateChildProcess(
   });
 }
 
-export async function fetchJson<T>(url: string, init?: RequestInit): Promise<T> {
+export async function fetchJson<T>(
+  url: string,
+  init?: RequestInit,
+): Promise<T> {
   return await fetchSharedJson<T>(url, init);
 }
