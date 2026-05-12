@@ -25,7 +25,7 @@ Specialist skill for building polished, accessible, design-aware user interfaces
 2. **Keep Components Focused:** Separate presentation, orchestration, and data access.
 3. **Build Real States:** Include empty, loading, error, and success states where the feature needs them.
 4. **Design for Accessibility:** Keep semantics, keyboard behavior, copy, and responsive behavior intentional.
-5. **Verify the UI Story:** Use tests, manual inspection, and `qa-verification` when browser or desktop-visible evidence matters.
+5. **Verify the UI Story:** Use tests, manual inspection, and `qa-verification` or `proofshot` when browser evidence matters.
 
 ## Ask / Escalate
 

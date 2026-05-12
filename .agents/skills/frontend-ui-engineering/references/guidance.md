@@ -29,4 +29,4 @@ Choose the simplest state model that matches the problem:
 
 ## Verification
 
-If the change is browser-visible or desktop-visible and risk is meaningful, route through `qa-verification` for human-reviewable evidence.
+If the change is browser-visible and risk is meaningful, route through `qa-verification` and optionally `proofshot` for human-reviewable evidence.

@@ -238,9 +238,13 @@ test('buildDenyPayload produces valid JSON with all required fields', () => {
   assert.match(payload.permissionDecisionReason, /approve-pre-implementation/);
   // Must include the full set of supported reviewers
   assert.match(payload.permissionDecisionReason, /copilot-claude/);
-  assert.match(payload.permissionDecisionReason, /copilot-gpt-5-mini/);
   assert.match(payload.permissionDecisionReason, /gemini-2\.5-pro/);
   assert.match(payload.permissionDecisionReason, /codex-subagent/);
+  assert.doesNotMatch(
+    payload.permissionDecisionReason,
+    /gpt-5-mini/i,
+    'Retired reviewer id must not appear in the deny payload.',
+  );
 });
 
 // endregion

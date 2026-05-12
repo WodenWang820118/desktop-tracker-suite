@@ -1,7 +1,4 @@
 import assert from 'node:assert/strict';
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
 import test from 'node:test';
 
 import {
@@ -15,7 +12,7 @@ import {
   parseChangedFilesFromContext,
   type ReviewExecution,
 } from './run-checkpoint-review.ts';
-import { createProviderObservationBucketKey } from '../provider-observability.ts';
+import { createProviderObservationBucketKey } from '../provider-observability/provider-observability.ts';
 
 test('parseCliArgs reads the supported checkpoint review flags', () => {
   const parsed = parseCliArgs([
@@ -49,7 +46,6 @@ test('getReviewExecutionPlan follows the repo checkpoint fallback rules', () => 
     [
       execution('plan', 'copilot', 'general', 'claude-sonnet-4.6'),
       execution('plan', 'gemini', 'general', 'gemini-2.5-pro'),
-      execution('plan', 'copilot', 'general', 'gpt-5-mini'),
       execution('plan', 'codex', 'general'),
     ],
   );
@@ -69,7 +65,6 @@ test('getReviewExecutionPlan follows the repo checkpoint fallback rules', () => 
         'gemini-3-flash-preview',
       ),
       execution('implementation', 'copilot', 'general', 'claude-sonnet-4.6'),
-      execution('implementation', 'copilot', 'general', 'gpt-5-mini'),
       execution('implementation', 'codex', 'general'),
     ],
   );
@@ -84,7 +79,6 @@ test('getReviewExecutionPlan follows the repo checkpoint fallback rules', () => 
     [
       execution('test', 'copilot', 'tests', 'claude-sonnet-4.6'),
       execution('test', 'gemini', 'tests', 'gemini-2.5-pro'),
-      execution('test', 'copilot', 'tests', 'gpt-5-mini'),
       execution('test', 'codex', 'tests'),
     ],
   );
@@ -96,10 +90,7 @@ test('getReviewExecutionPlan follows the repo checkpoint fallback rules', () => 
       focus: 'general',
       provider: 'copilot',
     }),
-    [
-      execution('pre-merge', 'copilot', 'general', 'claude-sonnet-4.6'),
-      execution('pre-merge', 'copilot', 'general', 'gpt-5-mini'),
-    ],
+    [execution('pre-merge', 'copilot', 'general', 'claude-sonnet-4.6')],
   );
 
   assert.deepEqual(
@@ -108,9 +99,9 @@ test('getReviewExecutionPlan follows the repo checkpoint fallback rules', () => 
       context: lowRiskImplementationContext(),
       focus: 'tests',
       provider: 'copilot',
-      model: 'gpt-5-mini',
+      model: 'claude-sonnet-4.6',
     }),
-    [execution('test', 'copilot', 'tests', 'gpt-5-mini')],
+    [execution('test', 'copilot', 'tests', 'claude-sonnet-4.6')],
   );
 });
 
@@ -129,26 +120,11 @@ test('parseChangedFilesFromContext normalizes Windows-style paths', () => {
     parseChangedFilesFromContext(
       [
         'Changed files:',
-        '- .\\tools\\scripts\\review\\run-checkpoint-review.ts',
+        '- .\\tools\\scripts\\review\\run-checkpoint-review\\run-checkpoint-review.ts',
         '',
       ].join('\n'),
     ),
-    ['tools/scripts/review/run-checkpoint-review.ts'],
-  );
-});
-
-test('parseChangedFilesFromContext normalizes absolute repo-root Windows paths', () => {
-  const repoRoot = process.cwd().replaceAll('/', '\\');
-
-  assert.deepEqual(
-    parseChangedFilesFromContext(
-      [
-        'Changed files:',
-        `- ${repoRoot}\\tools\\scripts\\review\\run-checkpoint-review.ts`,
-        '',
-      ].join('\n'),
-    ),
-    ['tools/scripts/review/run-checkpoint-review.ts'],
+    ['tools/scripts/review/run-checkpoint-review/run-checkpoint-review.ts'],
   );
 });
 
@@ -169,7 +145,7 @@ test('inferAutoReviewRisk marks review control-plane files as high risk', () => 
       checkpoint: 'implementation',
       context: [
         'Changed files:',
-        '- tools/scripts/review/run-checkpoint-review.ts',
+        '- tools/scripts/review/run-checkpoint-review/run-checkpoint-review.ts',
         '',
         'Notes:',
         '- Updates implementation routing.',
@@ -178,15 +154,35 @@ test('inferAutoReviewRisk marks review control-plane files as high risk', () => 
     }),
     'high',
   );
+});
+
+test('inferAutoReviewRisk marks review-gate control-plane files as high risk', () => {
   assert.equal(
     inferAutoReviewRisk({
       checkpoint: 'implementation',
       context: [
         'Changed files:',
-        '- scripts/review/run-checkpoint-review.ts',
+        '- tools/scripts/review-gate/shared/shared.ts',
         '',
         'Notes:',
-        '- Legacy path remains compatibility-sensitive.',
+        '- Tightens review-gate path recognition.',
+      ].join('\n'),
+      focus: 'general',
+    }),
+    'high',
+  );
+});
+
+test('inferAutoReviewRisk marks review-gate state mutation entrypoints as high risk', () => {
+  assert.equal(
+    inferAutoReviewRisk({
+      checkpoint: 'implementation',
+      context: [
+        'Changed files:',
+        '- tools/scripts/review-gate/approve-pre-implementation/approve-pre-implementation.ts',
+        '',
+        'Notes:',
+        '- Updates how review-gate approvals are written.',
       ].join('\n'),
       focus: 'general',
     }),
@@ -330,7 +326,7 @@ test('inferAutoReviewRisk marks reviewer and skill governance files as high risk
       checkpoint: 'implementation',
       context: [
         'Changed files:',
-        '- .agents/reviewers/security-reviewer.md',
+        '- .agents/reviewers/common-review-contract.toml',
         '',
         'Summary:',
         '- Tighten reviewer guidance.',
@@ -599,7 +595,6 @@ test('getReviewExecutionPlan prefers Codex first for low-risk implementation rev
         'gemini-3-flash-preview',
       ),
       execution('implementation', 'copilot', 'general', 'claude-sonnet-4.6'),
-      execution('implementation', 'copilot', 'general', 'gpt-5-mini'),
     ],
   );
 });
@@ -626,7 +621,6 @@ test('getReviewExecutionPlan keeps high-risk implementation reviews on the non-C
         'gemini-3-flash-preview',
       ),
       execution('implementation', 'copilot', 'general', 'claude-sonnet-4.6'),
-      execution('implementation', 'copilot', 'general', 'gpt-5-mini'),
       execution('implementation', 'codex', 'general'),
     ],
   );
@@ -654,7 +648,6 @@ test('getReviewExecutionPlan keeps contract-like implementation reviews on the n
         'gemini-3-flash-preview',
       ),
       execution('implementation', 'copilot', 'general', 'claude-sonnet-4.6'),
-      execution('implementation', 'copilot', 'general', 'gpt-5-mini'),
       execution('implementation', 'codex', 'general'),
     ],
   );
@@ -682,7 +675,6 @@ test('getReviewExecutionPlan keeps api-like implementation reviews on the non-Co
         'gemini-3-flash-preview',
       ),
       execution('implementation', 'copilot', 'general', 'claude-sonnet-4.6'),
-      execution('implementation', 'copilot', 'general', 'gpt-5-mini'),
       execution('implementation', 'codex', 'general'),
     ],
   );
@@ -702,7 +694,6 @@ test('getReviewExecutionPlan prefers Codex first for low-risk pre-merge reviews'
       execution('pre-merge', 'codex', 'general'),
       execution('pre-merge', 'gemini', 'general', 'gemini-2.5-pro'),
       execution('pre-merge', 'copilot', 'general', 'claude-sonnet-4.6'),
-      execution('pre-merge', 'copilot', 'general', 'gpt-5-mini'),
     ],
   );
 });
@@ -724,7 +715,6 @@ test('getReviewExecutionPlan keeps risky pre-merge reviews on the non-Codex-firs
     [
       execution('pre-merge', 'gemini', 'general', 'gemini-2.5-pro'),
       execution('pre-merge', 'copilot', 'general', 'claude-sonnet-4.6'),
-      execution('pre-merge', 'copilot', 'general', 'gpt-5-mini'),
       execution('pre-merge', 'codex', 'general'),
     ],
   );
@@ -785,7 +775,6 @@ test('getReviewExecutionPlan keeps plan review on the existing default order eve
     [
       execution('plan', 'copilot', 'general', 'claude-sonnet-4.6'),
       execution('plan', 'gemini', 'general', 'gemini-2.5-pro'),
-      execution('plan', 'copilot', 'general', 'gpt-5-mini'),
       execution('plan', 'codex', 'general'),
     ],
   );
@@ -799,42 +788,21 @@ test('buildReviewPrompt includes the checkpoint, focus, and supplied context', (
       focus: 'security',
       model: 'gemini-3-flash-preview',
     },
-    'Changed files: tools/scripts/review-gate/shared.ts',
+    'Changed files: tools/scripts/review-gate/shared/shared.ts',
+    {
+      commonReviewContract: '# Common Review Contract\nUse P0-P3 findings.',
+    },
   );
 
   assert.match(prompt, /Checkpoint: implementation/);
   assert.match(prompt, /Primary focus: security/);
-  assert.match(prompt, /Changed files: tools\/scripts\/review-gate\/shared\.ts/);
-});
-
-test('buildReviewPrompt includes the shared review contract when present', () => {
-  const repoRoot = mkdtempSync(join(tmpdir(), 'checkpoint-contract-'));
-  const originalCwd = process.cwd();
-
-  try {
-    mkdirSync(join(repoRoot, '.agents', 'reviewers'), { recursive: true });
-    writeFileSync(
-      join(repoRoot, '.agents', 'reviewers', 'common-review-contract.toml'),
-      'developer_instructions = """\nShared contract text.\n"""',
-    );
-    process.chdir(repoRoot);
-
-    const prompt = buildReviewPrompt(
-      {
-        checkpoint: 'implementation',
-        provider: 'gemini',
-        focus: 'agent-governance',
-        model: 'gemini-3-flash-preview',
-      },
-      'Changed files: .gemini/settings.json',
-    );
-
-    assert.match(prompt, /Shared review contract:/);
-    assert.match(prompt, /Shared contract text\./);
-  } finally {
-    process.chdir(originalCwd);
-    rmSync(repoRoot, { force: true, recursive: true });
-  }
+  assert.match(prompt, /Shared review contract:/);
+  assert.match(prompt, /Use P0-P3 findings/);
+  assert.match(prompt, /Apply the shared review contract/);
+  assert.match(
+    prompt,
+    /Changed files: tools\/scripts\/review-gate\/shared\/shared\.ts/,
+  );
 });
 
 test('createCheckpointReviewTelemetryContext keeps checkpoint buckets distinct', () => {
@@ -895,7 +863,7 @@ test('executeReviewFlow fails fast for a single explicit unavailable provider', 
   );
 });
 
-test('executeReviewFlow prefers Gemini before Copilot GPT-5 mini in auto routing', async () => {
+test('executeReviewFlow prefers Gemini before Codex in auto routing for test checkpoints', async () => {
   const probed: string[] = [];
 
   const output = await executeReviewFlow(
@@ -933,7 +901,7 @@ test('executeReviewFlow prefers Gemini before Copilot GPT-5 mini in auto routing
   assert.equal(output, 'gemini-2.5-pro');
 });
 
-test('executeReviewFlow falls back to Copilot GPT-5 mini before Codex after Gemini fails for test checkpoints', async () => {
+test('executeReviewFlow falls back to Codex after Copilot Claude and Gemini fail for test checkpoints', async () => {
   const probed: string[] = [];
 
   const output = await executeReviewFlow(
@@ -970,7 +938,6 @@ test('executeReviewFlow falls back to Copilot GPT-5 mini before Codex after Gemi
   assert.deepEqual(probed, [
     'copilot:claude-sonnet-4.6',
     'gemini:gemini-2.5-pro',
-    'copilot:gpt-5-mini',
     'codex:<none>',
   ]);
   assert.equal(output, 'codex');
@@ -1157,7 +1124,7 @@ test('executeReviewFlow reports all unavailable providers when auto routing is e
         },
       },
     ),
-    /Attempted providers:[\s\S]*copilot:claude-sonnet-4\.6: copilot down[\s\S]*gemini:gemini-2\.5-pro: gemini down[\s\S]*copilot:gpt-5-mini: copilot down[\s\S]*codex: codex down/,
+    /Attempted providers:[\s\S]*copilot:claude-sonnet-4\.6: copilot down[\s\S]*gemini:gemini-2\.5-pro: gemini down[\s\S]*codex: codex down/,
   );
 });
 

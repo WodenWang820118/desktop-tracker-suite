@@ -42,15 +42,16 @@ test('provider observability state round-trips through the workspace cache', () 
     );
 
     const state = loadProviderObservabilityState(tempRoot);
-    const bucket = state.buckets[
-      createProviderObservationBucketKey({
-        callsite: 'checkpoint-review',
-        checkpoint: 'plan',
-        model: 'claude-sonnet-4.6',
-        operation: 'health-probe',
-        provider: 'copilot',
-      })
-    ];
+    const bucket =
+      state.buckets[
+        createProviderObservationBucketKey({
+          callsite: 'checkpoint-review',
+          checkpoint: 'plan',
+          model: 'claude-sonnet-4.6',
+          operation: 'health-probe',
+          provider: 'copilot',
+        })
+      ];
 
     assert.equal(bucket?.observations.length, 1);
     assert.equal(bucket?.observations[0]?.promptChars, 17);
@@ -82,15 +83,16 @@ test('provider observability retains only the most recent 100 observations per b
       );
     }
 
-    const bucket = loadProviderObservabilityState(tempRoot).buckets[
-      createProviderObservationBucketKey({
-        callsite: 'checkpoint-review',
-        checkpoint: 'implementation',
-        model: 'claude-sonnet-4.6',
-        operation: 'health-probe',
-        provider: 'copilot',
-      })
-    ];
+    const bucket =
+      loadProviderObservabilityState(tempRoot).buckets[
+        createProviderObservationBucketKey({
+          callsite: 'checkpoint-review',
+          checkpoint: 'implementation',
+          model: 'claude-sonnet-4.6',
+          operation: 'health-probe',
+          provider: 'copilot',
+        })
+      ];
 
     assert.equal(bucket?.observations.length, 100);
     assert.equal(bucket?.observations[0]?.durationMs, 5);
