@@ -29,6 +29,15 @@ export function main(): void {
   console.log('Gate: READY');
   console.log(`Reviewer: ${evaluation.approval.reviewer}`);
   console.log(`Focus: ${evaluation.approval.focus}`);
+  console.log(`Mode: ${evaluation.approval.mode ?? 'standard'}`);
+  console.log(
+    `Primary family: ${evaluation.approval.primaryFamily ?? 'unspecified'}`,
+  );
+  console.log(`Task size: ${evaluation.approval.taskSize ?? 'unspecified'}`);
+  console.log(`Max files: ${evaluation.approval.maxFiles ?? 'unbounded'}`);
+  if (evaluation.approval.overrideReason) {
+    console.log(`Override reason: ${evaluation.approval.overrideReason}`);
+  }
   console.log(`Approved at: ${evaluation.approval.approvedAt}`);
   console.log(`Expires at: ${evaluation.approval.expiresAt}`);
   if (repoContext.dirty) {

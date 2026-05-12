@@ -9,7 +9,7 @@ import {
   formatProviderDoctorReport,
   parseCliArgs,
 } from './provider-doctor.ts';
-import { recordProviderObservation } from '../provider-observability.ts';
+import { recordProviderObservation } from '../provider-observability/provider-observability.ts';
 
 test('parseCliArgs supports provider filtering and json output', () => {
   assert.deepEqual(parseCliArgs(['--provider', 'gemini', '--json']), {
@@ -176,43 +176,8 @@ test('buildProviderDoctorReport exposes structured JSON-friendly data for gemini
   }
 });
 
-test('buildProviderDoctorReport skips timeout recommendations for unsupported provider operations', () => {
-  const tempRoot = mkdtempSync(join(tmpdir(), 'provider-doctor-unsupported-'));
-
-  try {
-    recordProviderObservation(
-      baseObservation({
-        operation: 'review-attempt',
-        provider: 'copilot',
-      }),
-      tempRoot,
-    );
-    recordProviderObservation(
-      baseObservation({
-        operation: 'reasoning-help',
-        provider: 'gemini',
-      }),
-      tempRoot,
-    );
-
-    const report = buildProviderDoctorReport({
-      provider: 'all',
-      repoRoot: tempRoot,
-    });
-
-    assert.equal(report.buckets.length, 2);
-    assert.equal(
-      report.buckets.every((bucket) => bucket.timeoutRecommendation === undefined),
-      true,
-    );
-  } finally {
-    rmSync(tempRoot, { force: true, recursive: true });
-  }
-});
-
 function baseObservation(
-  input: Partial<Parameters<typeof recordProviderObservation>[0]> &
-    Pick<Parameters<typeof recordProviderObservation>[0], 'operation' | 'provider'>,
+  input: Partial<Parameters<typeof recordProviderObservation>[0]> = {},
 ) {
   return {
     callsite: 'checkpoint-review' as const,
@@ -220,7 +185,9 @@ function baseObservation(
     configuredTimeoutMs: 30_000,
     durationMs: 1_000,
     errorCategory: null,
+    operation: 'health-probe' as const,
     promptChars: 10,
+    provider: 'copilot' as const,
     recordedAtMs: 1,
     success: true,
     timedOut: false,

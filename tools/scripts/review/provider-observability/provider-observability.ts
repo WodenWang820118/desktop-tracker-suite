@@ -216,9 +216,7 @@ export function listProviderObservationBuckets(
 ): ProviderObservationBucket[] {
   const state = loadProviderObservabilityState(input.repoRoot);
   return Object.values(state.buckets)
-    .filter(
-      (bucket) => !input.provider || bucket.provider === input.provider,
-    )
+    .filter((bucket) => !input.provider || bucket.provider === input.provider)
     .sort(compareProviderObservationBuckets);
 }
 
@@ -251,11 +249,7 @@ export function buildTimeoutRecommendationSummary(input: {
   const p95DurationMs = percentile(successfulDurations, 0.95) ?? 0;
   const currentTimeoutMs = input.currentTimeoutMs;
   const recommendedTimeoutMs = roundUpToNearestFiveSeconds(
-    clamp(
-      p95DurationMs * 1.2,
-      currentTimeoutMs * 0.5,
-      currentTimeoutMs * 2,
-    ),
+    clamp(p95DurationMs * 1.2, currentTimeoutMs * 0.5, currentTimeoutMs * 2),
   );
 
   return {
@@ -487,7 +481,9 @@ function withProviderObservabilityLock<T>(
 
 function isStaleLock(lockPath: string): boolean {
   try {
-    return Date.now() - statSync(lockPath).mtimeMs > OBSERVABILITY_LOCK_STALE_MS;
+    return (
+      Date.now() - statSync(lockPath).mtimeMs > OBSERVABILITY_LOCK_STALE_MS
+    );
   } catch {
     return false;
   }
