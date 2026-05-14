@@ -142,6 +142,97 @@ First-load routing rules that must stay inline:
 Full lifecycle: `.agents/workflows/review-lifecycle.md`.
 Tool details: `.agents/workflows/tool-routing.md`.
 
+## Sub-agent Delegation
+
+Task size determines delegation. Classify with `.agents/workflows/task-sizing.md`
+first, then apply the three-tier model below. Do not delegate blindly — size,
+domain fit, and cross-cutting risk all matter. This governs delegation
+strategy and sequencing, not whether delegation occurs. The
+orchestrator-only rule below is not optional.
+
+**The Main Thread is orchestrator-only for large and huge tasks.**
+It plans, gates, and integrates. No dedicated domain implementer sub-agents
+are defined for this multi-stack repo. For `small` tasks the main agent
+handles implementation directly under the unknown-domain exception. For
+`large` or `huge` tasks, Tier 3 phase decomposition is required.
+
+### Tier 1: Main Agent Direct (tiny tasks)
+
+**Rule**: the main agent executes directly. Do NOT delegate.
+
+- `tiny` tasks: typo, formatting-only, mechanical one-line change.
+- Non-domain tasks of any size that require whole-workspace understanding:
+  workspace config (`nx.json`, `pnpm-workspace.yaml`), CI/CD, Docker/compose,
+  root-level docs, workflow files, bridge files.
+- Simple scoped reads (inspecting ≤2 files to answer a factual question).
+
+**Rationale**: round-trip overhead exceeds work; no context-isolation benefit;
+these tasks need the main agent's full workspace awareness.
+
+### Tier 2: Domain Sub-agent (small–medium, single-domain)
+
+No dedicated domain implementer sub-agents are currently defined for this
+multi-stack repo. All implementation work falls under the unknown-domain
+exception in the Context Hygiene Rule below — the main agent handles it
+directly for `small` tasks across Angular, React, Vue, NestJS, Express,
+Spring Boot, and Tauri stacks.
+
+#### Read-only Exploration & Investigation
+
+Use read-only sub-agents to protect the Main Thread context from code-heavy
+exploration.
+
+| Purpose                             | Sub-agent / role    | When to use                                                                                                                      |
+| ----------------------------------- | ------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| Initial broad codebase mapping      | `codebase-mapper`   | Before implementation when affected files, Nx project boundaries, or cross-project impact are unclear                            |
+| Focused mid-task code investigation | `code-investigator` | During planning, implementation, debugging, or review when detailed code reading, call-chain tracing, or impact analysis needed  |
+
+**`codebase-mapper`**: Use before implementation when the Main Thread needs a
+broad map of affected projects, files, symbols, dependency paths, and test
+gaps. It must not edit files.
+
+**`code-investigator`**: Use when the Main Thread needs focused code reading
+during the task. It must not edit files, approve gates, or implement changes.
+
+See `.agents/references/agent-roles.md` for the role → platform mapping for
+both `codebase-mapper` and `code-investigator`.
+
+#### Context Hygiene Rule
+
+The Main Thread must not perform deep read-heavy exploration itself when the
+question can be delegated to `codebase-mapper` or `code-investigator`.
+
+For non-trivial tasks, if the Main Thread needs to inspect more than roughly
+three implementation files just to understand the code path, it must delegate
+that investigation first and continue orchestration from the returned summary.
+
+**Special case — unknown domain**: all apps and libs in this multi-stack repo
+are handled directly by the main agent for `small` tasks. Do not force-fit
+into a domain sub-agent.
+
+### Tier 3: Main Agent Orchestrates (large+, cross-cutting)
+
+**Rule**: the main agent plans and coordinates; sub-agents execute isolated
+slices.
+
+- `large` or `huge` tasks: break into phases per
+  `.agents/workflows/phased-workflow.md`.
+- Cross-project changes (e.g., backend + frontend together): phase-decompose
+  and integrate the slices.
+- Any task touching 2+ technology stacks: each stack gets its own
+  implementation phase.
+
+The main agent owns the plan, phase gating, integration verification, and final
+handoff. Sub-agents own focused implementation within their slice.
+
+### Review Sub-agents (always via main agent)
+
+Review checkpoints delegate to `architecture-reviewer`, `test-reviewer`,
+`security-reviewer`, or `ux-reviewer` as specified by
+`.agents/workflows/review-lifecycle.md`. The main agent must never self-approve
+its own plan, code, or tests — always use a second reviewer for non-trivial
+work.
+
 ## Phase Safeguards
 
 Use `product-and-scope-review` when scope is unstable. Feature work usually
