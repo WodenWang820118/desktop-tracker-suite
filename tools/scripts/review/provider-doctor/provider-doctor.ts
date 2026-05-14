@@ -1,5 +1,4 @@
-import { pathToFileURL } from 'node:url';
-
+import { isMainModule } from '../../shared/entrypoint/entrypoint.ts';
 import {
   buildGeminiBackoffRecommendationSummary,
   buildGeminiIntervalRecommendationSummary,
@@ -12,12 +11,14 @@ import {
   type ProviderObservabilityOperation,
   type ProviderObservabilityProvider,
   type TimeoutRecommendationSummary,
-} from '../provider-observability.ts';
+} from '../provider-observability/provider-observability.ts';
 import {
   getCopilotPolicyTimeoutMs,
+  type CopilotPolicyOperation,
   getGeminiCurrentPolicy,
   getGeminiPolicyTimeoutMs,
-} from '../provider-policies.ts';
+  type GeminiPolicyOperation,
+} from '../provider-policies/provider-policies.ts';
 
 export type ProviderDoctorFilter = 'all' | ProviderObservabilityProvider;
 
@@ -112,7 +113,9 @@ export function buildProviderDoctorReport(input: {
   };
 }
 
-export function formatProviderDoctorReport(report: ProviderDoctorReport): string {
+export function formatProviderDoctorReport(
+  report: ProviderDoctorReport,
+): string {
   if (report.buckets.length === 0) {
     return [
       'Provider observability doctor',
@@ -224,7 +227,9 @@ function buildBucketReport(
   };
 
   if (bucket.provider === 'gemini' && bucket.operation === 'review-attempt') {
-    const geminiPolicy = getGeminiCurrentPolicy(bucket.model ?? 'gemini-2.5-pro');
+    const geminiPolicy = getGeminiCurrentPolicy(
+      bucket.model ?? 'gemini-2.5-pro',
+    );
     const sessions = buildGeminiReviewSessionSummaries(bucket.observations);
     report.geminiBackoffRecommendation =
       buildGeminiBackoffRecommendationSummary({
@@ -245,39 +250,50 @@ function buildBucketReport(
 function buildBucketTimeoutRecommendation(
   bucket: ProviderObservationBucket,
 ): TimeoutRecommendationSummary | undefined {
+  let currentTimeoutMs: number;
+
   if (bucket.provider === 'copilot') {
-    if (
-      bucket.operation !== 'health-probe' &&
-      bucket.operation !== 'reasoning-help' &&
-      bucket.operation !== 'review'
-    ) {
+    if (!isCopilotPolicyOperation(bucket.operation)) {
       return undefined;
     }
 
-    return buildTimeoutRecommendationSummary({
-      currentTimeoutMs: getCopilotPolicyTimeoutMs(bucket.operation),
-      observations: bucket.observations,
+    currentTimeoutMs = getCopilotPolicyTimeoutMs(bucket.operation);
+  } else {
+    if (!isGeminiPolicyOperation(bucket.operation)) {
+      return undefined;
+    }
+
+    currentTimeoutMs = getGeminiPolicyTimeoutMs({
+      model: bucket.model,
+      operation: bucket.operation,
     });
   }
 
-  if (bucket.provider !== 'gemini') {
-    return undefined;
-  }
-
-  if (
-    bucket.operation !== 'health-probe' &&
-    bucket.operation !== 'review-attempt'
-  ) {
-    return undefined;
-  }
-
   return buildTimeoutRecommendationSummary({
-    currentTimeoutMs: getGeminiPolicyTimeoutMs({
-      model: bucket.model,
-      operation: bucket.operation,
-    }),
+    currentTimeoutMs,
     observations: bucket.observations,
   });
+}
+
+function isCopilotPolicyOperation(
+  operation: ProviderObservabilityOperation,
+): operation is CopilotPolicyOperation {
+  return (
+    operation === 'health-version' ||
+    operation === 'health-probe' ||
+    operation === 'reasoning-help' ||
+    operation === 'review'
+  );
+}
+
+function isGeminiPolicyOperation(
+  operation: ProviderObservabilityOperation,
+): operation is GeminiPolicyOperation {
+  return (
+    operation === 'health-version' ||
+    operation === 'health-probe' ||
+    operation === 'review-attempt'
+  );
 }
 
 function describeBucket(bucket: ProviderDoctorBucketReport): string {
@@ -302,7 +318,9 @@ function formatMs(value: number | null | undefined): string {
   return `${value}ms`;
 }
 
-function formatDelayList(values: ReadonlyArray<number> | null | undefined): string {
+function formatDelayList(
+  values: ReadonlyArray<number> | null | undefined,
+): string {
   if (!values || values.length === 0) {
     return 'n/a';
   }
@@ -310,10 +328,7 @@ function formatDelayList(values: ReadonlyArray<number> | null | undefined): stri
   return values.map((value) => `${value}ms`).join(', ');
 }
 
-const isEntryPoint =
-  process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
-
-if (isEntryPoint) {
+if (isMainModule(import.meta.url)) {
   main().catch((error) => {
     console.error(error instanceof Error ? error.message : String(error));
     process.exit(1);

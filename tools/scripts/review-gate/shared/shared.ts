@@ -23,12 +23,90 @@ const RISKY_SHELL_SYNTAX_PATTERNS = [
 
 export const SUPPORTED_REVIEWERS = [
   'copilot-claude',
-  'copilot-gpt-5-mini',
   'gemini-2.5-pro',
   'codex-subagent',
 ] as const;
 
 export type SupportedReviewer = (typeof SUPPORTED_REVIEWERS)[number];
+
+export const PRIMARY_FAMILIES = ['copilot', 'gemini', 'codex'] as const;
+export type PrimaryFamily = (typeof PRIMARY_FAMILIES)[number];
+
+export const TASK_SIZES = ['tiny', 'small', 'medium', 'large', 'huge'] as const;
+export type TaskSize = (typeof TASK_SIZES)[number];
+
+export const REVIEW_GATE_MODES = ['standard', 'override'] as const;
+export type ReviewGateMode = (typeof REVIEW_GATE_MODES)[number];
+
+const REVIEWER_FAMILY: Record<SupportedReviewer, PrimaryFamily> = {
+  'copilot-claude': 'copilot',
+  'gemini-2.5-pro': 'gemini',
+  'codex-subagent': 'codex',
+};
+
+const DEFAULT_MAX_FILES_BY_SIZE: Record<TaskSize, number | null> = {
+  tiny: 1,
+  small: 2,
+  medium: 5,
+  large: 10,
+  huge: null,
+};
+
+export function getReviewerFamily(reviewer: SupportedReviewer): PrimaryFamily {
+  return REVIEWER_FAMILY[reviewer];
+}
+
+export function defaultMaxFilesForSize(size: TaskSize): number | null {
+  return DEFAULT_MAX_FILES_BY_SIZE[size];
+}
+
+export function validateFamily(value: string): PrimaryFamily {
+  if ((PRIMARY_FAMILIES as readonly string[]).includes(value)) {
+    return value as PrimaryFamily;
+  }
+  throw new Error(
+    `Unsupported primary family "${value}". Expected one of: ${PRIMARY_FAMILIES.join(', ')}.`,
+  );
+}
+
+export function validateTaskSize(value: string): TaskSize {
+  if ((TASK_SIZES as readonly string[]).includes(value)) {
+    return value as TaskSize;
+  }
+  throw new Error(
+    `Unsupported task size "${value}". Expected one of: ${TASK_SIZES.join(', ')}.`,
+  );
+}
+
+export function validateGateMode(value: string): ReviewGateMode {
+  if ((REVIEW_GATE_MODES as readonly string[]).includes(value)) {
+    return value as ReviewGateMode;
+  }
+  throw new Error(
+    `Unsupported gate mode "${value}". Expected one of: ${REVIEW_GATE_MODES.join(', ')}.`,
+  );
+}
+
+export function assertCrossFamilyReviewer(input: {
+  reviewer: SupportedReviewer;
+  primaryFamily: PrimaryFamily | null;
+  mode: ReviewGateMode;
+  overrideReason: string | null;
+}): void {
+  if (input.primaryFamily === null) {
+    return;
+  }
+  const reviewerFamily = getReviewerFamily(input.reviewer);
+  if (reviewerFamily !== input.primaryFamily) {
+    return;
+  }
+  if (input.mode === 'override' && input.overrideReason) {
+    return;
+  }
+  throw new Error(
+    `Reviewer "${input.reviewer}" (${reviewerFamily}) is in the same AI family as the primary agent (${input.primaryFamily}). Use a cross-family reviewer or rerun with --mode override --override-reason "<rationale>".`,
+  );
+}
 
 export interface RepoContext {
   root: string;
@@ -48,6 +126,11 @@ export interface ReviewApproval {
   branch: string | null;
   head: string | null;
   root: string;
+  primaryFamily: PrimaryFamily | null;
+  taskSize: TaskSize | null;
+  mode: ReviewGateMode;
+  maxFiles: number | null;
+  overrideReason: string | null;
 }
 
 export interface ReviewGateState {
@@ -60,6 +143,11 @@ export interface ParsedReviewGateArgs {
   focus: string;
   summary: string;
   force: boolean;
+  primaryFamily: string | null;
+  taskSize: string | null;
+  mode: string;
+  maxFiles: number | null;
+  overrideReason: string | null;
 }
 
 interface HookInput {
@@ -193,8 +281,17 @@ export function createApproval(input: {
   focus: string;
   summary: string;
   repoContext: RepoContext;
+  primaryFamily?: PrimaryFamily | null;
+  taskSize?: TaskSize | null;
+  mode?: ReviewGateMode;
+  maxFiles?: number | null;
+  overrideReason?: string | null;
 }): ReviewGateState {
   const approvedAt = new Date().toISOString();
+  const taskSize = input.taskSize ?? null;
+  const mode = input.mode ?? 'standard';
+  const resolvedMaxFiles =
+    input.maxFiles ?? (taskSize ? defaultMaxFilesForSize(taskSize) : null);
   return {
     version: 1,
     approval: {
@@ -207,6 +304,11 @@ export function createApproval(input: {
       branch: input.repoContext.branch,
       head: input.repoContext.head,
       root: input.repoContext.root,
+      primaryFamily: input.primaryFamily ?? null,
+      taskSize,
+      mode,
+      maxFiles: resolvedMaxFiles,
+      overrideReason: input.overrideReason ?? null,
     },
   };
 }
@@ -288,37 +390,57 @@ export function evaluateApproval(
   return { valid: true, approval };
 }
 
+function parseMaxFilesValue(raw: string | undefined): number {
+  const value = raw ? Number.parseInt(raw, 10) : Number.NaN;
+  if (!Number.isFinite(value) || value < 0) {
+    throw new Error(`Invalid --max-files value "${raw ?? ''}".`);
+  }
+  return value;
+}
+
+const STRING_FLAG_TO_KEY: Record<string, keyof ParsedReviewGateArgs> = {
+  '--reviewer': 'reviewer',
+  '--focus': 'focus',
+  '--summary': 'summary',
+  '--primary-family': 'primaryFamily',
+  '--task-size': 'taskSize',
+  '--mode': 'mode',
+  '--override-reason': 'overrideReason',
+};
+
 export function parseArgs(argv: string[]): ParsedReviewGateArgs {
   const parsed: ParsedReviewGateArgs = {
     reviewer: 'copilot-claude',
     focus: 'general',
     summary: 'Approved after pre-implementation review.',
     force: false,
+    primaryFamily: null,
+    taskSize: null,
+    mode: 'standard',
+    maxFiles: null,
+    overrideReason: null,
   };
 
   for (let index = 0; index < argv.length; index += 1) {
     const current = argv[index];
 
-    if (current === '--reviewer') {
-      parsed.reviewer = argv[index + 1] ?? parsed.reviewer;
-      index += 1;
-      continue;
-    }
-
-    if (current === '--focus') {
-      parsed.focus = argv[index + 1] ?? parsed.focus;
-      index += 1;
-      continue;
-    }
-
-    if (current === '--summary') {
-      parsed.summary = argv[index + 1] ?? parsed.summary;
-      index += 1;
-      continue;
-    }
-
     if (current === '--force') {
       parsed.force = true;
+      continue;
+    }
+
+    if (current === '--max-files') {
+      parsed.maxFiles = parseMaxFilesValue(argv[index + 1]);
+      index += 1;
+      continue;
+    }
+
+    if (current && current in STRING_FLAG_TO_KEY) {
+      const next = argv[index + 1];
+      if (next !== undefined) {
+        (parsed as Record<string, unknown>)[STRING_FLAG_TO_KEY[current]] = next;
+      }
+      index += 1;
     }
   }
 

@@ -2,15 +2,21 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import {
+  assertCrossFamilyReviewer,
   buildDenyPayload,
   createApproval,
+  defaultMaxFilesForSize,
   evaluateHookPermission,
   evaluateApproval,
+  getReviewerFamily,
   isMutatingToolUse,
   isReviewGateCommand,
   parseArgs,
   parseHookInput,
+  validateFamily,
+  validateGateMode,
   validateReviewerId,
+  validateTaskSize,
 } from './shared.ts';
 
 test('parseArgs defaults to the Copilot reviewer and accepts Gemini or Codex fallback', () => {
@@ -35,21 +41,22 @@ test('parseArgs defaults to the Copilot reviewer and accepts Gemini or Codex fal
   assert.equal(parsed.summary, 'Approved after Gemini review');
   assert.equal(parsed.force, true);
 
-  const copilotMiniParsed = parseArgs(['--reviewer', 'copilot-gpt-5-mini']);
-  assert.equal(copilotMiniParsed.reviewer, 'copilot-gpt-5-mini');
-
   const codexParsed = parseArgs(['--reviewer', 'codex-subagent']);
   assert.equal(codexParsed.reviewer, 'codex-subagent');
 });
 
 test('validateReviewerId rejects reviewers outside the allowlist', () => {
   assert.equal(validateReviewerId('copilot-claude'), 'copilot-claude');
-  assert.equal(validateReviewerId('copilot-gpt-5-mini'), 'copilot-gpt-5-mini');
   assert.equal(validateReviewerId('gemini-2.5-pro'), 'gemini-2.5-pro');
   assert.equal(validateReviewerId('codex-subagent'), 'codex-subagent');
   assert.throws(
     () => validateReviewerId('claude-opus'),
     /Unsupported reviewer/,
+  );
+  assert.throws(
+    () => validateReviewerId('copilot-gpt-5-mini'),
+    /Unsupported reviewer/,
+    'Retired reviewer id (copilot-gpt-5-mini) must be rejected.',
   );
 });
 
@@ -186,19 +193,19 @@ test('isReviewGateCommand only exempts the TypeScript review-gate entrypoints', 
   assert.equal(isReviewGateCommand('pnpm nx test law-prep-web'), false);
 });
 
-test('buildDenyPayload points reviewers to Copilot first, then Gemini, and includes Codex fallback', () => {
+test('buildDenyPayload points reviewers to Copilot first, then Gemini, with Codex fallback', () => {
   const payload = JSON.parse(buildDenyPayload('Gate blocked.'));
 
   assert.equal(payload.permissionDecision, 'deny');
   assert.match(payload.permissionDecisionReason, /Copilot/i);
   assert.match(payload.permissionDecisionReason, /Gemini 2\.5 Pro/i);
-  assert.match(payload.permissionDecisionReason, /GPT-5 mini/i);
-  assert.match(
-    payload.permissionDecisionReason,
-    /Gemini 2\.5 Pro[\s\S]*GPT-5 mini/i,
-  );
   assert.match(payload.permissionDecisionReason, /^Gate blocked\./);
   assert.match(payload.permissionDecisionReason, /Codex/i);
+  assert.doesNotMatch(
+    payload.permissionDecisionReason,
+    /gpt-5-mini/i,
+    'Retired reviewer id must not appear in the deny payload.',
+  );
   assert.match(
     payload.permissionDecisionReason,
     /tools\/scripts\/review-gate\/approve-pre-implementation\/approve-pre-implementation\.ts/,
@@ -856,34 +863,6 @@ test('parseHookInput treats empty input as an empty hook payload', () => {
   assert.deepEqual(parseHookInput(''), { toolArgs: undefined });
 });
 
-test('copilot-gpt-5-mini approvals remain valid through gate evaluation', () => {
-  const approval = createApproval({
-    reviewer: 'copilot-gpt-5-mini',
-    focus: 'general',
-    summary: 'Approved after Copilot GPT-5 mini fallback review',
-    repoContext: {
-      root: 'C:/repo',
-      branch: 'feature/test',
-      head: 'abc123',
-      dirty: false,
-      gitCommand: 'git',
-    },
-  });
-
-  const evaluation = evaluateApproval(approval, {
-    root: 'C:/repo',
-    branch: 'feature/test',
-    head: 'abc123',
-    dirty: false,
-    gitCommand: 'git',
-  });
-
-  assert.deepEqual(evaluation, {
-    valid: true,
-    approval: approval.approval,
-  });
-});
-
 test('codex-subagent approvals remain valid through gate evaluation', () => {
   const approval = createApproval({
     reviewer: 'codex-subagent',
@@ -910,4 +889,157 @@ test('codex-subagent approvals remain valid through gate evaluation', () => {
     valid: true,
     approval: approval.approval,
   });
+});
+
+test('parseArgs reads new schema fields (mode, family, task-size, max-files, override-reason)', () => {
+  const parsed = parseArgs([
+    '--reviewer',
+    'codex-subagent',
+    '--primary-family',
+    'copilot',
+    '--task-size',
+    'large',
+    '--mode',
+    'override',
+    '--max-files',
+    '12',
+    '--override-reason',
+    'Solo session, no cross-family reviewer available.',
+  ]);
+  assert.equal(parsed.primaryFamily, 'copilot');
+  assert.equal(parsed.taskSize, 'large');
+  assert.equal(parsed.mode, 'override');
+  assert.equal(parsed.maxFiles, 12);
+  assert.equal(
+    parsed.overrideReason,
+    'Solo session, no cross-family reviewer available.',
+  );
+});
+
+test('parseArgs rejects an invalid --max-files value', () => {
+  assert.throws(
+    () => parseArgs(['--max-files', 'abc']),
+    /Invalid --max-files value/,
+  );
+});
+
+test('validateFamily, validateTaskSize, validateGateMode reject unknown values', () => {
+  assert.equal(validateFamily('copilot'), 'copilot');
+  assert.equal(validateTaskSize('huge'), 'huge');
+  assert.equal(validateGateMode('override'), 'override');
+  assert.throws(() => validateFamily('openai'), /Unsupported primary family/);
+  assert.throws(() => validateTaskSize('xl'), /Unsupported task size/);
+  assert.throws(() => validateGateMode('bypass'), /Unsupported gate mode/);
+});
+
+test('getReviewerFamily maps each supported reviewer to its AI family', () => {
+  assert.equal(getReviewerFamily('copilot-claude'), 'copilot');
+  assert.equal(getReviewerFamily('gemini-2.5-pro'), 'gemini');
+  assert.equal(getReviewerFamily('codex-subagent'), 'codex');
+});
+
+test('defaultMaxFilesForSize returns the documented per-size cap', () => {
+  assert.equal(defaultMaxFilesForSize('tiny'), 1);
+  assert.equal(defaultMaxFilesForSize('small'), 2);
+  assert.equal(defaultMaxFilesForSize('medium'), 5);
+  assert.equal(defaultMaxFilesForSize('large'), 10);
+  assert.equal(defaultMaxFilesForSize('huge'), null);
+});
+
+test('assertCrossFamilyReviewer refuses same-family reviewer without override', () => {
+  assert.throws(
+    () =>
+      assertCrossFamilyReviewer({
+        reviewer: 'copilot-claude',
+        primaryFamily: 'copilot',
+        mode: 'standard',
+        overrideReason: null,
+      }),
+    /same AI family/,
+  );
+  assert.throws(
+    () =>
+      assertCrossFamilyReviewer({
+        reviewer: 'copilot-claude',
+        primaryFamily: 'copilot',
+        mode: 'override',
+        overrideReason: null,
+      }),
+    /same AI family/,
+  );
+  // Cross-family is fine.
+  assertCrossFamilyReviewer({
+    reviewer: 'gemini-2.5-pro',
+    primaryFamily: 'copilot',
+    mode: 'standard',
+    overrideReason: null,
+  });
+  // Same family with explicit override + reason is allowed.
+  assertCrossFamilyReviewer({
+    reviewer: 'codex-subagent',
+    primaryFamily: 'codex',
+    mode: 'override',
+    overrideReason: 'Cross-family reviewer unavailable in this session.',
+  });
+  // Unspecified primary family is permissive (backward compat).
+  assertCrossFamilyReviewer({
+    reviewer: 'copilot-claude',
+    primaryFamily: null,
+    mode: 'standard',
+    overrideReason: null,
+  });
+});
+
+test('createApproval records new schema fields and resolves max-files from task size', () => {
+  const repoContext = {
+    root: 'C:/repo',
+    branch: 'feature/x',
+    head: 'deadbee',
+    dirty: false,
+    gitCommand: 'git',
+  };
+  const stateA = createApproval({
+    reviewer: 'gemini-2.5-pro',
+    focus: 'general',
+    summary: 'ok',
+    repoContext,
+    primaryFamily: 'copilot',
+    taskSize: 'medium',
+  });
+  assert.equal(stateA.approval.primaryFamily, 'copilot');
+  assert.equal(stateA.approval.taskSize, 'medium');
+  assert.equal(stateA.approval.mode, 'standard');
+  assert.equal(stateA.approval.maxFiles, 5);
+  assert.equal(stateA.approval.overrideReason, null);
+
+  const stateB = createApproval({
+    reviewer: 'codex-subagent',
+    focus: 'general',
+    summary: 'ok',
+    repoContext,
+    primaryFamily: 'codex',
+    taskSize: 'large',
+    mode: 'override',
+    maxFiles: 25,
+    overrideReason: 'No cross-family reviewer available.',
+  });
+  assert.equal(stateB.approval.mode, 'override');
+  assert.equal(stateB.approval.maxFiles, 25);
+  assert.equal(
+    stateB.approval.overrideReason,
+    'No cross-family reviewer available.',
+  );
+
+  // Backward-compat: omit new fields entirely.
+  const legacy = createApproval({
+    reviewer: 'copilot-claude',
+    focus: 'general',
+    summary: 'ok',
+    repoContext,
+  });
+  assert.equal(legacy.approval.primaryFamily, null);
+  assert.equal(legacy.approval.taskSize, null);
+  assert.equal(legacy.approval.mode, 'standard');
+  assert.equal(legacy.approval.maxFiles, null);
+  assert.equal(legacy.approval.overrideReason, null);
 });

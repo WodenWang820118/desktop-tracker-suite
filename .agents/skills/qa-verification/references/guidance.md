@@ -4,7 +4,7 @@
 
 Use the browser path when the behavior is visible in a web UI and human-reviewable proof would materially reduce risk.
 
-- Use reproducible notes, screenshots when available, and concise flow summaries for browser or desktop-visible evidence.
+- Use `proofshot` for screenshots, session video, and summarized browser evidence.
 - Keep the verification story tied to an actual user or operator flow, not just a component snapshot.
 - Report console errors, broken states, accessibility issues, missing copy, and empty/loading/error state problems.
 

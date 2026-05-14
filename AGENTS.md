@@ -257,6 +257,24 @@ Phase 3.5 refactor triggers that must stay inline:
 
 Full phase rules: `.agents/workflows/phased-workflow.md`.
 
+## Visual Verification
+
+Use `proofshot` only when the task is browser-verifiable and one of these is true:
+
+- the user explicitly asks for `proofshot`
+- the user asks for screenshots, video proof, browser proof, or visual proof
+- `qa-verification` chooses the browser path because human-reviewable artifacts would materially reduce risk
+
+Expected repo workflow:
+
+1. `pnpm proofshot:check`
+2. `pnpm proofshot:start:web -- --description "<flow>"`
+3. drive the browser with `proofshot exec ...` or compatible browser commands
+4. `pnpm proofshot:stop`
+5. review local `proofshot-artifacts/` with GitHub Copilot Claude using the dedicated proofshot review prompt
+
+`proofshot` is for `ng-tracker` UI flows only. Do not route backend-only, server-only, or non-browser library tasks through it.
+
 ## Repo-Specific Context
 
 - Repo topology: `.agents/references/repo-map.md`.

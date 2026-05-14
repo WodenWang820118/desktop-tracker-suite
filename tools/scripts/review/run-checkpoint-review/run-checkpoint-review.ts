@@ -1,29 +1,29 @@
 import { spawnSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { pathToFileURL } from 'node:url';
 
-import { cacheProviderHealth } from '../provider-health.ts';
+import { isMainModule } from '../../shared/entrypoint/entrypoint.ts';
+import { readCommonReviewContract } from '../shared/common-review-contract.ts';
+import { cacheProviderHealth } from '../provider-health/provider-health.ts';
 import {
   createProviderTelemetryContext,
   type ProviderTelemetryContext,
-} from '../provider-observability.ts';
+} from '../provider-observability/provider-observability.ts';
 import {
   isCopilotUnavailableError,
   probeCopilotCliHealth,
   runCopilotReview,
-} from '../providers/copilot.ts';
+} from '../providers/copilot/copilot.ts';
 import {
   isCodexUnavailableError,
   probeCodexCliHealth,
   runCodexReview,
-} from '../providers/codex.ts';
+} from '../providers/codex/codex.ts';
 import {
   isGeminiUnavailableError,
   probeGeminiCliHealth,
   runGeminiReview,
-} from '../providers/gemini.ts';
-import { readCommonReviewContract } from '../shared/common-review-contract.ts';
+} from '../providers/gemini/gemini.ts';
 
 export type ReviewCheckpoint = 'plan' | 'implementation' | 'test' | 'pre-merge';
 export type ReviewProvider = 'auto' | 'copilot' | 'gemini' | 'codex';
@@ -31,7 +31,6 @@ export type ConcreteReviewProvider = Exclude<ReviewProvider, 'auto'>;
 export type ReviewRiskLevel = 'low' | 'medium' | 'high';
 
 const DEFAULT_COPILOT_CLAUDE_MODEL = 'claude-sonnet-4.6';
-const DEFAULT_COPILOT_GPT5_MINI_MODEL = 'gpt-5-mini';
 const CHANGED_FILES_HEADING = 'changed files:';
 const LOW_RISK_MAX_CHANGED_FILES = 2;
 const REVIEW_CONTROL_PLANE_PATH_PATTERNS = [
@@ -276,12 +275,6 @@ export function getReviewExecutionPlan(input: {
         focus: input.focus,
         model: DEFAULT_COPILOT_CLAUDE_MODEL,
       }),
-      createReviewExecution({
-        checkpoint: input.checkpoint,
-        provider: 'copilot',
-        focus: input.focus,
-        model: DEFAULT_COPILOT_GPT5_MINI_MODEL,
-      }),
     ];
   }
 
@@ -339,12 +332,6 @@ export function getReviewExecutionPlan(input: {
         focus: input.focus,
         model: DEFAULT_COPILOT_CLAUDE_MODEL,
       }),
-      createReviewExecution({
-        checkpoint: input.checkpoint,
-        provider: 'copilot',
-        focus: input.focus,
-        model: DEFAULT_COPILOT_GPT5_MINI_MODEL,
-      }),
     ];
   }
 
@@ -364,12 +351,6 @@ export function getReviewExecutionPlan(input: {
         provider: 'copilot',
         focus: input.focus,
         model: DEFAULT_COPILOT_CLAUDE_MODEL,
-      }),
-      createReviewExecution({
-        checkpoint: input.checkpoint,
-        provider: 'copilot',
-        focus: input.focus,
-        model: DEFAULT_COPILOT_GPT5_MINI_MODEL,
       }),
       createReviewExecution({
         checkpoint: input.checkpoint,
@@ -395,12 +376,6 @@ export function getReviewExecutionPlan(input: {
       }),
       createReviewExecution({
         checkpoint: input.checkpoint,
-        provider: 'copilot',
-        focus: input.focus,
-        model: DEFAULT_COPILOT_GPT5_MINI_MODEL,
-      }),
-      createReviewExecution({
-        checkpoint: input.checkpoint,
         provider: 'codex',
         focus: input.focus,
       }),
@@ -419,12 +394,6 @@ export function getReviewExecutionPlan(input: {
       provider: 'gemini',
       focus: input.focus,
       model: getDefaultGeminiModel(input.checkpoint),
-    }),
-    createReviewExecution({
-      checkpoint: input.checkpoint,
-      provider: 'copilot',
-      focus: input.focus,
-      model: DEFAULT_COPILOT_GPT5_MINI_MODEL,
     }),
     createReviewExecution({
       checkpoint: input.checkpoint,
@@ -523,20 +492,22 @@ export function inferAutoReviewRisk(input: {
 export function buildReviewPrompt(
   execution: ReviewExecution,
   context: string,
+  options: { commonReviewContract?: string } = {},
 ): string {
-  const commonReviewContract = readCommonReviewContract(process.cwd());
+  const commonReviewContract =
+    options.commonReviewContract ?? readCommonReviewContract(process.cwd());
+  const commonReviewContractBlock = commonReviewContract.trim()
+    ? ['Shared review contract:', commonReviewContract.trim(), '']
+    : [];
   const reviewRules = [
     'You are the second-opinion reviewer for this repository.',
     `Checkpoint: ${execution.checkpoint}`,
     `Primary focus: ${execution.focus}`,
     execution.model ? `Requested model: ${execution.model}` : null,
     '',
-    commonReviewContract
-      ? ['Shared review contract:', commonReviewContract].join('\n')
-      : null,
-    commonReviewContract ? '' : null,
+    ...commonReviewContractBlock,
     'Review rules:',
-    '- Findings first, ordered by severity',
+    '- Apply the shared review contract for severity labels, findings, verdict, and residual-risk format',
     '- Call out correctness, security risk, workflow violations, contract drift, and missing tests',
     execution.checkpoint === 'test'
       ? '- Focus on missing scenarios, weak assertions, and regression gaps'
@@ -601,8 +572,6 @@ async function runReviewExecution(
 
   if (execution.provider === 'copilot') {
     return runCopilotReview({
-      checkpoint: execution.checkpoint,
-      focus: execution.focus,
       model: execution.model,
       prompt,
       repoRoot: process.cwd(),
@@ -612,8 +581,6 @@ async function runReviewExecution(
 
   if (execution.provider === 'gemini') {
     return runGeminiReview({
-      checkpoint: execution.checkpoint,
-      focus: execution.focus,
       model: execution.model ?? getDefaultGeminiModel(execution.checkpoint),
       prompt,
       repoRoot: process.cwd(),
@@ -958,32 +925,26 @@ function normalizeReviewPath(candidate: string): string {
     .replace(/^\/+/, '')
     .replace(/^\.\//, '')
     .trim();
-  const normalizedRepoRoot = resolve(process.cwd())
-    .replaceAll('\\', '/')
-    .replace(/^[A-Za-z]:\//, '')
-    .replace(/^\/+/, '')
-    .replace(/\/+$/, '');
-
-  if (normalizedRepoRoot.length > 0) {
-    if (normalized === normalizedRepoRoot) {
-      return '';
-    }
-
-    if (normalized.startsWith(`${normalizedRepoRoot}/`)) {
-      return normalized.slice(normalizedRepoRoot.length + 1);
-    }
-  }
-
-  const anchoredNormalized = normalized.startsWith('/')
-    ? normalized
-    : `/${normalized}`;
 
   const workspaceAnchors = [
+    'tools/scripts/',
+    'scripts/',
+    'apps/',
+    'libs/',
+    'packages/',
+    'docs/',
+    '.agents/',
+    '.github/',
+    '.codex/',
+    '.gemini/',
+    'AGENTS.md',
+    'sync-skills.ps1',
+    '/tools/scripts/',
     '/apps/',
     '/libs/',
     '/packages/',
-    '/tools/',
     '/scripts/',
+    '/tools/',
     '/docs/',
     '/.agents/',
     '/.github/',
@@ -994,9 +955,9 @@ function normalizeReviewPath(candidate: string): string {
   ];
 
   for (const anchor of workspaceAnchors) {
-    const index = anchoredNormalized.indexOf(anchor);
+    const index = normalized.indexOf(anchor);
     if (index >= 0) {
-      return anchoredNormalized.slice(index + 1);
+      return normalized.slice(index + (anchor.startsWith('/') ? 1 : 0));
     }
   }
 
@@ -1088,10 +1049,7 @@ function readStdin(): Promise<string> {
   });
 }
 
-const isEntryPoint =
-  process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
-
-if (isEntryPoint) {
+if (isMainModule(import.meta.url)) {
   main().catch((error) => {
     console.error(error instanceof Error ? error.message : String(error));
     process.exit(1);
