@@ -27,4 +27,30 @@ Call `ci_information` with heavy select fields. Summarize the heavy content and 
   "taskFailureSummaries": [{ "taskId": "...", "summary": "..." }]
 }
 ```
+
+Do NOT return raw suggestedFix diffs or raw taskOutputSummary — summarize them.
+The main agent uses these summaries to understand what failed and attempt local fixes.
+
+### UPDATE_FIX
+
+Call `update_self_healing_fix` with the provided shortLink and action (APPLY/REJECT/RERUN_ENVIRONMENT_STATE). Return the result message (success/failure string).
+
+### FETCH_THROTTLE_INFO
+
+Call `ci_information` with the provided URL. Return ONLY: `{ shortLink, cipeUrl }`
+
+## Important
+
+- Execute ONE command and return immediately
+- Do NOT poll, loop, sleep, or make decisions
+- Extract and return ONLY the fields specified for each command — do NOT dump the full MCP response
+
+## Failure and redaction rules
+
+- If a requested field is unavailable, return it with null rather than omitting it.
+- Never return raw logs, raw diffs, credentials, tokens, headers, environment variables, or full command output.
+- For FETCH_HEAVY, summarize only the failure cause, affected task, and proposed fix intent.
+- For UPDATE_FIX, require action to be one of APPLY, REJECT, RERUN_ENVIRONMENT_STATE.
+- If the command or required input is invalid, return:
+  { "error": "INVALID_INPUT", "message": "..." }
 """
