@@ -48,6 +48,18 @@ interface GeminiProviderDependencies {
   sleep?: typeof sleep;
 }
 
+type GoogleReviewCli = 'agy' | 'gemini';
+
+interface GoogleReviewCliCommand {
+  args: string[];
+  command: string;
+  input?: string;
+  windowsScriptName?: string;
+}
+
+const GOOGLE_REVIEW_CLI_ENV = 'GX_LAW_PREP_REVIEW_GOOGLE_CLI';
+const AGY_REVIEW_TIMEOUT_MS = 30_000;
+
 const GEMINI_HEALTH_PROMPT = 'Reply with exactly OK.';
 let geminiSessionCounter = 0;
 
@@ -73,86 +85,91 @@ export async function probeGeminiCliHealth(
   }
 
   const checkedAtMs = now();
-  const versionStartedAtMs = now();
-  const versionResult = runCommand({
-    command: 'gemini',
-    windowsScriptName: 'gemini.ps1',
-    args: ['--version'],
-    cwd: repoRoot,
-    timeoutMs: GEMINI_HEALTH_TIMEOUT_MS,
-  });
-  recordObservation(
+  const failures: string[] = [];
+
+  for (const cli of getGoogleReviewCliCandidates()) {
+    const versionStartedAtMs = now();
+    const versionResult = runCommand({
+      ...buildGoogleReviewCliVersionCommand(cli),
+      cwd: repoRoot,
+      timeoutMs: GEMINI_HEALTH_TIMEOUT_MS,
+    });
+    recordObservation(
+      {
+        ...telemetryContext,
+        configuredTimeoutMs: GEMINI_HEALTH_TIMEOUT_MS,
+        durationMs: now() - versionStartedAtMs,
+        errorCategory:
+          !versionResult.error && versionResult.status === 0
+            ? null
+            : classifyGeminiErrorCategory(
+                joinOutput(versionResult.stdout, versionResult.stderr),
+                versionResult.error?.message,
+              ),
+        model: input.model,
+        operation: 'health-version',
+        promptChars: 0,
+        provider: 'gemini',
+        success: !versionResult.error && versionResult.status === 0,
+        timedOut: isGeminiTimedOut(versionResult),
+      },
+      repoRoot,
+    );
+
+    if (versionResult.error || versionResult.status !== 0) {
+      failures.push(
+        `${cli}: ${joinOutput(versionResult.stdout, versionResult.stderr) || versionResult.error?.message || 'not installed'}`,
+      );
+      continue;
+    }
+
+    try {
+      const output = await runGeminiTextCommand(
+        {
+          cliCandidates: [cli],
+          model: input.model,
+          operation: 'health-probe',
+          prompt: GEMINI_HEALTH_PROMPT,
+          repoRoot,
+          telemetryContext,
+          timeoutMs: GEMINI_HEALTH_TIMEOUT_MS,
+        },
+        dependencies,
+      );
+
+      if (/^OK\b/i.test(output.trim())) {
+        return cacheProviderHealth(
+          'gemini',
+          input.model,
+          {
+            available: true,
+            checkedAtMs,
+          },
+          repoRoot,
+        );
+      }
+
+      failures.push(`${cli}: unexpected probe response`);
+    } catch (error) {
+      failures.push(
+        `${cli}: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
+  return cacheProviderHealth(
+    'gemini',
+    input.model,
     {
-      ...telemetryContext,
-      configuredTimeoutMs: GEMINI_HEALTH_TIMEOUT_MS,
-      durationMs: now() - versionStartedAtMs,
-      errorCategory:
-        !versionResult.error && versionResult.status === 0
-          ? null
-          : classifyGeminiErrorCategory(
-              joinOutput(versionResult.stdout, versionResult.stderr),
-              versionResult.error?.message,
-            ),
-      model: input.model,
-      operation: 'health-version',
-      promptChars: 0,
-      provider: 'gemini',
-      success: !versionResult.error && versionResult.status === 0,
-      timedOut: isGeminiTimedOut(versionResult),
+      available: false,
+      checkedAtMs,
+      reason:
+        failures.length > 0
+          ? `No Antigravity/Gemini reviewer CLI is available. ${failures.join('; ')}`
+          : 'No Antigravity/Gemini reviewer CLI is configured.',
     },
     repoRoot,
   );
-
-  if (versionResult.error || versionResult.status !== 0) {
-    return cacheProviderHealth(
-      'gemini',
-      input.model,
-      {
-        available: false,
-        checkedAtMs,
-        reason: 'Gemini CLI is not installed or cannot be started locally.',
-      },
-      repoRoot,
-    );
-  }
-
-  try {
-    const output = await runGeminiTextCommand(
-      {
-        model: input.model,
-        operation: 'health-probe',
-        prompt: GEMINI_HEALTH_PROMPT,
-        repoRoot,
-        telemetryContext,
-        timeoutMs: GEMINI_HEALTH_TIMEOUT_MS,
-      },
-      dependencies,
-    );
-
-    return cacheProviderHealth(
-      'gemini',
-      input.model,
-      {
-        available: /^OK\b/i.test(output.trim()),
-        checkedAtMs,
-        reason: /^OK\b/i.test(output.trim())
-          ? undefined
-          : 'Gemini CLI probe returned an unexpected response.',
-      },
-      repoRoot,
-    );
-  } catch (error) {
-    return cacheProviderHealth(
-      'gemini',
-      input.model,
-      {
-        available: false,
-        checkedAtMs,
-        reason: error instanceof Error ? error.message : String(error),
-      },
-      repoRoot,
-    );
-  }
 }
 
 export async function runGeminiReview(
@@ -248,6 +265,7 @@ function isGeminiModelNotFound(output: string): boolean {
 
 async function runGeminiTextCommand(
   input: GeminiReviewInput & {
+    cliCandidates?: GoogleReviewCli[];
     operation: 'health-probe' | 'review-attempt';
     timeoutMs?: number;
   },
@@ -295,23 +313,15 @@ async function runGeminiTextCommand(
       const attemptStartedAtMs = now();
       recordRequestStartFn(policy.model, attemptStartedAtMs, repoRoot);
 
-      const result = runCommand({
-        command: 'gemini',
-        windowsScriptName: 'gemini.ps1',
-        args: [
-          '--model',
-          policy.model,
-          '--approval-mode',
-          'plan',
-          '--output-format',
-          'text',
-          '--prompt',
-          ' ',
-        ],
-        cwd: repoRoot,
-        input: input.prompt,
+      const commandResult = runGoogleReviewCliTextCommand({
+        cliCandidates: input.cliCandidates ?? getGoogleReviewCliCandidates(),
+        model: policy.model,
+        prompt: input.prompt,
+        runCommand,
         timeoutMs: input.timeoutMs ?? policy.requestTimeoutMs,
+        cwd: repoRoot,
       });
+      const result = commandResult.result;
       const durationMs = now() - attemptStartedAtMs;
       const output = cleanGeminiOutput(
         joinOutput(result.stdout, result.stderr),
@@ -394,6 +404,150 @@ async function runGeminiTextCommand(
   } finally {
     releaseLock();
   }
+}
+
+function getGoogleReviewCliCandidates(): GoogleReviewCli[] {
+  const configured = process.env[GOOGLE_REVIEW_CLI_ENV]?.trim().toLowerCase();
+
+  if (configured === 'gemini') {
+    return ['gemini'];
+  }
+
+  if (configured === 'agy' || configured === 'antigravity') {
+    return ['agy', 'gemini'];
+  }
+
+  return ['agy', 'gemini'];
+}
+
+function buildGoogleReviewCliVersionCommand(
+  cli: GoogleReviewCli,
+): GoogleReviewCliCommand {
+  if (cli === 'agy') {
+    return {
+      args: ['--version'],
+      command: 'agy',
+    };
+  }
+
+  return {
+    args: ['--version'],
+    command: 'gemini',
+    windowsScriptName: 'gemini.ps1',
+  };
+}
+
+function buildGoogleReviewCliTextCommand(input: {
+  cli: GoogleReviewCli;
+  model: string;
+  prompt: string;
+  timeoutMs: number;
+}): GoogleReviewCliCommand {
+  if (input.cli === 'agy') {
+    return {
+      args: [
+        '--print',
+        '--print-timeout',
+        formatAgyTimeout(input.timeoutMs),
+        input.prompt,
+      ],
+      command: 'agy',
+    };
+  }
+
+  return {
+    args: [
+      '--model',
+      input.model,
+      '--approval-mode',
+      'plan',
+      '--output-format',
+      'text',
+      '--prompt',
+      ' ',
+    ],
+    command: 'gemini',
+    input: input.prompt,
+    windowsScriptName: 'gemini.ps1',
+  };
+}
+
+function runGoogleReviewCliTextCommand(input: {
+  cliCandidates: GoogleReviewCli[];
+  cwd: string;
+  model: string;
+  prompt: string;
+  runCommand: (input: LocalCliCommandInput) => LocalCliCommandResult;
+  timeoutMs: number;
+}): { cli: GoogleReviewCli; result: LocalCliCommandResult } {
+  let lastResult: {
+    cli: GoogleReviewCli;
+    result: LocalCliCommandResult;
+  } | null = null;
+
+  for (const cli of input.cliCandidates) {
+    const command = buildGoogleReviewCliTextCommand({
+      cli,
+      model: input.model,
+      prompt: input.prompt,
+      timeoutMs:
+        cli === 'agy'
+          ? Math.min(input.timeoutMs, AGY_REVIEW_TIMEOUT_MS)
+          : input.timeoutMs,
+    });
+    const result = input.runCommand({
+      ...command,
+      cwd: input.cwd,
+      timeoutMs:
+        cli === 'agy'
+          ? Math.min(input.timeoutMs, AGY_REVIEW_TIMEOUT_MS)
+          : input.timeoutMs,
+    });
+    lastResult = { cli, result };
+    const output = joinOutput(result.stdout, result.stderr);
+
+    if (!isFallbackEligibleGoogleCliFailure(cli, result, output)) {
+      return lastResult;
+    }
+  }
+
+  return (
+    lastResult ?? {
+      cli: 'gemini',
+      result: {
+        error: new Error(
+          'No Antigravity/Gemini reviewer CLI candidates configured.',
+        ),
+        status: null,
+        stderr: '',
+        stdout: '',
+      },
+    }
+  );
+}
+
+function isFallbackEligibleGoogleCliFailure(
+  cli: GoogleReviewCli,
+  result: LocalCliCommandResult,
+  output: string,
+): boolean {
+  if (cli !== 'agy') {
+    return false;
+  }
+
+  if (!result.error && result.status === 0 && output.trim().length > 0) {
+    return false;
+  }
+
+  return (
+    /\b(timeout|timed out|ETIMEDOUT|not authenticated|authenticate|login|sign in|api key|not installed|cannot be started locally|ENOENT|not recognized)\b/i.test(
+      [output, result.error?.message].filter(Boolean).join('\n'),
+    ) || output.trim().length === 0
+  );
+}
+
+function formatAgyTimeout(timeoutMs: number): string {
+  return `${Math.max(1, Math.ceil(timeoutMs / 1000))}s`;
 }
 
 function isGeminiTimedOut(result: LocalCliCommandResult, output = ''): boolean {

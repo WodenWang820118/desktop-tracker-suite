@@ -49,7 +49,7 @@ it cannot read `.agents/skills`.
 - Load `.agents/workflows/verification.md` for browser-visible, desktop-visible,
   backend smoke, workspace verification, screenshots, or explicit QA evidence.
 - Load `.agents/workflows/tool-routing.md` when using or updating
-  Copilot/Gemini/Codex review paths or bridge files.
+  Copilot/Antigravity-Gemini/Codex review paths or bridge files.
 - Load `.agents/references/memory-practices.md` at phase boundaries during
   large or huge tasks, before writing a session memory summary.
 
@@ -127,8 +127,8 @@ First-load routing rules that must stay inline:
 
 - Plan reviews prefer GitHub Copilot Claude Sonnet 4.6; fall back through the
   repo wrapper path when unavailable.
-- Implementation reviews normally start with Gemini Flash Preview
-  `gemini-3-flash-preview`.
+- Implementation reviews normally start with the Antigravity/Gemini Flash
+  reviewer `gemini-3-flash-preview`.
 - Codex-first implementation or pre-merge routing is allowed only with an
   explicit small non-sensitive changed-file list that exactly matches the repo's
   current changed-file set and touches no review/governance, auth, secrets,
@@ -182,10 +182,10 @@ Spring Boot, and Tauri stacks.
 Use read-only sub-agents to protect the Main Thread context from code-heavy
 exploration.
 
-| Purpose                             | Sub-agent / role    | When to use                                                                                                                      |
-| ----------------------------------- | ------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| Initial broad codebase mapping      | `codebase-mapper`   | Before implementation when affected files, Nx project boundaries, or cross-project impact are unclear                            |
-| Focused mid-task code investigation | `code-investigator` | During planning, implementation, debugging, or review when detailed code reading, call-chain tracing, or impact analysis needed  |
+| Purpose                             | Sub-agent / role    | When to use                                                                                                                     |
+| ----------------------------------- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| Initial broad codebase mapping      | `codebase-mapper`   | Before implementation when affected files, Nx project boundaries, or cross-project impact are unclear                           |
+| Focused mid-task code investigation | `code-investigator` | During planning, implementation, debugging, or review when detailed code reading, call-chain tracing, or impact analysis needed |
 
 **`codebase-mapper`**: Use before implementation when the Main Thread needs a
 broad map of affected projects, files, symbols, dependency paths, and test

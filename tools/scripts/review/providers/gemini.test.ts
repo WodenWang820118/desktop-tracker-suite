@@ -127,7 +127,7 @@ test('runGeminiReview wraps prompts with the selected reviewer profile', async (
           return undefined;
         },
         runCommand: (input) => {
-          capturedInput = input.input ?? '';
+          capturedInput = input.input ?? input.args.at(-1) ?? '';
           return {
             error: undefined,
             status: 0,
@@ -207,55 +207,65 @@ test('runGeminiReview records capacity-triggered retries with retry delay metada
 });
 
 test('runGeminiReview records timeout retries before succeeding', async () => {
+  const previous = process.env.GX_LAW_PREP_REVIEW_GOOGLE_CLI;
+  process.env.GX_LAW_PREP_REVIEW_GOOGLE_CLI = 'gemini';
   const recorded: Array<Record<string, unknown>> = [];
   let attempt = 0;
   const timeoutError = new Error('timed out');
   timeoutError.name = 'TimeoutError';
 
-  const review = await runGeminiReview(
-    {
-      model: 'gemini-2.5-pro',
-      prompt: 'Review this diff.',
-      repoRoot: 'C:/repo',
-    },
-    {
-      acquireLock: async () => () => undefined,
-      getInterRequestDelay: () => 0,
-      getRetryDelay: () => 35_000,
-      loadRateLimitState: () => ({ models: {} }),
-      recordObservation(observation) {
-        recorded.push(observation as unknown as Record<string, unknown>);
-        return observation;
+  try {
+    const review = await runGeminiReview(
+      {
+        model: 'gemini-2.5-pro',
+        prompt: 'Review this diff.',
+        repoRoot: 'C:/repo',
       },
-      recordRequestStart() {
-        return undefined;
+      {
+        acquireLock: async () => () => undefined,
+        getInterRequestDelay: () => 0,
+        getRetryDelay: () => 35_000,
+        loadRateLimitState: () => ({ models: {} }),
+        recordObservation(observation) {
+          recorded.push(observation as unknown as Record<string, unknown>);
+          return observation;
+        },
+        recordRequestStart() {
+          return undefined;
+        },
+        runCommand: () => {
+          attempt += 1;
+          return attempt === 1
+            ? {
+                error: timeoutError,
+                signal: 'SIGTERM',
+                status: null,
+                stderr: '',
+                stdout: '',
+              }
+            : {
+                error: undefined,
+                status: 0,
+                stderr: '',
+                stdout: 'Reviewed.',
+              };
+        },
+        sleep: async () => undefined,
       },
-      runCommand: () => {
-        attempt += 1;
-        return attempt === 1
-          ? {
-              error: timeoutError,
-              signal: 'SIGTERM',
-              status: null,
-              stderr: '',
-              stdout: '',
-            }
-          : {
-              error: undefined,
-              status: 0,
-              stderr: '',
-              stdout: 'Reviewed.',
-            };
-      },
-      sleep: async () => undefined,
-    },
-  );
+    );
 
-  assert.equal(review, 'Reviewed.');
-  assert.equal(recorded.length, 2);
-  assert.equal(recorded[0]?.timedOut, true);
-  assert.equal(recorded[0]?.retryDelayMs, 35_000);
-  assert.equal(recorded[1]?.success, true);
+    assert.equal(review, 'Reviewed.');
+    assert.equal(recorded.length, 2);
+    assert.equal(recorded[0]?.timedOut, true);
+    assert.equal(recorded[0]?.retryDelayMs, 35_000);
+    assert.equal(recorded[1]?.success, true);
+  } finally {
+    if (previous === undefined) {
+      delete process.env.GX_LAW_PREP_REVIEW_GOOGLE_CLI;
+    } else {
+      process.env.GX_LAW_PREP_REVIEW_GOOGLE_CLI = previous;
+    }
+  }
 });
 
 test('runGeminiReview does not mark successful timeout-themed output as a timeout', async () => {
