@@ -14,7 +14,7 @@ if (options.help) {
       'Usage: node tools/scripts/review-gate/approve-pre-implementation.ts [options]',
       '',
       'Options:',
-      '  --reviewer <id>   Reviewer id: copilot-claude | copilot-gpt-5-mini | gemini-2.5-pro | codex-subagent',
+      '  --reviewer <id>   Reviewer id: copilot-claude | copilot-gpt-5-mini | gemini-3.5-flash-high | codex-subagent',
       '  --focus <area>    Approval focus label. Default: general',
       '  --summary <text>  Approval summary text.',
       '  --force           Allow writing approval state even when the worktree is dirty.',

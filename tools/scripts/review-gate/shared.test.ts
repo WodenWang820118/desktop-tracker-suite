@@ -23,7 +23,7 @@ test('parseArgs defaults to the Copilot reviewer and accepts Gemini or Codex fal
 
   const parsed = parseArgs([
     '--reviewer',
-    'gemini-2.5-pro',
+    'gemini-3.5-flash-high',
     '--focus',
     'security',
     '--summary',
@@ -31,7 +31,7 @@ test('parseArgs defaults to the Copilot reviewer and accepts Gemini or Codex fal
     '--force',
   ]);
 
-  assert.equal(parsed.reviewer, 'gemini-2.5-pro');
+  assert.equal(parsed.reviewer, 'gemini-3.5-flash-high');
   assert.equal(parsed.focus, 'security');
   assert.equal(parsed.summary, 'Approved after Gemini review');
   assert.equal(parsed.force, true);
@@ -51,7 +51,7 @@ test('parseArgs defaults to the Copilot reviewer and accepts Gemini or Codex fal
 test('validateReviewerId rejects reviewers outside the allowlist', () => {
   assert.equal(validateReviewerId('copilot-claude'), 'copilot-claude');
   assert.equal(validateReviewerId('copilot-gpt-5-mini'), 'copilot-gpt-5-mini');
-  assert.equal(validateReviewerId('gemini-2.5-pro'), 'gemini-2.5-pro');
+  assert.equal(validateReviewerId('gemini-3.5-flash-high'), 'gemini-3.5-flash-high');
   assert.equal(validateReviewerId('codex-subagent'), 'codex-subagent');
   assert.throws(
     () => validateReviewerId('claude-opus'),
@@ -117,11 +117,11 @@ test('buildDenyPayload points reviewers to Copilot first, then Gemini, and inclu
 
   assert.equal(payload.permissionDecision, 'deny');
   assert.match(payload.permissionDecisionReason, /Copilot/i);
-  assert.match(payload.permissionDecisionReason, /Gemini 2\.5 Pro/i);
+  assert.match(payload.permissionDecisionReason, /Gemini 3\.5 Flash High/i);
   assert.match(payload.permissionDecisionReason, /GPT-5 mini/i);
   assert.match(
     payload.permissionDecisionReason,
-    /Gemini 2\.5 Pro[\s\S]*GPT-5 mini/i,
+    /Gemini 3\.5 Flash High[\s\S]*GPT-5 mini/i,
   );
   assert.match(payload.permissionDecisionReason, /Codex/i);
   assert.match(

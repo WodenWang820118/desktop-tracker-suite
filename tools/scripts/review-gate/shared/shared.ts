@@ -23,7 +23,7 @@ const RISKY_SHELL_SYNTAX_PATTERNS = [
 
 export const SUPPORTED_REVIEWERS = [
   'copilot-claude',
-  'gemini-2.5-pro',
+  'gemini-3.5-flash-high',
   'codex-subagent',
 ] as const;
 
@@ -40,7 +40,7 @@ export type ReviewGateMode = (typeof REVIEW_GATE_MODES)[number];
 
 const REVIEWER_FAMILY: Record<SupportedReviewer, PrimaryFamily> = {
   'copilot-claude': 'copilot',
-  'gemini-2.5-pro': 'gemini',
+  'gemini-3.5-flash-high': 'gemini',
   'codex-subagent': 'codex',
 };
 
@@ -575,7 +575,7 @@ export function evaluateHookPermission(input: {
 export function buildDenyPayload(reason: string): string {
   return JSON.stringify({
     permissionDecision: 'deny',
-    permissionDecisionReason: `${reason} Pass plan review first (Copilot Claude or Gemini 2.5 Pro fallback), then approve the gate with: node tools/scripts/review-gate/approve-pre-implementation/approve-pre-implementation.ts --reviewer <copilot-claude|gemini-2.5-pro|codex-subagent> --focus <area> --summary "<summary>"`,
+    permissionDecisionReason: `${reason} Pass plan review first (Copilot Claude or Antigravity Gemini 3.5 Flash High fallback), then approve the gate with: node tools/scripts/review-gate/approve-pre-implementation/approve-pre-implementation.ts --reviewer <copilot-claude|gemini-3.5-flash-high|codex-subagent> --focus <area> --summary "<summary>"`,
   });
 }
 // endregion

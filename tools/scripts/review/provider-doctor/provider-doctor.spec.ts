@@ -32,7 +32,7 @@ test('buildProviderDoctorReport respects the provider filter', () => {
     );
     recordProviderObservation(
       baseObservation({
-        model: 'gemini-3-flash-preview',
+        model: 'gemini-3.5-flash-high',
         operation: 'health-probe',
         provider: 'gemini',
       }),
@@ -128,7 +128,7 @@ test('buildProviderDoctorReport exposes structured JSON-friendly data for gemini
           capacityError: index < 2,
           configuredTimeoutMs: 180_000,
           durationMs: 9_000,
-          model: 'gemini-3-flash-preview',
+          model: 'gemini-3.5-flash-high',
           operation: 'review-attempt',
           provider: 'gemini',
           recordedAtMs: index * 10 + 1,
@@ -145,7 +145,7 @@ test('buildProviderDoctorReport exposes structured JSON-friendly data for gemini
             attempt: 1,
             configuredTimeoutMs: 180_000,
             durationMs: 10_000,
-            model: 'gemini-3-flash-preview',
+            model: 'gemini-3.5-flash-high',
             operation: 'review-attempt',
             provider: 'gemini',
             recordedAtMs: index * 10 + 2,
@@ -165,7 +165,7 @@ test('buildProviderDoctorReport exposes structured JSON-friendly data for gemini
 
     assert.equal(
       report.buckets[0]?.geminiIntervalRecommendation?.recommendedIntervalMs,
-      32_000,
+      55_000,
     );
     assert.equal(
       report.buckets[0]?.geminiBackoffRecommendation?.insufficientData,

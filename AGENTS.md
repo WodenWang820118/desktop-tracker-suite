@@ -127,16 +127,16 @@ First-load routing rules that must stay inline:
 
 - Plan reviews prefer GitHub Copilot Claude Sonnet 4.6; fall back through the
   repo wrapper path when unavailable.
-- Implementation reviews normally start with the Antigravity/Gemini Flash
-  reviewer `gemini-3-flash-preview`.
+- Implementation reviews normally start with the Antigravity/Gemini 3.5 Flash High
+  reviewer `gemini-3.5-flash-high`.
 - Codex-first implementation or pre-merge routing is allowed only with an
   explicit small non-sensitive changed-file list that exactly matches the repo's
   current changed-file set and touches no review/governance, auth, secrets,
   filesystem, shell, network, or public-contract surface.
 - Escalate blocking findings, auth, secrets, filesystem, shell execution,
   network behavior, or public contracts to Copilot Claude.
-- Gemini scripted review throttling is `gemini-2.5-pro`: 38s start-to-start
-  with `35s -> 50s -> 75s` retry backoff; `gemini-3-flash-preview`: 22s
+- Gemini scripted review throttling is `gemini-3.5-flash-high`: 38s start-to-start
+  with `35s -> 50s -> 75s` retry backoff; `gemini-3.5-flash-high`: 22s
   start-to-start with `20s -> 30s` retry backoff.
 
 Full lifecycle: `.agents/workflows/review-lifecycle.md`.

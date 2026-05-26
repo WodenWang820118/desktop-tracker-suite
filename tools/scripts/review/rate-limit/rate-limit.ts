@@ -13,19 +13,15 @@ export interface ModelRateLimitPolicy {
 }
 
 const GEMINI_MODEL_ALIASES: Record<string, string> = {
-  'gemini-3.1-flash-preview': 'gemini-3-flash-preview',
+  'gemini-3-flash-preview': 'gemini-3.5-flash-high',
+  'gemini-3.1-flash-preview': 'gemini-3.5-flash-high',
 };
 
 const MODEL_POLICIES: Record<string, Omit<ModelRateLimitPolicy, 'model'>> = {
-  'gemini-2.5-pro': {
-    targetIntervalMs: 38000,
-    retryDelaysMs: [35000, 50000, 75000],
+  'gemini-3.5-flash-high': {
+    targetIntervalMs: 45_000,
+    retryDelaysMs: [45_000, 65_000, 95_000],
     requestTimeoutMs: 5 * 60 * 1000,
-  },
-  'gemini-3-flash-preview': {
-    targetIntervalMs: 22000,
-    retryDelaysMs: [20000, 30000],
-    requestTimeoutMs: 3 * 60 * 1000,
   },
 };
 

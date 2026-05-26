@@ -14,8 +14,8 @@ import {
 test('provider health cache keys include the model when present', () => {
   assert.equal(createProviderHealthCacheKey('copilot'), 'copilot');
   assert.equal(
-    createProviderHealthCacheKey('gemini', 'gemini-3-flash-preview'),
-    'gemini:gemini-3-flash-preview',
+    createProviderHealthCacheKey('gemini', 'gemini-3.5-flash-high'),
+    'gemini:gemini-3.5-flash-high',
   );
 });
 
@@ -30,7 +30,7 @@ test('provider health cache round-trips healthy and unhealthy entries', () => {
 
     cacheProviderHealth(
       'gemini',
-      'gemini-3-flash-preview',
+      'gemini-3.5-flash-high',
       {
         available: true,
         checkedAtMs: 1_000,
@@ -52,7 +52,7 @@ test('provider health cache round-trips healthy and unhealthy entries', () => {
     assert.deepEqual(
       getCachedProviderHealth(
         'gemini',
-        'gemini-3-flash-preview',
+        'gemini-3.5-flash-high',
         tempRoot,
         1_500,
       ),

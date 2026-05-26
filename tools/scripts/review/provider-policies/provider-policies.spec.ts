@@ -38,7 +38,7 @@ test('getGeminiPolicyTimeoutMs requires a model for review attempts', () => {
   );
 
   const timeoutMs = getGeminiPolicyTimeoutMs({
-    model: 'gemini-3-flash-preview',
+    model: 'gemini-3.5-flash-high',
     operation: 'review-attempt',
   });
 
@@ -46,12 +46,12 @@ test('getGeminiPolicyTimeoutMs requires a model for review attempts', () => {
 });
 
 test('getGeminiCurrentPolicy returns a defensive copy of retry delays', () => {
-  const firstPolicy = getGeminiCurrentPolicy('gemini-3-flash-preview');
+  const firstPolicy = getGeminiCurrentPolicy('gemini-3.5-flash-high');
   firstPolicy.retryDelaysMs.push(999);
 
-  const secondPolicy = getGeminiCurrentPolicy('gemini-3-flash-preview');
+  const secondPolicy = getGeminiCurrentPolicy('gemini-3.5-flash-high');
 
-  assert.equal(secondPolicy.model, 'gemini-3-flash-preview');
+  assert.equal(secondPolicy.model, 'gemini-3.5-flash-high');
   assert.doesNotThrow(() => assert.notDeepEqual(secondPolicy, firstPolicy));
   assert.equal(secondPolicy.retryDelaysMs.includes(999), false);
 });

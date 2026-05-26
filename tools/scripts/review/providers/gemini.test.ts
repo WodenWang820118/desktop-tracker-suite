@@ -13,7 +13,7 @@ test('probeGeminiCliHealth records health-version and health-probe observations 
   try {
     const health = await probeGeminiCliHealth(
       {
-        model: 'gemini-2.5-pro',
+        model: 'gemini-3.5-flash-high',
         repoRoot,
         telemetryContext: {
           callsite: 'checkpoint-review',
@@ -56,7 +56,7 @@ test('runGeminiReview records a successful first attempt with wait-before-start 
 
   const review = await runGeminiReview(
     {
-      model: 'gemini-3-flash-preview',
+      model: 'gemini-3.5-flash-high',
       prompt: 'Review this diff.',
       repoRoot: 'C:/repo',
       telemetryContext: {
@@ -111,7 +111,7 @@ test('runGeminiReview wraps prompts with the selected reviewer profile', async (
       {
         checkpoint: 'test',
         focus: 'tests',
-        model: 'gemini-2.5-pro',
+        model: 'gemini-3.5-flash-high',
         prompt: 'Original test context.',
         repoRoot,
       },
@@ -158,7 +158,7 @@ test('runGeminiReview records capacity-triggered retries with retry delay metada
 
   const review = await runGeminiReview(
     {
-      model: 'gemini-3-flash-preview',
+      model: 'gemini-3.5-flash-high',
       prompt: 'Review this diff.',
       repoRoot: 'C:/repo',
       telemetryContext: {
@@ -217,7 +217,7 @@ test('runGeminiReview records timeout retries before succeeding', async () => {
   try {
     const review = await runGeminiReview(
       {
-        model: 'gemini-2.5-pro',
+        model: 'gemini-3.5-flash-high',
         prompt: 'Review this diff.',
         repoRoot: 'C:/repo',
       },
@@ -273,7 +273,7 @@ test('runGeminiReview does not mark successful timeout-themed output as a timeou
 
   const review = await runGeminiReview(
     {
-      model: 'gemini-2.5-pro',
+      model: 'gemini-3.5-flash-high',
       prompt: 'Review timeout handling.',
       repoRoot: 'C:/repo',
     },

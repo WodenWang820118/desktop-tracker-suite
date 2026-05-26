@@ -65,7 +65,6 @@ interface GoogleReviewCliCommand {
 }
 
 const GOOGLE_REVIEW_CLI_ENV = 'GX_LAW_PREP_REVIEW_GOOGLE_CLI';
-const AGY_REVIEW_TIMEOUT_MS = 30_000;
 
 const GEMINI_HEALTH_PROMPT = 'Reply with exactly OK.';
 let geminiSessionCounter = 0;
@@ -432,10 +431,14 @@ function getGoogleReviewCliCandidates(): GoogleReviewCli[] {
   }
 
   if (configured === 'agy' || configured === 'antigravity') {
+    return ['agy'];
+  }
+
+  if (configured === 'legacy-fallback' || configured === 'agy,gemini') {
     return ['agy', 'gemini'];
   }
 
-  return ['agy', 'gemini'];
+  return ['agy'];
 }
 
 function buildGoogleReviewCliVersionCommand(
@@ -508,18 +511,12 @@ function runGoogleReviewCliTextCommand(input: {
       cli,
       model: input.model,
       prompt: input.prompt,
-      timeoutMs:
-        cli === 'agy'
-          ? Math.min(input.timeoutMs, AGY_REVIEW_TIMEOUT_MS)
-          : input.timeoutMs,
+      timeoutMs: input.timeoutMs,
     });
     const result = input.runCommand({
       ...command,
       cwd: input.cwd,
-      timeoutMs:
-        cli === 'agy'
-          ? Math.min(input.timeoutMs, AGY_REVIEW_TIMEOUT_MS)
-          : input.timeoutMs,
+      timeoutMs: input.timeoutMs,
     });
     lastResult = { cli, result };
     const output = joinOutput(result.stdout, result.stderr);

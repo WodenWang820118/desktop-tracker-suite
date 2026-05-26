@@ -73,7 +73,7 @@
         "review:checkpoint": "node --experimental-strip-types tools/scripts/review/run-checkpoint-review/run-checkpoint-review.ts",
         "review:providers:doctor": "node tools/scripts/review/provider-doctor.ts",
         "review:plan": "node --experimental-strip-types tools/scripts/review/run-checkpoint-review/run-checkpoint-review.ts --checkpoint plan --provider auto --focus general",
-        "review:plan:risky": "node --experimental-strip-types tools/scripts/review/run-checkpoint-review/run-checkpoint-review.ts --checkpoint plan --provider gemini --model gemini-2.5-pro --focus general",
+        "review:plan:risky": "node --experimental-strip-types tools/scripts/review/run-checkpoint-review/run-checkpoint-review.ts --checkpoint plan --provider gemini --model gemini-3.5-flash-high --focus general",
         "review:implementation": "node --experimental-strip-types tools/scripts/review/run-checkpoint-review/run-checkpoint-review.ts --checkpoint implementation --provider auto --focus general",
         "review:test": "node --experimental-strip-types tools/scripts/review/run-checkpoint-review/run-checkpoint-review.ts --checkpoint test --provider auto --focus tests",
         "review:local:doctor": "node --experimental-strip-types tools/scripts/review/local-reviewer/local-reviewer.ts doctor",
