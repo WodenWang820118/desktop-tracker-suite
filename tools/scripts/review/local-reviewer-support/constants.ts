@@ -124,6 +124,8 @@ export const HYBRID_REPO_HABITS_PATH_PATTERNS = [
   /^package\.json$/i,
   /^pnpm-workspace\.ya?ml$/i,
   /^pnpm-lock\.ya?ml$/i,
+  /^bun\.lock$/i,
+  /^bunfig\.toml$/i,
   /^nx\.json$/i,
   /(^|\/)tsconfig[^/]*\.json$/i,
   /(^|\/)project\.json$/i,

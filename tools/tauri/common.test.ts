@@ -7,53 +7,55 @@ import test from 'node:test';
 import {
   buildStagedProductionDependencyInstallArgs,
   installStagedProductionDependencies,
-  isPnpmOfflineMetadataMiss,
-  PNPM_COMMAND,
+  isBunOfflineCacheMiss,
+  BUN_COMMAND,
 } from './common.ts';
 import { RunCommandError, type RunCommandOptions } from '../shared/process.ts';
 
 test('buildStagedProductionDependencyInstallArgs keeps the offline install shape', () => {
   assert.deepEqual(buildStagedProductionDependencyInstallArgs({ offline: true }), [
     'install',
-    '--prod',
-    '--no-lockfile',
+    '--production',
+    '--no-save',
+    '--linker=hoisted',
     '--offline',
   ]);
   assert.deepEqual(buildStagedProductionDependencyInstallArgs({ offline: false }), [
     'install',
-    '--prod',
-    '--no-lockfile',
+    '--production',
+    '--no-save',
+    '--linker=hoisted',
   ]);
 });
 
-test('isPnpmOfflineMetadataMiss detects the pnpm offline metadata code', () => {
+test('isBunOfflineCacheMiss detects a bun offline cache miss', () => {
   assert.equal(
-    isPnpmOfflineMetadataMiss(
+    isBunOfflineCacheMiss(
       new RunCommandError({
         args: ['install'],
-        command: PNPM_COMMAND,
+        command: BUN_COMMAND,
         exitCode: 1,
         signal: null,
-        stderr: 'ERR_PNPM_NO_OFFLINE_META Failed to resolve metadata',
+        stderr: 'error: Failed to resolve sqlite3 (offline mode)',
         stdout: '',
       }),
     ),
     true,
   );
   assert.equal(
-    isPnpmOfflineMetadataMiss(
+    isBunOfflineCacheMiss(
       new RunCommandError({
         args: ['install'],
-        command: PNPM_COMMAND,
+        command: BUN_COMMAND,
         exitCode: 1,
         signal: null,
-        stderr: 'ERR_PNPM_FETCH_404 Not found',
+        stderr: 'error: GET https://registry.npmjs.org/sqlite3 - 404 Not found',
         stdout: '',
       }),
     ),
     false,
   );
-  assert.equal(isPnpmOfflineMetadataMiss(new Error('ERR_PNPM_NO_OFFLINE_META')), false);
+  assert.equal(isBunOfflineCacheMiss(new Error('offline mode')), false);
 });
 
 test('installStagedProductionDependencies succeeds with the offline install first', async () => {
@@ -85,14 +87,14 @@ test('installStagedProductionDependencies succeeds with the offline install firs
   });
 });
 
-test('installStagedProductionDependencies falls back online in CI on offline metadata misses', async () => {
+test('installStagedProductionDependencies falls back online in CI on offline cache misses', async () => {
   const calls: CommandCall[] = [];
   const offlineError = new RunCommandError({
     args: ['install'],
-    command: PNPM_COMMAND,
+    command: BUN_COMMAND,
     exitCode: 1,
     signal: null,
-    stderr: 'ERR_PNPM_NO_OFFLINE_META Failed to resolve metadata',
+    stderr: 'error: Failed to resolve sqlite3 (offline mode)',
     stdout: '',
   });
 
@@ -150,10 +152,10 @@ test('installStagedProductionDependencies uses the online install directly on Wi
 test('installStagedProductionDependencies does not fall back outside CI', async () => {
   const offlineError = new RunCommandError({
     args: ['install'],
-    command: PNPM_COMMAND,
+    command: BUN_COMMAND,
     exitCode: 1,
     signal: null,
-    stderr: 'ERR_PNPM_NO_OFFLINE_META Failed to resolve metadata',
+    stderr: 'error: Failed to resolve sqlite3 (offline mode)',
     stdout: '',
   });
 
@@ -172,14 +174,14 @@ test('installStagedProductionDependencies does not fall back outside CI', async 
   });
 });
 
-test('installStagedProductionDependencies does not fall back for other pnpm errors in CI', async () => {
+test('installStagedProductionDependencies does not fall back for other bun errors in CI', async () => {
   const calls: CommandCall[] = [];
   const otherPnpmError = new RunCommandError({
     args: ['install'],
-    command: PNPM_COMMAND,
+    command: BUN_COMMAND,
     exitCode: 1,
     signal: null,
-    stderr: 'ERR_PNPM_FETCH_404 Not found',
+    stderr: 'error: GET https://registry.npmjs.org/sqlite3 - 404 Not found',
     stdout: '',
   });
 
@@ -204,7 +206,7 @@ test('installStagedProductionDependencies does not fall back for other pnpm erro
 
 test('installStagedProductionDependencies does not fall back for plain errors in CI', async () => {
   const calls: CommandCall[] = [];
-  const plainError = new Error('ERR_PNPM_NO_OFFLINE_META');
+  const plainError = new Error('offline mode');
 
   await withStagedWorkspace(async (cwd) => {
     await assert.rejects(
@@ -228,10 +230,10 @@ test('installStagedProductionDependencies does not fall back for plain errors in
 test('installStagedProductionDependencies surfaces online fallback failures', async () => {
   const offlineError = new RunCommandError({
     args: ['install'],
-    command: PNPM_COMMAND,
+    command: BUN_COMMAND,
     exitCode: 1,
     signal: null,
-    stderr: 'ERR_PNPM_NO_OFFLINE_META Failed to resolve metadata',
+    stderr: 'error: Failed to resolve sqlite3 (offline mode)',
     stdout: '',
   });
   const onlineError = new Error('registry unavailable');
@@ -256,13 +258,13 @@ test('installStagedProductionDependencies surfaces online fallback failures', as
       (error) =>
         error instanceof Error &&
         error.message ===
-          'Online pnpm install fallback failed after an offline metadata miss for test runtime.' &&
+          'Online bun install fallback failed after an offline cache miss for test runtime.' &&
         error.cause === onlineError,
     );
   });
 });
 
-test('installStagedProductionDependencies rejects missing staged workspace config', async () => {
+test('installStagedProductionDependencies rejects a missing staged package.json', async () => {
   const cwd = await mkdtemp(join(tmpdir(), 'tauri-staged-install-test-'));
   try {
     await assert.rejects(
@@ -274,7 +276,7 @@ test('installStagedProductionDependencies rejects missing staged workspace confi
           throw new Error('install should not run');
         },
       }),
-      /Staged pnpm workspace config is missing/u,
+      /Staged package.json is missing/u,
     );
   } finally {
     await rm(cwd, { recursive: true, force: true });
@@ -290,7 +292,15 @@ type CommandCall = [
 async function withStagedWorkspace<T>(callback: (cwd: string) => Promise<T>): Promise<T> {
   const cwd = await mkdtemp(join(tmpdir(), 'tauri-staged-install-test-'));
   try {
-    await writeFile(join(cwd, 'pnpm-workspace.yaml'), 'packages: []\n', 'utf8');
+    await writeFile(
+      join(cwd, 'package.json'),
+      JSON.stringify({
+        name: 'staged-runtime',
+        private: true,
+        trustedDependencies: ['@nestjs/core', 'sqlite3'],
+      }),
+      'utf8',
+    );
     return await callback(cwd);
   } finally {
     await rm(cwd, { recursive: true, force: true });
@@ -307,14 +317,12 @@ function assertCommandCall(
   },
 ): void {
   assert.ok(call);
-  assert.equal(call[0], PNPM_COMMAND);
+  assert.equal(call[0], BUN_COMMAND);
   assert.deepEqual(call[1], expected.args);
   assert.equal(call[2].cwd, expected.cwd);
   assert.equal(call[2].stdio, expected.stdio);
   assert.equal(typeof call[2].log, 'function');
   assert.equal(call[2].env?.CI, 'true');
-  assert.equal(call[2].env?.npm_config_node_linker, 'hoisted');
-  assert.equal(call[2].env?.npm_config_confirm_modules_purge, 'false');
   for (const [key, value] of Object.entries(expected.env ?? {})) {
     assert.equal(call[2].env?.[key], value);
   }

@@ -4,7 +4,6 @@
   "sourceRoot": "apps/react-tracker/src",
   "projectType": "application",
   "tags": [],
-  "// targets": "to see all targets run: nx show project react-tracker --web",
   "targets": {
     "build": {
       "executor": "@nx/vite:build",
@@ -40,14 +39,17 @@
       }
     },
     "test": {
-      "executor": "@nx/vite:test",
+      "executor": "@nx/vitest:test",
       "outputs": ["{options.reportsDirectory}"],
       "options": {
         "reportsDirectory": "../../coverage/react-tracker"
       }
     },
     "lint": {
-      "executor": "@nx/eslint:lint"
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun lint --no-script apps/react-tracker"
+      }
     }
   }
 }

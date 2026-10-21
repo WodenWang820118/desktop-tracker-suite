@@ -8,7 +8,7 @@
     "lint": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "eslint .",
+        "command": "bun lint --no-script .",
         "cwd": "tools/scripts"
       }
     },
@@ -22,7 +22,7 @@
     "typecheck": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "pnpm exec tsc -p tsconfig.json --pretty false && pnpm exec tsc -p tsconfig.spec.json --pretty false",
+        "command": "bun check --no-script -p tsconfig.json --no-pretty && bun check --no-script -p tsconfig.spec.json --no-pretty",
         "cwd": "tools/scripts"
       }
     }

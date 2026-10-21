@@ -15,7 +15,7 @@
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-web</artifactId>
+            <artifactId>spring-boot-starter-webmvc</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -91,7 +91,7 @@
             <plugin>
                 <groupId>dev.nx.maven</groupId>
                 <artifactId>nx-maven-plugin</artifactId>
-                <version>0.0.9</version>
+                <version>0.0.17</version>
             </plugin>
         </plugins>
     </build>

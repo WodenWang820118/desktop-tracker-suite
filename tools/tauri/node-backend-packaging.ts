@@ -6,6 +6,7 @@ type PackageJson = {
   packageManager?: string;
   pkg?: NodeSidecarPkgConfig;
   private?: boolean;
+  trustedDependencies?: string[];
   version?: string;
 };
 
@@ -14,17 +15,10 @@ export type NodeSidecarPkgConfig = {
   ignore?: string[];
 };
 
-export const NODE_BACKEND_INSTALL_WORKSPACE_CONFIG =
-  [
-    'packages: []',
-    '',
-    'nodeLinker: hoisted',
-    '',
-    'allowBuilds:',
-    "  '@nestjs/core': true",
-    "  '@scarf/scarf': false",
-    '  sqlite3: true',
-  ].join('\n') + '\n';
+export const NODE_BACKEND_TRUSTED_DEPENDENCIES = ['@nestjs/core', 'sqlite3'] as const;
+
+export const NODE_BACKEND_INSTALL_POLICY =
+  ['trustedDependencies:', '  - @nestjs/core', '  - sqlite3'].join('\n') + '\n';
 
 export function buildPackagedNodeBackendPackageJson(input: {
   backendPackageJson: PackageJson;
@@ -45,6 +39,7 @@ export function buildPackagedNodeBackendPackageJson(input: {
       sqlite3: sqliteVersion,
     },
     packageManager: input.packageManager,
+    trustedDependencies: [...NODE_BACKEND_TRUSTED_DEPENDENCIES],
   };
 }
 

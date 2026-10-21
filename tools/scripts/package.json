@@ -4,6 +4,6 @@
   "type": "module",
   "scripts": {
     "test": "node --test review/**/*.test.ts review/**/*.spec.ts review-gate/*.test.ts",
-    "typecheck": "tsc -p tsconfig.json --pretty false && tsc -p tsconfig.spec.json --pretty false"
+    "typecheck": "bun check --no-script -p tsconfig.json --no-pretty && bun check --no-script -p tsconfig.spec.json --no-pretty"
   }
 }

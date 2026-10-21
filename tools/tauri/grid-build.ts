@@ -1,7 +1,7 @@
 import { syncDesktopVersionFiles } from './sync-version.ts';
 import {
   logStep,
-  PNPM_COMMAND,
+  BUN_COMMAND,
   runCommand,
   TAURI_PROJECT_ROOT,
   WORKSPACE_ROOT,
@@ -82,7 +82,7 @@ async function runGridSelection({
 async function buildFrontend(selection: GridSelection) {
   const frontend = getFrontendDefinition(selection.frontend);
   logStep(`Building ${selection.frontend} frontend for Tauri grid packaging`);
-  await runCommand(PNPM_COMMAND, frontend.buildArgs, {
+  await runCommand(BUN_COMMAND, frontend.buildArgs, {
     cwd: WORKSPACE_ROOT,
   });
 }
@@ -90,7 +90,7 @@ async function buildFrontend(selection: GridSelection) {
 async function buildBackend(selection: GridSelection) {
   const backend = getBackendDefinition(selection.backend);
   logStep(`Building ${selection.backend} backend for Tauri grid packaging`);
-  await runCommand(PNPM_COMMAND, backend.buildArgs, {
+  await runCommand(BUN_COMMAND, backend.buildArgs, {
     cwd: WORKSPACE_ROOT,
   });
 }
@@ -120,7 +120,7 @@ async function runTauriBuild({
 }) {
   const target = resolveDesktopTargetInfo();
   const tauriArgs = [
-    'exec',
+    'x',
     'tauri',
     'build',
     '--config',
@@ -138,7 +138,7 @@ async function runTauriBuild({
       selection,
     )})`,
   );
-  await runCommand(PNPM_COMMAND, tauriArgs, {
+  await runCommand(BUN_COMMAND, tauriArgs, {
     cwd: TAURI_PROJECT_ROOT,
   });
 }

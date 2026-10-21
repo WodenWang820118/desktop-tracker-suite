@@ -30,10 +30,7 @@ import {
   writeTextFile,
   WORKSPACE_ROOT,
 } from './common.ts';
-import {
-  buildPackagedNodeBackendPackageJson,
-  NODE_BACKEND_INSTALL_WORKSPACE_CONFIG,
-} from './node-backend-packaging.ts';
+import { buildPackagedNodeBackendPackageJson } from './node-backend-packaging.ts';
 import {
   assertHostCanBuildDesktopTarget,
   resolveDesktopTargetInfo,
@@ -107,6 +104,8 @@ async function main() {
   logStep('Copying the built Nest backend into the packaged runtime folder');
   await copyDirectory(NEST_DIST_DIR, BACKEND_RUNTIME_DIR);
   await rm(join(BACKEND_RUNTIME_DIR, 'pnpm-lock.yaml'), { force: true });
+  await rm(join(BACKEND_RUNTIME_DIR, 'pnpm-workspace.yaml'), { force: true });
+  await rm(join(BACKEND_RUNTIME_DIR, 'bun.lock'), { force: true });
 
   const backendPackageJson = await readJson<PackageJson>(distPackageJsonPath);
   await writeJson(
@@ -116,10 +115,6 @@ async function main() {
       packageManager: rootPackageJson.packageManager,
       sqliteVersion: sqlitePackageJson.version,
     }),
-  );
-  await writeTextFile(
-    join(BACKEND_RUNTIME_DIR, 'pnpm-workspace.yaml'),
-    NODE_BACKEND_INSTALL_WORKSPACE_CONFIG,
   );
   await writeTextFile(
     join(BACKEND_RUNTIME_DIR, '.tauri-desktop-target'),

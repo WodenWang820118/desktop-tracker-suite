@@ -32,7 +32,7 @@ import {
 } from './common.ts';
 import {
   buildNodeSidecarPackageJson,
-  NODE_BACKEND_INSTALL_WORKSPACE_CONFIG,
+  NODE_BACKEND_INSTALL_POLICY,
 } from './node-backend-packaging.ts';
 import {
   assertHostCanBuildDesktopTarget,
@@ -79,7 +79,7 @@ export type NodeSidecarCacheKeyInput = {
   packagedPackageJson: unknown;
   pkgEnvironment: Record<string, string>;
   pkgVersion: string;
-  pnpmLockHash: string;
+  lockfileHash: string;
   processArch: string;
   processPlatform: string;
   processVersion: string;
@@ -89,7 +89,7 @@ export type NodeSidecarCacheKeyInput = {
   workspaceConfig: string;
 };
 
-const NODE_SIDECAR_CACHE_SCHEMA_VERSION = 2;
+const NODE_SIDECAR_CACHE_SCHEMA_VERSION = 3;
 const NODE_SIDECAR_CACHE_MANIFEST_NAME = 'materialize-cache.json';
 
 const NODE_SIDECAR_RUNTIME_DEFINITIONS: Record<
@@ -206,14 +206,14 @@ async function main() {
     packagedPackageJson,
     pkgEnvironment: buildPkgCacheEnvironment(),
     pkgVersion: await readPkgVersion(),
-    pnpmLockHash: await hashFile(join(WORKSPACE_ROOT, 'pnpm-lock.yaml')),
+    lockfileHash: await hashFile(join(WORKSPACE_ROOT, 'bun.lock')),
     processArch: process.arch,
     processPlatform: process.platform,
     processVersion: process.version,
     profile: target.profile,
     rustTarget: target.rustTarget,
     sidecarName: runtimeDefinition.sidecarName,
-    workspaceConfig: NODE_BACKEND_INSTALL_WORKSPACE_CONFIG,
+    workspaceConfig: NODE_BACKEND_INSTALL_POLICY,
   });
 
   const cachedSidecar = await resolveCachedSidecar({
@@ -237,13 +237,11 @@ async function main() {
   await ensureCleanDir(stageRoot);
   await copyDirectory(runtimeDefinition.backendDistDir, stageRoot);
   await rm(join(stageRoot, 'pnpm-lock.yaml'), { force: true });
+  await rm(join(stageRoot, 'pnpm-workspace.yaml'), { force: true });
+  await rm(join(stageRoot, 'bun.lock'), { force: true });
   await writeJson(
     join(stageRoot, 'package.json'),
     packagedPackageJson,
-  );
-  await writeTextFile(
-    join(stageRoot, 'pnpm-workspace.yaml'),
-    NODE_BACKEND_INSTALL_WORKSPACE_CONFIG,
   );
 
   logStep(
@@ -272,7 +270,7 @@ async function main() {
   logStep(`Packaging the ${runtimeDefinition.label} backend into a self-contained sidecar executable`);
   const pkgCommand = getWorkspaceBinaryPath('pkg');
   if (!(await fileExists(pkgCommand))) {
-    throw new Error(`Workspace pkg binary is missing at ${pkgCommand}. Run pnpm install first.`);
+    throw new Error(`Workspace pkg binary is missing at ${pkgCommand}. Run bun install first.`);
   }
 
   await runCommand(
@@ -384,8 +382,8 @@ async function resolveCachedSidecar({
 function buildInstallCacheEnvironment(): Record<string, string> {
   return {
     CI: 'true',
-    npm_config_confirm_modules_purge: 'false',
-    npm_config_node_linker: 'hoisted',
+    bun_linker: 'hoisted',
+    bun_production: 'true',
   };
 }
 

@@ -1,6 +1,6 @@
 import {
   DEV_FRONTEND_URL,
-  PNPM_COMMAND,
+  BUN_COMMAND,
   TAURI_PROJECT_ROOT,
   logStep,
   spawnLogged,
@@ -10,15 +10,15 @@ import {
 
 async function main() {
   const childProcesses = [
-    spawnLogged(PNPM_COMMAND, [
-      'exec',
+    spawnLogged(BUN_COMMAND, [
+      'x',
       'nx',
       'run',
       'ng-tracker:serve',
       '--host=127.0.0.1',
       '--port=4200',
     ]),
-    spawnLogged(PNPM_COMMAND, ['exec', 'nx', 'run', 'nest-backend:serve:development'], {
+    spawnLogged(BUN_COMMAND, ['x', 'nx', 'run', 'nest-backend:serve:development'], {
       env: {
         ...process.env,
         NODE_ENV: 'dev',
@@ -50,8 +50,8 @@ async function main() {
     await waitForUrl('http://127.0.0.1:3000/health', { attempts: 90, delayMs: 1000 });
 
     tauriProcess = spawnLogged(
-      PNPM_COMMAND,
-      ['exec', 'tauri', 'dev', '--config', 'src-tauri/tauri.conf.json', '--no-dev-server-wait'],
+      BUN_COMMAND,
+      ['x', 'tauri', 'dev', '--config', 'src-tauri/tauri.conf.json', '--no-dev-server-wait'],
       {
         cwd: TAURI_PROJECT_ROOT,
       },

@@ -1,12 +1,16 @@
 import { useEffect, useState } from 'react';
 import { themes } from '../themes';
 
-export const useTheme = () => {
-  const [theme, setTheme] = useState<'light' | 'dark'>('light');
+function resolveTheme(): 'light' | 'dark' {
+  const saved = localStorage.getItem('theme');
+  const prefersDark = globalThis.matchMedia(
+    '(prefers-color-scheme: dark)',
+  ).matches;
+  return (saved ? saved === 'dark' : prefersDark) ? 'dark' : 'light';
+}
 
-  useEffect(() => {
-    initTheme();
-  }, []);
+export const useTheme = () => {
+  const [theme, setTheme] = useState<'light' | 'dark'>(resolveTheme);
 
   const switchPrimeReactTheme = (isDark: boolean) => {
     const themeUrl = isDark ? themes.dark : themes.light;
@@ -25,23 +29,21 @@ export const useTheme = () => {
     themeLink.href = themeUrl;
   };
 
-  const initTheme = () => {
-    const saved = localStorage.getItem('theme');
-    const prefersDark = globalThis.matchMedia(
-      '(prefers-color-scheme: dark)',
-    ).matches;
-    const useDark = saved ? saved === 'dark' : prefersDark;
-
-    if (useDark) {
-      document.documentElement.classList.add('dark');
-      setTheme('dark');
-      switchPrimeReactTheme(true);
-    } else {
-      document.documentElement.classList.remove('dark');
-      setTheme('light');
-      switchPrimeReactTheme(false);
-    }
+  const applyTheme = (next: 'light' | 'dark') => {
+    const useDark = next === 'dark';
+    document.documentElement.classList.toggle('dark', useDark);
+    switchPrimeReactTheme(useDark);
   };
+
+  const initTheme = () => {
+    const next = resolveTheme();
+    applyTheme(next);
+    setTheme(next);
+  };
+
+  useEffect(() => {
+    applyTheme(theme);
+  }, [theme]);
 
   const toggleTheme = () => {
     const newTheme = theme === 'light' ? 'dark' : 'light';

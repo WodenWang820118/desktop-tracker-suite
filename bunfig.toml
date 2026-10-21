@@ -1,0 +1,6 @@
+[install]
+linker = "hoisted"
+
+[fmt]
+singleQuote = true
+ignorePatterns = ["dist", "coverage", ".nx", ".angular"]

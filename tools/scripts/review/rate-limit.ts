@@ -164,7 +164,9 @@ export async function acquireGeminiLock(
       }
 
       if (Date.now() - startedWaitingAtMs >= waitTimeoutMs) {
-        throw new Error('Timed out waiting for the Gemini review lock.');
+        throw new Error('Timed out waiting for the Gemini review lock.', {
+          cause: error,
+        });
       }
 
       await sleep(250);

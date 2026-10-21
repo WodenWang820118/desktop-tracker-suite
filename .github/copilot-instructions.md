@@ -13,7 +13,7 @@ routing, gate conditions, or review lifecycle rules.
   `.agents/workflows`.
 - For review checkpoints, use the shared contract plus the relevant
   tool-native reviewer profile or prompt named by `AGENTS.md`.
-- Use repo review wrappers such as `pnpm review:*` only as directed by
+- Use repo review wrappers such as `bun run review:*` only as directed by
   `AGENTS.md` and its referenced workflows.
 
 ## Repo Memory
@@ -30,5 +30,5 @@ fact. Keep entries concise and do not duplicate `AGENTS.md` or
 
 - Do not recreate `.github/skills` or `.gemini/skills` copies unless a tool
   proves it cannot read `.agents/skills`.
-- Run workspace tasks through `pnpm nx ...` after loading the Nx guidance named
+- Run workspace tasks through `bun nx ...` after loading the Nx guidance named
   by `AGENTS.md`.

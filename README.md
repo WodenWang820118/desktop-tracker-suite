@@ -32,15 +32,15 @@ The workspace also keeps alternative browser and backend implementations for com
 
 ## Prerequisites
 
-- Node.js 24+
-- pnpm 11.0.1 (the workspace is pinned via `packageManager`)
+- Node.js >=24.15.0
+- Bun 1.4.3-canary.20261019.1 (the workspace is pinned via `packageManager`; this canary includes `bun lint`, `bun fmt`, and `bun check`)
 - Rust toolchain for Tauri desktop builds
 - JDK 25+ and Maven if you work on the Spring backend
 
 ## Install
 
 ```bash
-pnpm install
+bun install
 ```
 
 ## Development
@@ -48,23 +48,23 @@ pnpm install
 ### Browser Frontends
 
 ```bash
-pnpm run dev-ng
-pnpm run dev-vue
-pnpm run dev-react
+bun run dev-ng
+bun run dev-vue
+bun run dev-react
 ```
 
 ### Backends
 
 ```bash
-pnpm run dev-nest
-pnpm run dev-express
-pnpm run dev-spring
+bun run dev-nest
+bun run dev-express
+bun run dev-spring
 ```
 
 ### Desktop Shell
 
 ```bash
-pnpm run desktop:dev
+bun run desktop:dev
 ```
 
 The desktop shell expects the Angular frontend on port `4200` and the Nest backend on port `3000` during development.
@@ -74,60 +74,65 @@ The desktop shell expects the Angular frontend on port `4200` and the Nest backe
 ### Frontends
 
 ```bash
-pnpm run build-ng
-pnpm run build-prod-ng
-pnpm run build-vue
-pnpm run build-prod-vue
-pnpm run build-react
-pnpm run build-prod-react
+bun run build-ng
+bun run build-prod-ng
+bun run build-vue
+bun run build-prod-vue
+bun run build-react
+bun run build-prod-react
 ```
 
 ### Backends
 
 ```bash
-pnpm run build-nest
-pnpm run build-prod-nest
-pnpm run build-express
-pnpm run build-prod-express
-pnpm run build-spring
+bun run build-nest
+bun run build-prod-nest
+bun run build-express
+bun run build-prod-express
+bun run build-spring
 ```
 
 ### Desktop Packaging
 
 ```bash
-pnpm run desktop:materialize-runtime
-pnpm run desktop:build
-pnpm run desktop:package
+bun run desktop:materialize-runtime
+bun run desktop:build
+bun run desktop:package
 ```
 
 Useful desktop verification commands:
 
 ```bash
-pnpm run desktop:test:tooling
-pnpm run desktop:smoke-runtime
+bun run desktop:test:tooling
+bun run desktop:smoke-runtime
 ```
 
 ## Testing
 
 ```bash
-pnpm run test-back:cov
+bun run test-back:cov
 ```
 
 ## Troubleshooting
 
-If native dependencies are blocked during install, run:
+Bun does not run dependency lifecycle scripts unless the package is listed in
+`trustedDependencies` in `package.json`. The workspace trusts `@nestjs/core`,
+`@swc/core`, `esbuild`, `nx`, and `sqlite3`.
+
+## Lint, format, and typecheck
 
 ```bash
-pnpm approve-builds
+bun run lint
+bun run format:check
+bun run check
 ```
 
-Approved and blocked dependency build scripts are recorded in
-`pnpm-workspace.yaml` under `allowBuilds`.
+`bun lint` uses Bun's built-in rules and does not load an ESLint config. `bun fmt` formats from `bunfig.toml` with single quotes. `bun check` type-checks each TypeScript project. The root `tsconfig.json` does not include the apps, so the `check` script passes `--no-script` and a project path. Nx `typecheck` targets use the same command.
 
 ## Project Configuration
 
 - Monorepo: Nx
-- Package manager: pnpm 11
+- Package manager: Bun 1.4.3-canary.20261019.1
 - Desktop shell: Tauri
 - Web build tools: Angular CLI, Vite, Rspack
 - Backend build tools: Nx Node tooling, Maven

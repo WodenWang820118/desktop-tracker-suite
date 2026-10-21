@@ -31,5 +31,5 @@ Review rules:
 - If this is a security-sensitive change, use the security reviewer lens
 - If this is a UI change, use the UX reviewer lens
 - If this is an `implementation` review, treat it as an escalation checkpoint and say clearly whether Gemini findings need additional follow-up
-- If this is a `plan` review and there are no blocking findings left, open the implementation gate by running `pnpm review:approve-pre-implementation -- --reviewer copilot-claude --focus "${input:focus}" --summary "Approved after Copilot Claude plan review"`.
+- If this is a `plan` review and there are no blocking findings left, open the implementation gate by running `bun run review:approve-pre-implementation -- --reviewer copilot-claude --focus "${input:focus}" --summary "Approved after Copilot Claude plan review"`.
 - If blocking findings remain, do not run the approval command and say that the implementation gate must stay closed.

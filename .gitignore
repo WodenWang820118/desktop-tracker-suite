@@ -63,3 +63,6 @@ buildNumber.properties
 apps/tauri-shell/src-tauri/binaries/*
 !apps/tauri-shell/src-tauri/binaries/.gitkeep
 apps/tauri-shell/src-tauri/generated-grid-configs/
+
+.claude/worktrees
+.claude/settings.local.json

@@ -9,7 +9,6 @@
     "default": ["{projectRoot}/**/*", "sharedGlobals"],
     "production": [
       "default",
-      "!{projectRoot}/eslint.config.mjs",
       "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
       "!{projectRoot}/tsconfig.spec.json",
       "!{projectRoot}/jest.config.[jt]s",
@@ -28,28 +27,12 @@
       "cache": true,
       "inputs": ["default", "^production"]
     },
-    "@nx/eslint:lint": {
-      "cache": true,
-      "inputs": [
-        "default",
-        "^default",
-        "{workspaceRoot}/eslint.config.mjs",
-        "{projectRoot}/eslint.config.mjs",
-        {
-          "externalDependencies": ["eslint"]
-        }
-      ]
-    },
     "lint": {
       "cache": true,
       "inputs": [
         "default",
         "^default",
-        "{workspaceRoot}/eslint.config.mjs",
-        "{projectRoot}/eslint.config.mjs",
-        {
-          "externalDependencies": ["eslint"]
-        }
+        "{workspaceRoot}/bunfig.toml"
       ]
     },
     "@nx/jest:jest": {
@@ -69,7 +52,7 @@
   "generators": {
     "@nx/angular:application": {
       "e2eTestRunner": "none",
-      "linter": "eslint",
+      "linter": "none",
       "style": "scss",
       "unitTestRunner": "vitest-angular"
     },
@@ -77,7 +60,7 @@
       "application": {
         "babel": true,
         "style": "css",
-        "linter": "eslint",
+        "linter": "none",
         "bundler": "vite"
       },
       "component": {
@@ -85,35 +68,24 @@
       },
       "library": {
         "style": "css",
-        "linter": "eslint"
+        "linter": "none"
       }
     }
   },
   "plugins": [
     {
-      "plugin": "@nx/webpack/plugin",
-      "options": {
-        "buildTargetName": "build",
-        "serveTargetName": "serve",
-        "previewTargetName": "preview",
-        "serveStaticTargetName": "serve-static"
-      }
-    },
-    {
-      "plugin": "@nx/eslint/plugin",
-      "options": {
-        "targetName": "lint",
-        "extensions": ["ts", "tsx", "js", "jsx", "html", "vue"]
-      }
-    },
-    {
       "plugin": "@nx/vite/plugin",
       "options": {
         "buildTargetName": "build",
-        "testTargetName": "test",
         "serveTargetName": "serve",
         "previewTargetName": "preview",
         "serveStaticTargetName": "serve-static"
+      }
+    },
+    {
+      "plugin": "@nx/vitest",
+      "options": {
+        "testTargetName": "test"
       }
     },
     {

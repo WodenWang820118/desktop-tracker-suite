@@ -471,6 +471,7 @@ function withProviderObservabilityLock<T>(
       if (Date.now() - startedAtMs >= OBSERVABILITY_LOCK_TIMEOUT_MS) {
         throw new Error(
           'Timed out while waiting for the provider observability cache lock.',
+          { cause: error },
         );
       }
 

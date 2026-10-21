@@ -81,9 +81,9 @@ one-line edit:
 
 The primary agent must not self-approve its own plan, code, or tests.
 
-Pre-implementation gate commands: inspect with `pnpm review:status`, approve
-with `pnpm review:approve-pre-implementation -- --reviewer <id> --focus <area>
---summary "<summary>"`, and reset with `pnpm review:reset`.
+Pre-implementation gate commands: inspect with `bun run review:status`, approve
+with `bun run review:approve-pre-implementation -- --reviewer <id> --focus <area>
+--summary "<summary>"`, and reset with `bun run review:reset`.
 
 ## Task Size Summary
 
@@ -117,8 +117,8 @@ Full rules: `.agents/workflows/task-sizing.md`.
 - `pre-merge`: additional wrapper only; it does not replace implementation
   review or the pre-implementation gate.
 
-Use `pnpm review:plan`, `pnpm review:test`, and
-`pnpm review:implementation` unless the detailed workflow says a pinned
+Use `bun run review:plan`, `bun run review:test`, and
+`bun run review:implementation` unless the detailed workflow says a pinned
 provider is required.
 
 First-load routing rules that must stay inline:
@@ -173,7 +173,7 @@ Full phase rules: `.agents/workflows/phased-workflow.md`.
 
 ## Nx Rules
 
-- Prefer `pnpm nx ...` and Nx targets over underlying tools.
+- Prefer `bun nx ...` and Nx targets over underlying tools.
 - Load `nx-workspace` before Nx exploration, target discovery, or workspace
   debugging.
 - Load `nx-generate` before scaffolding, setup, or generator work.
@@ -186,7 +186,7 @@ Full phase rules: `.agents/workflows/phased-workflow.md`.
 
 - For navigating/exploring the workspace, invoke the `nx-workspace` skill first - it has patterns for querying projects, targets, and dependencies
 - When running tasks (for example build, lint, test, e2e, etc.), always prefer running the task through `nx` (i.e. `nx run`, `nx run-many`, `nx affected`) instead of using the underlying tooling directly
-- Prefix nx commands with the workspace's package manager (for example `pnpm nx build`, `pnpm nx run`, `pnpm exec nx show project`) - avoids using globally installed CLI
+- Prefix nx commands with the workspace's package manager (for example `bun nx build`, `bun nx run`, `bun x nx show project`) - avoids using globally installed CLI
 - You have access to the Nx MCP server and its tools, use them to help the user
 - For Nx plugin best practices, check `node_modules/@nx/<plugin>/PLUGIN.md`. Not all plugins have this file - proceed without it if unavailable.
 - NEVER guess CLI flags - always check docs or `--help` first when unsure

@@ -60,7 +60,7 @@ describe('TaskService', () => {
       day: '2023-07-31',
       reminder: true,
     };
-    const expectedResult = { id: '1', ...createTaskDto };
+    const expectedResult = { ...createTaskDto };
     mockTaskRepository.create.mockReturnValue(createTaskDto);
     mockTaskRepository.save.mockResolvedValue(expectedResult);
     const result = await service.create(createTaskDto);

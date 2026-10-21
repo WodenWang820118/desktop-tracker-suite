@@ -26,7 +26,7 @@ A modern task management application built with React, TypeScript, and PrimeReac
 ### Run the development server
 
 ```bash
-pnpm run dev-react
+bun run dev-react
 ```
 
 The application will be available at [http://localhost:4200](http://localhost:4200)
@@ -34,7 +34,7 @@ The application will be available at [http://localhost:4200](http://localhost:42
 ### Run the backend API
 
 ```bash
-pnpm run dev-back
+bun run dev-back
 ```
 
 The API will be available at [http://localhost:3000](http://localhost:3000)
