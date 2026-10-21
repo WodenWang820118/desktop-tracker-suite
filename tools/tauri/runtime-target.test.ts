@@ -16,7 +16,9 @@ function getCurrentHostDesktopTargetProfileOrSkip(
     return getHostDesktopTargetProfile();
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    testContext.skip(`Current host is outside the supported desktop matrix: ${message}`);
+    testContext.skip(
+      `Current host is outside the supported desktop matrix: ${message}`,
+    );
     return undefined;
   }
 }
@@ -31,9 +33,18 @@ test('resolveDesktopTargetInfo uses TAURI_DESKTOP_TARGET when provided', () => {
   assert.equal(target.hostPlatform, 'linux');
   assert.equal(target.hostArch, 'x64');
   assert.equal(target.nodeBinaryName, 'node');
-  assert.equal(target.nodeDistributionPath, `node-v${NODE_VERSION}-linux-x64.tar.gz`);
-  assert.equal(target.nodeArchiveFileName, `node-v${NODE_VERSION}-linux-x64.tar.gz`);
-  assert.equal(target.nodeArchiveEntryPath, `node-v${NODE_VERSION}-linux-x64/bin/node`);
+  assert.equal(
+    target.nodeDistributionPath,
+    `node-v${NODE_VERSION}-linux-x64.tar.gz`,
+  );
+  assert.equal(
+    target.nodeArchiveFileName,
+    `node-v${NODE_VERSION}-linux-x64.tar.gz`,
+  );
+  assert.equal(
+    target.nodeArchiveEntryPath,
+    `node-v${NODE_VERSION}-linux-x64/bin/node`,
+  );
   assert.equal(target.nodeCacheFileName, `node-v${NODE_VERSION}-linux-x64`);
 });
 
@@ -47,9 +58,18 @@ test('resolveDesktopTargetInfo maps Rust target triples back to desktop profiles
   assert.equal(target.hostPlatform, 'darwin');
   assert.equal(target.hostArch, 'arm64');
   assert.equal(target.nodeBinaryName, 'node');
-  assert.equal(target.nodeDistributionPath, `node-v${NODE_VERSION}-darwin-arm64.tar.gz`);
-  assert.equal(target.nodeArchiveFileName, `node-v${NODE_VERSION}-darwin-arm64.tar.gz`);
-  assert.equal(target.nodeArchiveEntryPath, `node-v${NODE_VERSION}-darwin-arm64/bin/node`);
+  assert.equal(
+    target.nodeDistributionPath,
+    `node-v${NODE_VERSION}-darwin-arm64.tar.gz`,
+  );
+  assert.equal(
+    target.nodeArchiveFileName,
+    `node-v${NODE_VERSION}-darwin-arm64.tar.gz`,
+  );
+  assert.equal(
+    target.nodeArchiveEntryPath,
+    `node-v${NODE_VERSION}-darwin-arm64/bin/node`,
+  );
   assert.equal(target.nodeCacheFileName, `node-v${NODE_VERSION}-darwin-arm64`);
 });
 
@@ -63,9 +83,18 @@ test('resolveDesktopTargetInfo resolves the full darwin-arm64 target record from
   assert.equal(target.hostPlatform, 'darwin');
   assert.equal(target.hostArch, 'arm64');
   assert.equal(target.nodeBinaryName, 'node');
-  assert.equal(target.nodeDistributionPath, `node-v${NODE_VERSION}-darwin-arm64.tar.gz`);
-  assert.equal(target.nodeArchiveFileName, `node-v${NODE_VERSION}-darwin-arm64.tar.gz`);
-  assert.equal(target.nodeArchiveEntryPath, `node-v${NODE_VERSION}-darwin-arm64/bin/node`);
+  assert.equal(
+    target.nodeDistributionPath,
+    `node-v${NODE_VERSION}-darwin-arm64.tar.gz`,
+  );
+  assert.equal(
+    target.nodeArchiveFileName,
+    `node-v${NODE_VERSION}-darwin-arm64.tar.gz`,
+  );
+  assert.equal(
+    target.nodeArchiveEntryPath,
+    `node-v${NODE_VERSION}-darwin-arm64/bin/node`,
+  );
   assert.equal(target.nodeCacheFileName, `node-v${NODE_VERSION}-darwin-arm64`);
 });
 

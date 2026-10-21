@@ -198,8 +198,7 @@ export function evaluateApproval(
   state: ReviewGateState | null,
   repoContext: RepoContext,
 ):
-  | { valid: true; approval: ReviewApproval }
-  | { valid: false; reason: string } {
+  { valid: true; approval: ReviewApproval } | { valid: false; reason: string } {
   const approval = state?.approval;
 
   if (!approval) {

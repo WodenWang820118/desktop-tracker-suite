@@ -84,7 +84,9 @@ export function probeCopilotCliHealth(
     dependencies.recordObservation ?? recordProviderObservation;
   const runCommand = dependencies.runCommand ?? runLocalCliCommand;
   const repoRoot = input.repoRoot ?? process.cwd();
-  const telemetryContext = createProviderTelemetryContext(input.telemetryContext);
+  const telemetryContext = createProviderTelemetryContext(
+    input.telemetryContext,
+  );
   const cached = getCachedProviderHealth('copilot', input.model, repoRoot);
   if (cached) {
     return cached;
@@ -221,7 +223,9 @@ export function runCopilotReview(
     dependencies.recordObservation ?? recordProviderObservation;
   const runCommand = dependencies.runCommand ?? runLocalCliCommand;
   const repoRoot = input.repoRoot ?? process.cwd();
-  const telemetryContext = createProviderTelemetryContext(input.telemetryContext);
+  const telemetryContext = createProviderTelemetryContext(
+    input.telemetryContext,
+  );
   const reasoningEffortSupportCache =
     dependencies.reasoningEffortSupportCache ??
     DEFAULT_REASONING_EFFORT_SUPPORT_CACHE;
@@ -305,16 +309,15 @@ export function runCopilotReview(
         errorCategory:
           !result.error && result.status === 0 && output.trim().length > 0
             ? null
-            : output.trim().length === 0 &&
-                !result.error &&
-                result.status === 0
+            : output.trim().length === 0 && !result.error && result.status === 0
               ? 'empty-output'
               : classifyCopilotErrorCategory(output, result.error?.message),
         model: input.model,
         operation: 'review',
         promptChars: reviewPrompt.length,
         provider: 'copilot',
-        success: !result.error && result.status === 0 && output.trim().length > 0,
+        success:
+          !result.error && result.status === 0 && output.trim().length > 0,
         timedOut: isCopilotTimedOut(result, output),
       },
       repoRoot,
@@ -342,9 +345,7 @@ export function runCopilotReview(
       durationMs: now() - reviewStartedAtMs,
       errorCategory: reviewSucceeded
         ? null
-        : output.trim().length === 0 &&
-            !result.error &&
-            result.status === 0
+        : output.trim().length === 0 && !result.error && result.status === 0
           ? 'empty-output'
           : classifyCopilotErrorCategory(output, result.error?.message),
       model: input.model,
@@ -383,7 +384,9 @@ export function buildCopilotReviewCommandArgs(
   const recordObservation =
     dependencies.recordObservation ?? recordProviderObservation;
   const repoRoot = input.repoRoot ?? process.cwd();
-  const telemetryContext = createProviderTelemetryContext(input.telemetryContext);
+  const telemetryContext = createProviderTelemetryContext(
+    input.telemetryContext,
+  );
   const reasoningEffortSupportCache =
     dependencies.reasoningEffortSupportCache ??
     DEFAULT_REASONING_EFFORT_SUPPORT_CACHE;

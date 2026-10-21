@@ -66,7 +66,9 @@ async function runGridSelection({
     ...selection,
     version: await readWorkspaceVersion(),
   });
-  logStep(`Generated Tauri grid config at ${generatedConfig.projectConfigPath}`);
+  logStep(
+    `Generated Tauri grid config at ${generatedConfig.projectConfigPath}`,
+  );
 
   if (mode === 'prepare') {
     return;
@@ -97,7 +99,9 @@ async function buildBackend(selection: GridSelection) {
 
 async function materializeBackend(selection: GridSelection) {
   const backend = getBackendDefinition(selection.backend);
-  logStep(`Materializing ${selection.backend} backend runtime for Tauri grid packaging`);
+  logStep(
+    `Materializing ${selection.backend} backend runtime for Tauri grid packaging`,
+  );
   await runCommand('node', backend.materializeArgs, {
     cwd: WORKSPACE_ROOT,
   });
@@ -152,7 +156,9 @@ function parseGridMode(value: string | undefined): GridMode {
     return value;
   }
 
-  throw new Error('Unsupported grid mode. Expected "build", "package", "prepare", or "verify".');
+  throw new Error(
+    'Unsupported grid mode. Expected "build", "package", "prepare", or "verify".',
+  );
 }
 
 function resolveSelectionFromArgsOrEnv(args: string[]): GridSelection {
@@ -165,6 +171,8 @@ function resolveSelectionFromArgsOrEnv(args: string[]): GridSelection {
 }
 
 main().catch((error) => {
-  console.error(error instanceof Error ? error.stack ?? error.message : String(error));
+  console.error(
+    error instanceof Error ? (error.stack ?? error.message) : String(error),
+  );
   process.exitCode = 1;
 });

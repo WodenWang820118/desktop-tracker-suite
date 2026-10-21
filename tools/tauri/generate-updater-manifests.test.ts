@@ -34,26 +34,38 @@ test('parseReleaseArtifact extracts variant and desktop target from asset names'
   );
   assert.equal(
     parseReleaseArtifact(
-      join('release', 'desktop-tracker-suite-ng-nest-1.4.2-darwin-aarch64.app.tar.gz'),
+      join(
+        'release',
+        'desktop-tracker-suite-ng-nest-1.4.2-darwin-aarch64.app.tar.gz',
+      ),
     ),
     null,
   );
   assert.equal(
     parseReleaseArtifact(
-      join('release', 'desktop-tracker-suite-ng-nest-1.4.2-darwin-x64.app.tar.gz'),
+      join(
+        'release',
+        'desktop-tracker-suite-ng-nest-1.4.2-darwin-x64.app.tar.gz',
+      ),
     ),
     null,
   );
 
   const windowsAsset = parseReleaseArtifact(
-    join('release', 'desktop-tracker-suite-ng-nest-1.4.2-windows-x64-setup.exe'),
+    join(
+      'release',
+      'desktop-tracker-suite-ng-nest-1.4.2-windows-x64-setup.exe',
+    ),
   );
   assert.ok(windowsAsset);
   assert.equal(windowsAsset.desktopTarget, 'windows-x64');
   assert.equal(windowsAsset.isSignature, false);
 
   const linuxAsset = parseReleaseArtifact(
-    join('release', 'desktop-tracker-suite-vue-express-1.4.2-linux-x64.AppImage.tar.gz'),
+    join(
+      'release',
+      'desktop-tracker-suite-vue-express-1.4.2-linux-x64.AppImage.tar.gz',
+    ),
   );
   assert.ok(linuxAsset);
   assert.equal(linuxAsset.desktopTarget, 'linux-x64');
@@ -63,8 +75,12 @@ test('parseReleaseArtifact extracts variant and desktop target from asset names'
 });
 
 test('selectUpdaterArtifactPair prefers the highest priority Windows signature pair', () => {
-  const setupAsset = releaseArtifact('desktop-tracker-suite-ng-nest-1.4.2-windows-x64-setup.exe');
-  const nsisAsset = releaseArtifact('desktop-tracker-suite-ng-nest-1.4.2-windows-x64.nsis.zip');
+  const setupAsset = releaseArtifact(
+    'desktop-tracker-suite-ng-nest-1.4.2-windows-x64-setup.exe',
+  );
+  const nsisAsset = releaseArtifact(
+    'desktop-tracker-suite-ng-nest-1.4.2-windows-x64.nsis.zip',
+  );
   const pair = __test.selectUpdaterArtifactPair({
     artifacts: [
       nsisAsset,
@@ -102,7 +118,9 @@ test('buildUpdaterManifestContents emits all variant manifests and canonical ali
   );
 
   const reactExpress = JSON.parse(
-    manifests[getUpdaterManifestFileName({ backend: 'express', frontend: 'react' })],
+    manifests[
+      getUpdaterManifestFileName({ backend: 'express', frontend: 'react' })
+    ],
   ) as {
     platforms: Record<string, { signature: string; url: string }>;
     pub_date: string;
@@ -133,7 +151,10 @@ test('generateUpdaterManifestFiles copies latest-ng-nest.json byte-for-byte to l
   });
   const outputRoot = join(WORKSPACE_ROOT, 'tmp');
   await mkdir(outputRoot, { recursive: true });
-  const outputDir = join(await mkdtemp(join(outputRoot, 'tauri-updater-output-')), 'manifests');
+  const outputDir = join(
+    await mkdtemp(join(outputRoot, 'tauri-updater-output-')),
+    'manifests',
+  );
 
   const writtenFiles = await generateUpdaterManifestFiles({
     now: new Date('2026-04-27T00:00:00.000Z'),
@@ -161,7 +182,10 @@ test('generateUpdaterManifestFiles copies latest-ng-nest.json byte-for-byte to l
   );
 
   const canonicalVariant = await readFile(
-    join(outputDir, getUpdaterManifestFileName({ backend: 'nest', frontend: 'ng' })),
+    join(
+      outputDir,
+      getUpdaterManifestFileName({ backend: 'nest', frontend: 'ng' }),
+    ),
   );
   const canonicalAlias = await readFile(
     join(outputDir, getCanonicalUpdaterManifestFileName()),
@@ -198,13 +222,15 @@ test('buildUpdaterManifestContents fails when a required platform artifact is mi
   );
 });
 
-async function createCompleteReleaseArtifactTree(options: {
-  skip?: {
-    backend: GridBackend;
-    desktopTarget: GridDesktopTarget;
-    frontend: GridFrontend;
-  };
-} = {}) {
+async function createCompleteReleaseArtifactTree(
+  options: {
+    skip?: {
+      backend: GridBackend;
+      desktopTarget: GridDesktopTarget;
+      frontend: GridFrontend;
+    };
+  } = {},
+) {
   const root = await mkdtemp(join(tmpdir(), 'tauri-release-artifacts-'));
   for (const frontend of GRID_FRONTENDS) {
     for (const backend of GRID_BACKENDS) {

@@ -24,7 +24,7 @@ The feasibility result above is still the recommendation, but the repo implement
 - Default packaged desktop runtime: `nest-backend` as a true Tauri sidecar built as a self-contained Node executable.
 - Alternate packaged desktop runtime: `express-backend` as a true Tauri sidecar built the same way.
 - Alternate packaged desktop runtime: `spring-backend` as a true Tauri sidecar using the GraalVM native executable.
-The current maintained desktop packaging model is Tauri `bundle.externalBin` sidecars for Spring, Nest, and Express. The older Nest `bundle.resources` path is now treated as historical evaluation context, not as an exposed package target.
+  The current maintained desktop packaging model is Tauri `bundle.externalBin` sidecars for Spring, Nest, and Express. The older Nest `bundle.resources` path is now treated as historical evaluation context, not as an exposed package target.
 
 ## Packaging Clarification
 
@@ -92,11 +92,11 @@ Metrics snapshots:
 
 ### Comparison Matrix
 
-| Scenario | Runtime payload | Windows installer | Health-ready | CRUD smoke | Result |
-| --- | ---: | ---: | ---: | --- | --- |
-| Nest + Node packaged runtime | 153.41 MB | 35.73 MB | 1043 ms | Pass | Baseline |
-| Spring native standalone | 100.15 MB | n/a | 1068 ms | Pass | Works |
-| Spring native packaged in Tauri | 100.15 MB | 66.20 MB | 1036 ms | Pass | Works, but installer larger |
+| Scenario                        | Runtime payload | Windows installer | Health-ready | CRUD smoke | Result                      |
+| ------------------------------- | --------------: | ----------------: | -----------: | ---------- | --------------------------- |
+| Nest + Node packaged runtime    |       153.41 MB |          35.73 MB |      1043 ms | Pass       | Baseline                    |
+| Spring native standalone        |       100.15 MB |               n/a |      1068 ms | Pass       | Works                       |
+| Spring native packaged in Tauri |       100.15 MB |          66.20 MB |      1036 ms | Pass       | Works, but installer larger |
 
 ### Delta Summary
 

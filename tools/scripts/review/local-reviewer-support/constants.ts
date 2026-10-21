@@ -1,7 +1,4 @@
-import type {
-  EvaluationSample,
-  HybridReviewProfileName,
-} from './types.ts';
+import type { EvaluationSample, HybridReviewProfileName } from './types.ts';
 
 // Constants are centralized so behavior modules can stay focused on their own flow.
 export const DEFAULT_OLLAMA_HOST = 'http://127.0.0.1:11434';
@@ -37,7 +34,8 @@ export const EVALUATION_KIND_WEIGHTS: Readonly<
   'multi-file-refactor': 8,
   'workspace-config': 8,
 };
-export const WINDOWS_PROCESS_BRIDGE_ENV = 'LOCAL_REVIEWER_WINDOWS_PROCESS_JSON_PATH';
+export const WINDOWS_PROCESS_BRIDGE_ENV =
+  'LOCAL_REVIEWER_WINDOWS_PROCESS_JSON_PATH';
 export const WINDOWS_PROCESS_BRIDGE_SCRIPT = [
   "$ProgressPreference = 'SilentlyContinue'",
   `$payload = Get-Content -LiteralPath $env:${WINDOWS_PROCESS_BRIDGE_ENV} -Raw | ConvertFrom-Json`,
@@ -59,7 +57,11 @@ export const PREFILTER_ARTIFACT_DIR = ['.cache', 'reviews', 'local-reviewer'];
 export const PREFILTER_CONTEXT_FILE = 'prefilter-context.md';
 export const PREFILTER_REPORT_FILE = 'prefilter-report.json';
 export const REVIEWER_CONTEXT_FILE = 'prefilter-review-context.md';
-export const EVALUATION_ARTIFACT_DIR = ['.cache', 'reviews', 'local-reviewer-eval'];
+export const EVALUATION_ARTIFACT_DIR = [
+  '.cache',
+  'reviews',
+  'local-reviewer-eval',
+];
 export const HYBRID_PROFILE_ORDER: HybridReviewProfileName[] = [
   'angular',
   'nest',

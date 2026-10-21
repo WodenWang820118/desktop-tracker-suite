@@ -56,7 +56,10 @@ const TARGET_PLATFORM_KEYS: Record<GridDesktopTarget, string> = {
   'windows-x64': 'windows-x86_64',
 };
 
-const TARGET_NAME_PARTS: Record<GridDesktopTarget, { arch: string[]; platform: string[] }> = {
+const TARGET_NAME_PARTS: Record<
+  GridDesktopTarget,
+  { arch: string[]; platform: string[] }
+> = {
   'linux-x64': {
     arch: ['x64', 'x86_64', 'amd64'],
     platform: ['linux'],
@@ -95,7 +98,10 @@ export async function generateUpdaterManifestFiles(
     input.outputDir,
     getUpdaterManifestFileName({ backend: 'nest', frontend: 'ng' }),
   );
-  const canonicalDestination = join(input.outputDir, getCanonicalUpdaterManifestFileName());
+  const canonicalDestination = join(
+    input.outputDir,
+    getCanonicalUpdaterManifestFileName(),
+  );
   await copyFile(canonicalSource, canonicalDestination);
   writtenFiles.push(canonicalDestination);
 
@@ -118,10 +124,12 @@ export async function buildUpdaterManifestContents(input: {
       selection,
       version: input.version,
     });
-    manifests[getUpdaterManifestFileName(selection)] = `${JSON.stringify(manifest, null, 2)}\n`;
+    manifests[getUpdaterManifestFileName(selection)] =
+      `${JSON.stringify(manifest, null, 2)}\n`;
   }
 
-  const canonicalContent = manifests[getUpdaterManifestFileName({ backend: 'nest', frontend: 'ng' })];
+  const canonicalContent =
+    manifests[getUpdaterManifestFileName({ backend: 'nest', frontend: 'ng' })];
   if (!canonicalContent) {
     throw new Error('Canonical ng-nest updater manifest was not generated.');
   }
@@ -130,7 +138,9 @@ export async function buildUpdaterManifestContents(input: {
   return manifests;
 }
 
-export async function collectReleaseArtifacts(releaseDir: string): Promise<ReleaseArtifact[]> {
+export async function collectReleaseArtifacts(
+  releaseDir: string,
+): Promise<ReleaseArtifact[]> {
   const filePaths = await listFiles(releaseDir);
   return filePaths
     .map((filePath) => parseReleaseArtifact(filePath))
@@ -144,7 +154,10 @@ export function parseReleaseArtifact(filePath: string): ReleaseArtifact | null {
     return null;
   }
 
-  const desktopTarget = parseDesktopTargetFromArtifactName(fileName, variant.prefix);
+  const desktopTarget = parseDesktopTargetFromArtifactName(
+    fileName,
+    variant.prefix,
+  );
   if (!desktopTarget) {
     return null;
   }
@@ -158,9 +171,9 @@ export function parseReleaseArtifact(filePath: string): ReleaseArtifact | null {
   };
 }
 
-function parseVariantFromArtifactName(fileName: string):
-  | { prefix: string; selection: GridSelection }
-  | null {
+function parseVariantFromArtifactName(
+  fileName: string,
+): { prefix: string; selection: GridSelection } | null {
   for (const frontend of GRID_FRONTENDS) {
     for (const backend of GRID_BACKENDS) {
       const prefix = `desktop-tracker-suite-${frontend}-${backend}-`;
@@ -259,11 +272,15 @@ function selectUpdaterArtifactPair(input: {
   );
 }
 
-function signaturePriority(fileName: string, desktopTarget: GridDesktopTarget): number {
+function signaturePriority(
+  fileName: string,
+  desktopTarget: GridDesktopTarget,
+): number {
   if (desktopTarget === 'windows-x64') {
     if (fileName.endsWith('-setup.exe.sig')) return 100;
     if (fileName.endsWith('.nsis.zip.sig')) return 90;
-    if (fileName.endsWith('.msi.sig') || fileName.endsWith('.msi.zip.sig')) return 80;
+    if (fileName.endsWith('.msi.sig') || fileName.endsWith('.msi.zip.sig'))
+      return 80;
   }
 
   if (desktopTarget === 'linux-x64') {
@@ -297,7 +314,9 @@ async function listFiles(root: string): Promise<string[]> {
 }
 
 async function readWorkspaceVersion(): Promise<string> {
-  const packageJson = await readJson<{ version?: string }>(join(WORKSPACE_ROOT, 'package.json'));
+  const packageJson = await readJson<{ version?: string }>(
+    join(WORKSPACE_ROOT, 'package.json'),
+  );
   const version = packageJson.version?.trim();
   if (!version) {
     throw new Error('The root package.json is missing a version field.');
@@ -351,7 +370,9 @@ async function main() {
 
 if (import.meta.url === new URL(process.argv[1] ?? '', 'file://').href) {
   main().catch((error) => {
-    console.error(error instanceof Error ? error.stack ?? error.message : String(error));
+    console.error(
+      error instanceof Error ? (error.stack ?? error.message) : String(error),
+    );
     process.exitCode = 1;
   });
 }

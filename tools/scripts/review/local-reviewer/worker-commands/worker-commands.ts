@@ -15,7 +15,9 @@ import {
 import { getUsageText, readIntegerFlag, readStringFlag } from '../cli/cli.ts';
 
 // Internal worker commands parse the private argv contract used by spawned Node workers.
-export async function runCollectCandidatesWorker(argv: string[]): Promise<void> {
+export async function runCollectCandidatesWorker(
+  argv: string[],
+): Promise<void> {
   const dependencies = createLocalReviewerDependencies();
   const parsed = parseCollectCandidatesArgs(argv);
   const payload = collectRepoCommitCandidates({

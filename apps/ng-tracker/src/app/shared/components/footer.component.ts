@@ -12,14 +12,14 @@ import { Router, RouterLink } from '@angular/router';
         <p class="text-sm text-gray-600 dark:text-slate-400">
           &copy; 2025 Task Tracker. All rights reserved.
         </p>
-        @if(!hasRoute('/about')) {
-        <a
-          data-test-id="about-link"
-          [routerLink]="['/', 'about']"
-          class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 hover:underline transition-colors duration-200 text-sm font-medium"
-        >
-          About
-        </a>
+        @if (!hasRoute('/about')) {
+          <a
+            data-test-id="about-link"
+            [routerLink]="['/', 'about']"
+            class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 hover:underline transition-colors duration-200 text-sm font-medium"
+          >
+            About
+          </a>
         }
       </div>
     </footer>

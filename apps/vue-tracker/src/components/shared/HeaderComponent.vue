@@ -6,7 +6,9 @@ import { useTheme } from '../../composables/useTheme';
 
 const { theme, toggleTheme } = useTheme();
 
-const themeIcon = computed(() => (theme.value === 'dark' ? 'pi pi-sun' : 'pi pi-moon'));
+const themeIcon = computed(() =>
+  theme.value === 'dark' ? 'pi pi-sun' : 'pi pi-moon',
+);
 const themeLabel = computed(() => (theme.value === 'dark' ? 'Light' : 'Dark'));
 </script>
 
@@ -15,7 +17,10 @@ const themeLabel = computed(() => (theme.value === 'dark' ? 'Light' : 'Dark'));
     class="sticky top-0 z-10 bg-white/95 dark:bg-slate-900/90 backdrop-blur border-b border-gray-200 dark:border-slate-700"
   >
     <div class="max-w-5xl mx-auto px-4 py-3 flex items-center gap-4">
-      <RouterLink to="/" class="flex items-center gap-2 font-semibold text-gray-800 dark:text-slate-100">
+      <RouterLink
+        to="/"
+        class="flex items-center gap-2 font-semibold text-gray-800 dark:text-slate-100"
+      >
         <i class="pi pi-check-circle text-blue-600"></i>
         <span>Task Tracker</span>
       </RouterLink>
@@ -39,7 +44,14 @@ const themeLabel = computed(() => (theme.value === 'dark' ? 'Light' : 'Dark'));
 
       <div class="flex-1"></div>
 
-      <Button :label="themeLabel" :icon="themeIcon" @click="toggleTheme" severity="secondary" outlined class="ml-2" />
+      <Button
+        :label="themeLabel"
+        :icon="themeIcon"
+        @click="toggleTheme"
+        severity="secondary"
+        outlined
+        class="ml-2"
+      />
     </div>
   </header>
 </template>

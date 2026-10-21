@@ -1,6 +1,14 @@
 import { DOCUMENT } from '@angular/common';
 import { TestBed } from '@angular/core/testing';
-import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import {
+  afterAll,
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vitest';
 
 import { ThemeService } from './theme.service';
 
@@ -14,7 +22,7 @@ describe('ThemeService', () => {
       addEventListener: vi.fn(
         (_event: string, listener: (event: MediaQueryListEvent) => void) => {
           listeners.push(listener);
-        }
+        },
       ),
     };
 
@@ -65,7 +73,7 @@ describe('ThemeService', () => {
 
     expect(service.mode()).toBe('dark');
     expect(
-      injectedDocument.documentElement.classList.contains('app-dark')
+      injectedDocument.documentElement.classList.contains('app-dark'),
     ).toBe(true);
   });
 
@@ -116,7 +124,7 @@ describe('ThemeService', () => {
     expect(setItemSpy).toHaveBeenCalledWith('theme-mode', 'dark');
     expect(localStorage.getItem('theme-mode')).toBe('dark');
     expect(
-      injectedDocument.documentElement.classList.contains('app-dark')
+      injectedDocument.documentElement.classList.contains('app-dark'),
     ).toBe(true);
   });
 
@@ -138,7 +146,7 @@ describe('ThemeService', () => {
     expect(setItemSpy).toHaveBeenCalledWith('theme-mode', 'light');
     expect(localStorage.getItem('theme-mode')).toBe('light');
     expect(
-      injectedDocument.documentElement.classList.contains('app-dark')
+      injectedDocument.documentElement.classList.contains('app-dark'),
     ).toBe(false);
   });
 

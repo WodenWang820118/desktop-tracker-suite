@@ -48,13 +48,14 @@ const TARGETS: Record<DesktopTargetProfile, DesktopTargetInfo> = {
   },
 };
 
-const RUST_TARGET_TO_PROFILE: Record<string, DesktopTargetProfile> = Object.values(TARGETS).reduce(
-  (accumulator, target) => {
-    accumulator[target.rustTarget] = target.profile;
-    return accumulator;
-  },
-  {} as Record<string, DesktopTargetProfile>,
-);
+const RUST_TARGET_TO_PROFILE: Record<string, DesktopTargetProfile> =
+  Object.values(TARGETS).reduce(
+    (accumulator, target) => {
+      accumulator[target.rustTarget] = target.profile;
+      return accumulator;
+    },
+    {} as Record<string, DesktopTargetProfile>,
+  );
 
 export function getHostDesktopTargetProfile(
   platform: NodeJS.Platform = process.platform,
@@ -84,7 +85,11 @@ export function resolveDesktopTargetInfo(
   const requestedRustTargetValue = resolveRequestedRustTargetValue(env);
   const requestedRustTarget = parseRustTargetProfile(requestedRustTargetValue);
 
-  if (requestedProfile && requestedRustTarget && requestedProfile !== requestedRustTarget) {
+  if (
+    requestedProfile &&
+    requestedRustTarget &&
+    requestedProfile !== requestedRustTarget
+  ) {
     throw new Error(
       `TAURI_DESKTOP_TARGET (${requestedProfile}) does not match the requested Rust target (${requestedRustTargetValue}).`,
     );

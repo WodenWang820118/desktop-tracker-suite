@@ -65,7 +65,7 @@ export class ThemeService {
   private readInitialMode(): ThemeMode {
     try {
       const saved = localStorage.getItem(
-        ThemeService.STORAGE_KEY
+        ThemeService.STORAGE_KEY,
       ) as ThemeMode | null;
       if (saved === 'dark' || saved === 'light') return saved;
     } catch {
@@ -73,7 +73,7 @@ export class ThemeService {
     }
     // Fallback to system preference
     const prefersDark = globalThis.matchMedia?.(
-      '(prefers-color-scheme: dark)'
+      '(prefers-color-scheme: dark)',
     ).matches;
     return prefersDark ? 'dark' : 'light';
   }

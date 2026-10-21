@@ -313,15 +313,33 @@ test('stageSpringNativeRuntimeArtifacts copies only executable and native librar
     await writeFile(join(sourceDir, 'sqlitejdbc.dll.original'), 'original');
     await writeFile(join(sourceDir, 'libsqlitejdbc.so'), 'so');
     await writeFile(join(sourceDir, 'libsqlitejdbc.so.1'), 'so-versioned');
-    await writeFile(join(sourceDir, 'libsqlitejdbc.so.1.2'), 'so-multi-versioned');
-    await writeFile(join(sourceDir, 'libsqlitejdbc.so.1.2.3'), 'so-three-versioned');
+    await writeFile(
+      join(sourceDir, 'libsqlitejdbc.so.1.2'),
+      'so-multi-versioned',
+    );
+    await writeFile(
+      join(sourceDir, 'libsqlitejdbc.so.1.2.3'),
+      'so-three-versioned',
+    );
     await writeFile(join(sourceDir, 'libsqlitejdbc.so.original'), 'original');
     await writeFile(join(sourceDir, 'libsqlitejdbc.so.1.original'), 'original');
-    await writeFile(join(sourceDir, 'libsqlitejdbc.so.1.2.original'), 'original');
-    await writeFile(join(sourceDir, 'libsqlitejdbc.so.1.2.3.original'), 'original');
-    await writeFile(join(sourceDir, 'libsqlitejdbc.so.12.original'), 'original');
+    await writeFile(
+      join(sourceDir, 'libsqlitejdbc.so.1.2.original'),
+      'original',
+    );
+    await writeFile(
+      join(sourceDir, 'libsqlitejdbc.so.1.2.3.original'),
+      'original',
+    );
+    await writeFile(
+      join(sourceDir, 'libsqlitejdbc.so.12.original'),
+      'original',
+    );
     await writeFile(join(sourceDir, 'libsqlitejdbc.dylib'), 'dylib');
-    await writeFile(join(sourceDir, 'libsqlitejdbc.dylib.original'), 'original');
+    await writeFile(
+      join(sourceDir, 'libsqlitejdbc.dylib.original'),
+      'original',
+    );
     await writeFile(join(sourceDir, 'spring-backend.jar'), 'jar');
     await writeFile(join(distDir, 'stale.txt'), 'stale');
 
@@ -336,9 +354,18 @@ test('stageSpringNativeRuntimeArtifacts copies only executable and native librar
       'spring-backend',
       'sqlitejdbc.dll',
     ]);
-    assert.equal(await readFile(join(distDir, 'spring-backend'), 'utf8'), 'exe');
-    assert.equal(await readFile(join(distDir, 'sqlitejdbc.dll'), 'utf8'), 'dll');
-    assert.equal(await readFile(join(distDir, 'libsqlitejdbc.so'), 'utf8'), 'so');
+    assert.equal(
+      await readFile(join(distDir, 'spring-backend'), 'utf8'),
+      'exe',
+    );
+    assert.equal(
+      await readFile(join(distDir, 'sqlitejdbc.dll'), 'utf8'),
+      'dll',
+    );
+    assert.equal(
+      await readFile(join(distDir, 'libsqlitejdbc.so'), 'utf8'),
+      'so',
+    );
     assert.equal(
       await readFile(join(distDir, 'libsqlitejdbc.so.1'), 'utf8'),
       'so-versioned',
@@ -424,7 +451,9 @@ test('stageSpringNativeRuntimeArtifacts rejects a source directory without runti
 });
 
 async function withTempDirectory(callback: (root: string) => Promise<void>) {
-  const root = await mkdtemp(join(tmpdir(), 'prepare-spring-native-dist-test-'));
+  const root = await mkdtemp(
+    join(tmpdir(), 'prepare-spring-native-dist-test-'),
+  );
   try {
     await callback(root);
   } finally {

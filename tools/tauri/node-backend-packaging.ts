@@ -15,7 +15,10 @@ export type NodeSidecarPkgConfig = {
   ignore?: string[];
 };
 
-export const NODE_BACKEND_TRUSTED_DEPENDENCIES = ['@nestjs/core', 'sqlite3'] as const;
+export const NODE_BACKEND_TRUSTED_DEPENDENCIES = [
+  '@nestjs/core',
+  'sqlite3',
+] as const;
 
 export const NODE_BACKEND_INSTALL_POLICY =
   ['trustedDependencies:', '  - @nestjs/core', '  - sqlite3'].join('\n') + '\n';
@@ -28,7 +31,9 @@ export function buildPackagedNodeBackendPackageJson(input: {
 }) {
   const sqliteVersion = input.sqliteVersion?.trim();
   if (!sqliteVersion) {
-    throw new Error('sqlite3 is missing from the installed workspace dependencies.');
+    throw new Error(
+      'sqlite3 is missing from the installed workspace dependencies.',
+    );
   }
 
   return {

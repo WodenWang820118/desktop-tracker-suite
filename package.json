@@ -82,8 +82,8 @@
     "review:copilot": "node tools/scripts/review/run-checkpoint-review.ts --provider copilot",
     "review:gemini": "node tools/scripts/review/run-checkpoint-review.ts --provider gemini",
     "lint": "bun lint",
-    "format": "bun fmt --no-config --single-quote",
-    "format:check": "bun fmt --no-config --single-quote --check",
+    "format": "bun fmt",
+    "format:check": "bun fmt --check",
     "check": "bun check --no-script -b -p apps/ng-tracker --no-pretty && bun check --no-script -b -p apps/react-tracker --no-pretty && bun check --no-script -b -p apps/vue-tracker --no-pretty && bun check --no-script -b -p apps/nest-backend --no-pretty && bun check --no-script -b -p apps/express-backend --no-pretty && bun check --no-script -b -p libs/task-domain --no-pretty && bun check --no-script -p tools/tsconfig.json --no-pretty && bun check --no-script -p tools/scripts/tsconfig.json --no-pretty && bun check --no-script -p tools/scripts/tsconfig.spec.json --no-pretty"
   },
   "private": true,

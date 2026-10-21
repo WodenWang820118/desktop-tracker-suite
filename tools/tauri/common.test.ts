@@ -13,19 +13,14 @@ import {
 import { RunCommandError, type RunCommandOptions } from '../shared/process.ts';
 
 test('buildStagedProductionDependencyInstallArgs keeps the offline install shape', () => {
-  assert.deepEqual(buildStagedProductionDependencyInstallArgs({ offline: true }), [
-    'install',
-    '--production',
-    '--no-save',
-    '--linker=hoisted',
-    '--offline',
-  ]);
-  assert.deepEqual(buildStagedProductionDependencyInstallArgs({ offline: false }), [
-    'install',
-    '--production',
-    '--no-save',
-    '--linker=hoisted',
-  ]);
+  assert.deepEqual(
+    buildStagedProductionDependencyInstallArgs({ offline: true }),
+    ['install', '--production', '--no-save', '--linker=hoisted', '--offline'],
+  );
+  assert.deepEqual(
+    buildStagedProductionDependencyInstallArgs({ offline: false }),
+    ['install', '--production', '--no-save', '--linker=hoisted'],
+  );
 });
 
 test('isBunOfflineCacheMiss detects a bun offline cache miss', () => {
@@ -289,7 +284,9 @@ type CommandCall = [
   options: RunCommandOptions,
 ];
 
-async function withStagedWorkspace<T>(callback: (cwd: string) => Promise<T>): Promise<T> {
+async function withStagedWorkspace<T>(
+  callback: (cwd: string) => Promise<T>,
+): Promise<T> {
   const cwd = await mkdtemp(join(tmpdir(), 'tauri-staged-install-test-'));
   try {
     await writeFile(

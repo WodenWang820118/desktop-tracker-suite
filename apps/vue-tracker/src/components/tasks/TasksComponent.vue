@@ -74,13 +74,21 @@ watch(searchQuery, onSearchChange);
 
 <template>
   <div class="px-1 md:px-2 lg:px-3">
-    <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between py-4">
-      <h2 class="text-xl font-semibold text-gray-800 dark:text-slate-100">Your Tasks</h2>
+    <div
+      class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between py-4"
+    >
+      <h2 class="text-xl font-semibold text-gray-800 dark:text-slate-100">
+        Your Tasks
+      </h2>
       <div class="flex items-center gap-2 w-full md:w-auto">
         <span class="relative flex-1 md:flex-none">
           <IconField>
             <InputIcon class="pi pi-search" />
-            <InputText v-model="searchQuery" placeholder="Search tasks..." class="w-full" />
+            <InputText
+              v-model="searchQuery"
+              placeholder="Search tasks..."
+              class="w-full"
+            />
           </IconField>
         </span>
         <RouterLink to="/add-task">
@@ -90,7 +98,9 @@ watch(searchQuery, onSearchChange);
     </div>
 
     <div v-if="loading" class="flex justify-center items-center py-12">
-      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-blue-400"></div>
+      <div
+        class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-blue-400"
+      ></div>
     </div>
 
     <div
@@ -102,14 +112,26 @@ watch(searchQuery, onSearchChange);
       <span class="block sm:inline ml-2">{{ error }}</span>
     </div>
 
-    <div v-if="!loading && !error && tasks.length === 0" class="text-center py-12">
+    <div
+      v-if="!loading && !error && tasks.length === 0"
+      class="text-center py-12"
+    >
       <p class="text-gray-500 dark:text-slate-400 text-lg">
-        {{ searchQuery ? 'No tasks found. Try a different search.' : 'No tasks found. Add one to get started!' }}
+        {{
+          searchQuery
+            ? 'No tasks found. Try a different search.'
+            : 'No tasks found. Add one to get started!'
+        }}
       </p>
     </div>
 
     <div class="grid gap-4 md:grid-cols-1 lg:grid-cols-2">
-      <TaskItem v-for="task in tasks" :key="task.id" :task="task" @task-changed="refreshTasks" />
+      <TaskItem
+        v-for="task in tasks"
+        :key="task.id"
+        :task="task"
+        @task-changed="refreshTasks"
+      />
     </div>
 
     <div v-if="!loading && tasks.length > 0" class="mt-6">

@@ -29,11 +29,7 @@
     },
     "lint": {
       "cache": true,
-      "inputs": [
-        "default",
-        "^default",
-        "{workspaceRoot}/bunfig.toml"
-      ]
+      "inputs": ["default", "^default", "{workspaceRoot}/bunfig.toml"]
     },
     "@nx/jest:jest": {
       "cache": true,

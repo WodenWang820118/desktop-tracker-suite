@@ -75,7 +75,9 @@ export async function probeGeminiCliHealth(
     dependencies.recordObservation ?? recordProviderObservation;
   const runCommand = dependencies.runCommand ?? runLocalCliCommand;
   const repoRoot = input.repoRoot ?? process.cwd();
-  const telemetryContext = createProviderTelemetryContext(input.telemetryContext);
+  const telemetryContext = createProviderTelemetryContext(
+    input.telemetryContext,
+  );
   const cached = getCachedProviderHealth('gemini', input.model, repoRoot);
   if (cached) {
     return cached;
@@ -232,9 +234,7 @@ function classifyGeminiErrorCategory(
   }
 
   if (
-    /\b(not authenticated|authenticate|login|sign in|api key)\b/i.test(
-      message,
-    )
+    /\b(not authenticated|authenticate|login|sign in|api key)\b/i.test(message)
   ) {
     return 'auth';
   }
@@ -290,7 +290,9 @@ async function runGeminiTextCommand(
   const runCommand = dependencies.runCommand ?? runLocalCliCommand;
   const sleepFn = dependencies.sleep ?? sleep;
   const repoRoot = input.repoRoot ?? process.cwd();
-  const telemetryContext = createProviderTelemetryContext(input.telemetryContext);
+  const telemetryContext = createProviderTelemetryContext(
+    input.telemetryContext,
+  );
   const releaseLock = await acquireLock(repoRoot);
 
   try {
@@ -357,9 +359,7 @@ async function runGeminiTextCommand(
           durationMs,
           errorCategory: attemptSucceeded
             ? null
-            : output.trim().length === 0 &&
-                !result.error &&
-                result.status === 0
+            : output.trim().length === 0 && !result.error && result.status === 0
               ? 'empty-output'
               : classifyGeminiErrorCategory(output, result.error?.message),
           model: policy.model,
@@ -418,10 +418,7 @@ async function runGeminiTextCommand(
   }
 }
 
-function isGeminiTimedOut(
-  result: LocalCliCommandResult,
-  output = '',
-): boolean {
+function isGeminiTimedOut(result: LocalCliCommandResult, output = ''): boolean {
   return (
     result.error?.name === 'TimeoutError' ||
     result.signal === 'SIGTERM' ||

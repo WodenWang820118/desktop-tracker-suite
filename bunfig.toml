@@ -3,4 +3,11 @@ linker = "hoisted"
 
 [fmt]
 singleQuote = true
-ignorePatterns = ["dist", "coverage", ".nx", ".angular"]
+endOfLine = "auto"
+ignorePatterns = [
+  "dist",
+  "coverage",
+  ".nx",
+  ".angular",
+  "apps/tauri-shell/src-tauri/gen",
+]

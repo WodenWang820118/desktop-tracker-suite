@@ -53,7 +53,10 @@ test('buildDesktopRuntimeMetadata records the Express sidecar manifest fields', 
 });
 
 test('resolveNodeSidecarRuntimeDefinition maps Nest to the default sidecar name', () => {
-  assert.equal(resolveNodeSidecarRuntimeDefinition('nest').sidecarName, 'nest-backend');
+  assert.equal(
+    resolveNodeSidecarRuntimeDefinition('nest').sidecarName,
+    'nest-backend',
+  );
 });
 
 test('resolveNodeSidecarRuntimeDefinition maps Express to the alternate sidecar name', () => {
@@ -82,7 +85,10 @@ test('buildNodeSidecarCacheKey is deterministic for object key order', () => {
 test('buildNodeSidecarCacheKey is stable for identical inputs', () => {
   const input = buildCacheKeyInput();
 
-  assert.equal(buildNodeSidecarCacheKey(input), buildNodeSidecarCacheKey(input));
+  assert.equal(
+    buildNodeSidecarCacheKey(input),
+    buildNodeSidecarCacheKey(input),
+  );
 });
 
 test('buildNodeSidecarCacheKey changes when lockfile hash changes', () => {
@@ -200,8 +206,14 @@ test('buildNodeSidecarCacheManifest records the cache key and executable path', 
 });
 
 test('getWorkspaceBinaryPath resolves pkg from the workspace root', () => {
-  assert.match(getWorkspaceBinaryPath('pkg', 'win32'), /node_modules[\\/]\.bin[\\/]pkg\.cmd$/u);
-  assert.match(getWorkspaceBinaryPath('pkg', 'linux'), /node_modules[\\/]\.bin[\\/]pkg$/u);
+  assert.match(
+    getWorkspaceBinaryPath('pkg', 'win32'),
+    /node_modules[\\/]\.bin[\\/]pkg\.cmd$/u,
+  );
+  assert.match(
+    getWorkspaceBinaryPath('pkg', 'linux'),
+    /node_modules[\\/]\.bin[\\/]pkg$/u,
+  );
 });
 
 test('buildNodeSidecarPackageJson adds pkg metadata and sqlite3 to the runtime package', () => {
@@ -226,7 +238,9 @@ test('buildNodeSidecarPackageJson adds pkg metadata and sqlite3 to the runtime p
     sqlite3: '5.1.7',
     typeorm: '0.3.28',
   });
-  assert.deepEqual(packagedJson.trustedDependencies, [...NODE_BACKEND_TRUSTED_DEPENDENCIES]);
+  assert.deepEqual(packagedJson.trustedDependencies, [
+    ...NODE_BACKEND_TRUSTED_DEPENDENCIES,
+  ]);
   assert.deepEqual(packagedJson.pkg, buildNodeSidecarPkgConfig());
 });
 
@@ -256,7 +270,10 @@ test('NODE_BACKEND_INSTALL_POLICY trusts the sidecar native build scripts', () =
   assert.match(NODE_BACKEND_INSTALL_POLICY, /trustedDependencies:/u);
   assert.match(NODE_BACKEND_INSTALL_POLICY, /- @nestjs\/core/u);
   assert.match(NODE_BACKEND_INSTALL_POLICY, /- sqlite3/u);
-  assert.deepEqual([...NODE_BACKEND_TRUSTED_DEPENDENCIES], ['@nestjs/core', 'sqlite3']);
+  assert.deepEqual(
+    [...NODE_BACKEND_TRUSTED_DEPENDENCIES],
+    ['@nestjs/core', 'sqlite3'],
+  );
 });
 
 function buildCacheKeyInput(): NodeSidecarCacheKeyInput {

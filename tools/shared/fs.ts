@@ -43,7 +43,9 @@ export function resolveWorkspacePath(
   { root = WORKSPACE_ROOT }: WorkspacePathOptions = {},
 ): string {
   const resolvedRoot = resolve(root);
-  const resolvedPath = isAbsolute(path) ? resolve(path) : resolve(resolvedRoot, path);
+  const resolvedPath = isAbsolute(path)
+    ? resolve(path)
+    : resolve(resolvedRoot, path);
   const relativePath = relative(resolvedRoot, resolvedPath);
   const isInsideRoot =
     relativePath === '' ||

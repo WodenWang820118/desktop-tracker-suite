@@ -1,4 +1,8 @@
-import { spawn, type ChildProcess, type SpawnOptions } from 'node:child_process';
+import {
+  spawn,
+  type ChildProcess,
+  type SpawnOptions,
+} from 'node:child_process';
 
 import { WORKSPACE_ROOT } from './workspace.ts';
 
@@ -58,48 +62,50 @@ export async function runCommand(
   const { log, ...spawnOptions } = options;
   log(`> ${command} ${args.join(' ')}`);
 
-  return await new Promise<RunCommandResult>((resolvePromise, rejectPromise) => {
-    const child = spawn(command, args, {
-      stdio: 'inherit',
-      cwd: WORKSPACE_ROOT,
-      shell: shouldUseWindowsCmdShell(command),
-      ...spawnOptions,
-    });
-    const stdoutChunks: string[] = [];
-    const stderrChunks: string[] = [];
+  return await new Promise<RunCommandResult>(
+    (resolvePromise, rejectPromise) => {
+      const child = spawn(command, args, {
+        stdio: 'inherit',
+        cwd: WORKSPACE_ROOT,
+        shell: shouldUseWindowsCmdShell(command),
+        ...spawnOptions,
+      });
+      const stdoutChunks: string[] = [];
+      const stderrChunks: string[] = [];
 
-    child.stdout?.setEncoding('utf8');
-    child.stdout?.on('data', (chunk: string) => stdoutChunks.push(chunk));
-    child.stderr?.setEncoding('utf8');
-    child.stderr?.on('data', (chunk: string) => stderrChunks.push(chunk));
+      child.stdout?.setEncoding('utf8');
+      child.stdout?.on('data', (chunk: string) => stdoutChunks.push(chunk));
+      child.stderr?.setEncoding('utf8');
+      child.stderr?.on('data', (chunk: string) => stderrChunks.push(chunk));
 
-    child.on('error', rejectPromise);
-    child.on('exit', (code, signal) => {
-      const stdout = stdoutChunks.join('');
-      const stderr = stderrChunks.join('');
+      child.on('error', rejectPromise);
+      child.on('exit', (code, signal) => {
+        const stdout = stdoutChunks.join('');
+        const stderr = stderrChunks.join('');
 
-      if (code === 0) {
-        resolvePromise({
-          exitCode: code,
-          signal,
-          stderr,
-          stdout,
-        });
-        return;
-      }
+        if (code === 0) {
+          resolvePromise({
+            exitCode: code,
+            signal,
+            stderr,
+            stdout,
+          });
+          return;
+        }
 
-      rejectPromise(
-        new RunCommandError({
-          args,
-          command,
-          exitCode: code,
-          signal,
-          stderr,
-          stdout,
-        }),
-      );
-    });
-  });
+        rejectPromise(
+          new RunCommandError({
+            args,
+            command,
+            exitCode: code,
+            signal,
+            stderr,
+            stdout,
+          }),
+        );
+      });
+    },
+  );
 }
 
 export function spawnLogged(
@@ -149,7 +155,10 @@ export async function terminateChildProcess(
   await waitForExit(child, 2000);
 }
 
-async function waitForExit(child: ChildProcess, timeoutMs: number): Promise<boolean> {
+async function waitForExit(
+  child: ChildProcess,
+  timeoutMs: number,
+): Promise<boolean> {
   if (child.exitCode !== null) {
     return true;
   }

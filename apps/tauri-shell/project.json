@@ -78,7 +78,9 @@
       "options": {
         "command": "node tools/tauri/grid-build.ts package"
       },
-      "outputs": ["{workspaceRoot}/apps/tauri-shell/src-tauri/target/release/bundle"]
+      "outputs": [
+        "{workspaceRoot}/apps/tauri-shell/src-tauri/target/release/bundle"
+      ]
     },
     "dev": {
       "executor": "nx:run-commands",
@@ -116,7 +118,9 @@
       "options": {
         "command": "node tools/tauri/build.ts package nest"
       },
-      "outputs": ["{workspaceRoot}/apps/tauri-shell/src-tauri/target/release/bundle"]
+      "outputs": [
+        "{workspaceRoot}/apps/tauri-shell/src-tauri/target/release/bundle"
+      ]
     },
     "package-express-sidecar": {
       "executor": "nx:run-commands",
@@ -124,7 +128,9 @@
       "options": {
         "command": "node tools/tauri/build.ts package express"
       },
-      "outputs": ["{workspaceRoot}/apps/tauri-shell/src-tauri/target/release/bundle"]
+      "outputs": [
+        "{workspaceRoot}/apps/tauri-shell/src-tauri/target/release/bundle"
+      ]
     },
     "package-spring-native": {
       "executor": "nx:run-commands",
@@ -132,7 +138,9 @@
       "options": {
         "command": "node tools/tauri/build.ts package spring-native"
       },
-      "outputs": ["{workspaceRoot}/apps/tauri-shell/src-tauri/target/release/bundle"]
+      "outputs": [
+        "{workspaceRoot}/apps/tauri-shell/src-tauri/target/release/bundle"
+      ]
     }
   }
 }

@@ -66,20 +66,30 @@ const formatDate = (date: string) => {
 </script>
 
 <template>
-  <Card :class="reminderClass" @dblclick="toggleReminder" v-tooltip.top="'Tip: Double-click to toggle reminder'">
+  <Card
+    :class="reminderClass"
+    @dblclick="toggleReminder"
+    v-tooltip.top="'Tip: Double-click to toggle reminder'"
+  >
     <template #content>
       <div class="flex justify-between items-start gap-4">
         <div class="flex-1 min-w-0">
-          <h3 class="text-lg font-semibold text-gray-800 dark:text-slate-100 mb-2 wrap-break-word">
+          <h3
+            class="text-lg font-semibold text-gray-800 dark:text-slate-100 mb-2 wrap-break-word"
+          >
             {{ task.text }}
           </h3>
-          <p class="text-sm text-gray-600 dark:text-slate-300 flex items-center gap-2">
+          <p
+            class="text-sm text-gray-600 dark:text-slate-300 flex items-center gap-2"
+          >
             <i class="pi pi-calendar text-blue-600 dark:text-blue-400"></i>
             {{ formatDate(task.day) }}
           </p>
           <div v-if="task.reminder" class="mt-2 flex items-center gap-2">
             <i class="pi pi-bell text-amber-500"></i>
-            <span class="text-xs text-amber-600 dark:text-amber-400 font-medium">Reminder Set</span>
+            <span class="text-xs text-amber-600 dark:text-amber-400 font-medium"
+              >Reminder Set</span
+            >
           </div>
         </div>
         <Button

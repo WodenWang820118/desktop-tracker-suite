@@ -47,11 +47,15 @@ export class DesktopUpdateService {
       this.messageService.add({
         severity: 'success',
         summary: 'Update Installed',
-        detail: 'The update has been installed. Restart Desktop Tracker Suite to finish applying it.',
+        detail:
+          'The update has been installed. Restart Desktop Tracker Suite to finish applying it.',
         life: 7000,
       });
     } catch (error) {
-      console.warn('Desktop Tracker Suite could not complete the update check.', error);
+      console.warn(
+        'Desktop Tracker Suite could not complete the update check.',
+        error,
+      );
     }
   }
 }
@@ -60,7 +64,10 @@ function isPackagedTauriRuntime() {
   return typeof window !== 'undefined' && window.location.protocol === 'tauri:';
 }
 
-function buildUpdatePrompt(version: string, releaseNotes: string | null | undefined) {
+function buildUpdatePrompt(
+  version: string,
+  releaseNotes: string | null | undefined,
+) {
   const trimmedNotes = releaseNotes?.trim();
   if (!trimmedNotes) {
     return `Desktop Tracker Suite ${version} is available. Download and install it now?`;

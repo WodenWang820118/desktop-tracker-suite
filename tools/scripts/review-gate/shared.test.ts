@@ -68,9 +68,7 @@ test('isReviewGateCommand exempts both legacy and relocated TypeScript review-ga
     true,
   );
   assert.equal(
-    isReviewGateCommand(
-      'node tools/scripts/review-gate/status.ts',
-    ),
+    isReviewGateCommand('node tools/scripts/review-gate/status.ts'),
     true,
   );
   assert.equal(
@@ -86,15 +84,10 @@ test('isReviewGateCommand exempts both legacy and relocated TypeScript review-ga
     true,
   );
   assert.equal(
-    isReviewGateCommand(
-      'node tools/scripts/review-gate/reset.ts',
-    ),
+    isReviewGateCommand('node tools/scripts/review-gate/reset.ts'),
     true,
   );
-  assert.equal(
-    isReviewGateCommand('node scripts/review-gate/reset.ts'),
-    true,
-  );
+  assert.equal(isReviewGateCommand('node scripts/review-gate/reset.ts'), true);
   assert.equal(
     isReviewGateCommand('node .\\tools\\scripts\\review-gate\\status.ts'),
     true,
@@ -304,8 +297,7 @@ test('isMutatingToolUse fails closed for non-allowlisted shell commands', () => 
     isMutatingToolUse({
       toolName: 'powershell',
       toolArgs: {
-        command:
-          'node tools/scripts/review-gate/status.ts',
+        command: 'node tools/scripts/review-gate/status.ts',
       },
     }),
     false,
@@ -314,8 +306,7 @@ test('isMutatingToolUse fails closed for non-allowlisted shell commands', () => 
     isMutatingToolUse({
       toolName: 'powershell',
       toolArgs: {
-        command:
-          'node .\\tools\\scripts\\review-gate\\status.ts',
+        command: 'node .\\tools\\scripts\\review-gate\\status.ts',
       },
     }),
     false,
@@ -324,8 +315,7 @@ test('isMutatingToolUse fails closed for non-allowlisted shell commands', () => 
     isMutatingToolUse({
       toolName: 'powershell',
       toolArgs: {
-        command:
-          'node tools/scripts/review-gate/approve-pre-implementation.ts',
+        command: 'node tools/scripts/review-gate/approve-pre-implementation.ts',
       },
     }),
     false,
@@ -334,8 +324,7 @@ test('isMutatingToolUse fails closed for non-allowlisted shell commands', () => 
     isMutatingToolUse({
       toolName: 'powershell',
       toolArgs: {
-        command:
-          'node scripts/review-gate/approve-pre-implementation.ts',
+        command: 'node scripts/review-gate/approve-pre-implementation.ts',
       },
     }),
     false,
@@ -344,8 +333,7 @@ test('isMutatingToolUse fails closed for non-allowlisted shell commands', () => 
     isMutatingToolUse({
       toolName: 'powershell',
       toolArgs: {
-        command:
-          'node tools/scripts/review-gate/reset.ts',
+        command: 'node tools/scripts/review-gate/reset.ts',
       },
     }),
     false,
@@ -354,8 +342,7 @@ test('isMutatingToolUse fails closed for non-allowlisted shell commands', () => 
     isMutatingToolUse({
       toolName: 'powershell',
       toolArgs: {
-        command:
-          'node scripts/review-gate/reset.ts',
+        command: 'node scripts/review-gate/reset.ts',
       },
     }),
     false,

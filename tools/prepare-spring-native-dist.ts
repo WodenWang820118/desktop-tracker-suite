@@ -86,7 +86,9 @@ export function stageSpringNativeRuntimeArtifacts({
   sourceDir: string;
 }) {
   if (!existsSync(sourceDir)) {
-    throw new Error(`Spring native artifact source directory is missing: ${sourceDir}`);
+    throw new Error(
+      `Spring native artifact source directory is missing: ${sourceDir}`,
+    );
   }
 
   const filesToCopy = listFiles(sourceDir).filter((filePath) =>
@@ -94,7 +96,9 @@ export function stageSpringNativeRuntimeArtifacts({
   );
 
   if (filesToCopy.length === 0) {
-    throw new Error(`No Spring native runtime artifacts found in: ${sourceDir}`);
+    throw new Error(
+      `No Spring native runtime artifacts found in: ${sourceDir}`,
+    );
   }
 
   rmSync(distDir, { recursive: true, force: true });

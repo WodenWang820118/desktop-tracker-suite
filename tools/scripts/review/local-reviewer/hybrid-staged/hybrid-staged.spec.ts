@@ -77,7 +77,10 @@ test('runHybridStagedReview runs targeted local review when GPT requests depth',
     }),
   );
 
-  assert.deepEqual(calls, ['gpt:src/utils.ts,README.md', 'local:targeted:repo-habits']);
+  assert.deepEqual(calls, [
+    'gpt:src/utils.ts,README.md',
+    'local:targeted:repo-habits',
+  ]);
   assert.equal(report.local_mode, 'targeted');
   assert.deepEqual(report.requested_profiles, ['repo-habits']);
 });

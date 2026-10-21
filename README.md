@@ -127,7 +127,7 @@ bun run format:check
 bun run check
 ```
 
-`bun lint` uses Bun's built-in rules and does not load an ESLint config. `bun fmt` formats from `bunfig.toml` with single quotes. `bun check` type-checks each TypeScript project. The root `tsconfig.json` does not include the apps, so the `check` script passes `--no-script` and a project path. Nx `typecheck` targets use the same command.
+`bun lint` uses Bun's built-in rules and does not load an ESLint config. `bun fmt` formats from `bunfig.toml` with single quotes and keeps each file's existing line endings. Generated Tauri schemas under `apps/tauri-shell/src-tauri/gen` are left as Tauri writes them. `bun check` type-checks each TypeScript project. The root `tsconfig.json` does not include the apps, so the `check` script passes `--no-script` and a project path. Nx `typecheck` targets use the same command.
 
 ## Project Configuration
 

@@ -28,12 +28,18 @@ const onSubmit = async () => {
   const newTask: CreateTaskDto = {
     id: uuidv4(),
     text: taskText.value,
-    day: taskDate.value instanceof Date ? taskDate.value.toISOString() : taskDate.value,
+    day:
+      taskDate.value instanceof Date
+        ? taskDate.value.toISOString()
+        : taskDate.value,
     reminder: taskReminder.value,
   };
 
   console.log('Submitting task:', newTask);
-  console.log('API URL:', import.meta.env.VITE_TASK_API_URL || 'http://localhost:3000/tasks');
+  console.log(
+    'API URL:',
+    import.meta.env.VITE_TASK_API_URL || 'http://localhost:3000/tasks',
+  );
 
   try {
     const result = await taskService.addTask(newTask);
@@ -45,7 +51,7 @@ const onSubmit = async () => {
     console.error('Error response:', error.response?.data);
     console.error('Error status:', error.response?.status);
     console.error('Error config:', error.config);
-    
+
     let errorMessage = 'Failed to add task. ';
     if (error.response) {
       errorMessage += `Server responded with status ${error.response.status}: ${JSON.stringify(error.response.data)}`;
@@ -54,7 +60,7 @@ const onSubmit = async () => {
     } else {
       errorMessage += `Error: ${error.message}`;
     }
-    
+
     alert(errorMessage);
   }
 };
@@ -62,14 +68,20 @@ const onSubmit = async () => {
 
 <template>
   <div class="px-6 py-8">
-    <h2 class="text-2xl font-bold text-gray-800 dark:text-slate-100 mb-6">Add New Task</h2>
+    <h2 class="text-2xl font-bold text-gray-800 dark:text-slate-100 mb-6">
+      Add New Task
+    </h2>
     <form
       @submit.prevent="onSubmit"
       data-test-id="add-task-form"
       class="space-y-6 bg-white dark:bg-slate-900 p-6 rounded-lg shadow-md"
     >
       <div class="form-field">
-        <label for="text" data-testid="label-task" class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">
+        <label
+          for="text"
+          data-testid="label-task"
+          class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2"
+        >
           Task Description
         </label>
         <InputText
@@ -83,7 +95,11 @@ const onSubmit = async () => {
       </div>
 
       <div class="form-field">
-        <label for="date" data-test-id="label-date" class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">
+        <label
+          for="date"
+          data-test-id="label-date"
+          class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2"
+        >
           Due Date
         </label>
         <DatePicker
@@ -97,7 +113,9 @@ const onSubmit = async () => {
         />
       </div>
 
-      <div class="form-field flex items-center gap-3 p-4 bg-gray-50 dark:bg-slate-800 rounded-lg">
+      <div
+        class="form-field flex items-center gap-3 p-4 bg-gray-50 dark:bg-slate-800 rounded-lg"
+      >
         <Checkbox
           id="reminder"
           v-model="taskReminder"

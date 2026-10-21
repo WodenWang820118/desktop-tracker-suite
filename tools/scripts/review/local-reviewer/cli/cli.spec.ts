@@ -1,11 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import {
-  normalizeJobs,
-  parseCliArgs,
-  writePrefilterOutput,
-} from './cli.ts';
+import { normalizeJobs, parseCliArgs, writePrefilterOutput } from './cli.ts';
 
 test('parseCliArgs accepts every public command', () => {
   assert.equal(parseCliArgs(['doctor']).command, 'doctor');

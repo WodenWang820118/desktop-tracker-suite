@@ -106,14 +106,7 @@ export type TauriConfig = {
 
 const FRONTEND_DEFINITIONS: Record<GridFrontend, GridFrontendDefinition> = {
   ng: {
-    buildArgs: [
-      'x',
-      'nx',
-      'build',
-      'ng-tracker',
-      '--configuration',
-      'tauri',
-    ],
+    buildArgs: ['x', 'nx', 'build', 'ng-tracker', '--configuration', 'tauri'],
     distPathFromGeneratedConfig: `${GENERATED_CONFIG_ROOT_PREFIX}/dist/ng-tracker/browser`,
     label: 'Angular',
   },

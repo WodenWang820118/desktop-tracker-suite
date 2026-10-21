@@ -23,13 +23,15 @@ const SIDECAR_RESOURCE_MAPPINGS = [
   {
     configFile: 'tauri.express-sidecar.conf.json',
     expectedResources: {
-      '../../../dist/tauri-shell-express-sidecar/resources/metadata': 'metadata',
+      '../../../dist/tauri-shell-express-sidecar/resources/metadata':
+        'metadata',
     },
   },
   {
     configFile: 'tauri.spring-native.conf.json',
     expectedResources: {
-      '../../../dist/tauri-shell-spring-native/resources/spring-native': 'spring-native',
+      '../../../dist/tauri-shell-spring-native/resources/spring-native':
+        'spring-native',
       '../../../dist/tauri-shell-spring-native/resources/metadata': 'metadata',
     },
   },

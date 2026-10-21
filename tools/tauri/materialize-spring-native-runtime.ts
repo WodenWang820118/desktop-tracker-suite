@@ -34,7 +34,9 @@ type SpringDesktopRuntimeMetadata = {
   sidecarName: string;
 };
 
-export function buildDesktopRuntimeMetadata(target: { profile: string }): SpringDesktopRuntimeMetadata {
+export function buildDesktopRuntimeMetadata(target: {
+  profile: string;
+}): SpringDesktopRuntimeMetadata {
   return {
     backendDirectory: 'spring-native',
     backendKind: 'spring-native',
@@ -59,7 +61,10 @@ export function listSpringNativeCompanionFiles(
   return entries
     .filter((entry) => entry.isFile())
     .map((entry) => entry.name)
-    .filter((entryName) => entryName.toLowerCase() !== executableFileName.toLowerCase());
+    .filter(
+      (entryName) =>
+        entryName.toLowerCase() !== executableFileName.toLowerCase(),
+    );
 }
 
 async function main() {
@@ -80,7 +85,9 @@ async function main() {
   await ensureDir(TAURI_BINARIES_DIR);
 
   const preparedExecutablePath = getPreparedSpringSidecarPath(target);
-  logStep(`Copying the built Spring native runtime into the Tauri sidecar binaries folder (${preparedExecutablePath})`);
+  logStep(
+    `Copying the built Spring native runtime into the Tauri sidecar binaries folder (${preparedExecutablePath})`,
+  );
   await copyFileEnsured(executablePath, preparedExecutablePath);
 
   const companionFiles = listSpringNativeCompanionFiles(
@@ -98,9 +105,14 @@ async function main() {
     join(TAURI_SPRING_METADATA_DIR, 'desktop-runtime.json'),
     buildDesktopRuntimeMetadata(target),
   );
-  await writeTextFile(join(TAURI_SPRING_METADATA_DIR, '.tauri-database-name'), `${DATABASE_FILE_NAME}\n`);
+  await writeTextFile(
+    join(TAURI_SPRING_METADATA_DIR, '.tauri-database-name'),
+    `${DATABASE_FILE_NAME}\n`,
+  );
 
-  logStep(`Spring-native Tauri runtime materialized for ${target.profile} at ${TAURI_SPRING_DIST_ROOT}`);
+  logStep(
+    `Spring-native Tauri runtime materialized for ${target.profile} at ${TAURI_SPRING_DIST_ROOT}`,
+  );
 }
 
 const isEntryPoint =
@@ -108,7 +120,9 @@ const isEntryPoint =
 
 if (isEntryPoint) {
   main().catch((error) => {
-    console.error(error instanceof Error ? error.stack ?? error.message : String(error));
+    console.error(
+      error instanceof Error ? (error.stack ?? error.message) : String(error),
+    );
     process.exitCode = 1;
   });
 }

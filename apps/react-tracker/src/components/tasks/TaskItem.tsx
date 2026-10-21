@@ -72,7 +72,9 @@ export const TaskItem = ({ task, onTaskChanged }: TaskItemProps) => {
             {task.reminder && (
               <div className="mt-2 flex items-center gap-2">
                 <i className="pi pi-bell text-amber-500"></i>
-                <span className="text-xs text-amber-600 dark:text-amber-400 font-medium">Reminder Set</span>
+                <span className="text-xs text-amber-600 dark:text-amber-400 font-medium">
+                  Reminder Set
+                </span>
               </div>
             )}
           </div>

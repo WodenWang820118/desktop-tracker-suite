@@ -197,7 +197,9 @@ if (!parsed.profile) {
 
 const baseFiles = PROFILE_FILES[parsed.profile as string];
 if (!baseFiles) {
-  die(`Unknown profile: ${parsed.profile}. Run: bun run --silent with-env --help`);
+  die(
+    `Unknown profile: ${parsed.profile}. Run: bun run --silent with-env --help`,
+  );
 }
 
 const envFiles: string[] = [...baseFiles];
