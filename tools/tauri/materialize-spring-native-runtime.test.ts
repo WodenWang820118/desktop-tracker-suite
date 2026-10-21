@@ -37,7 +37,10 @@ test('buildSpringNativeExecutableFileName keeps the Windows source executable ex
     TAURI_DESKTOP_TARGET: 'windows-x64',
   });
 
-  assert.equal(buildSpringNativeExecutableFileName(target), 'spring-backend.exe');
+  assert.equal(
+    buildSpringNativeExecutableFileName(target),
+    'spring-backend.exe',
+  );
 });
 
 test('buildSpringNativeExecutableFileName omits the executable extension on Linux', () => {

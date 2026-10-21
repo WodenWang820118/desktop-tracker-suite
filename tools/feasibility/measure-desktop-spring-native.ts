@@ -40,7 +40,9 @@ async function main() {
       `No Spring-native sidecar executable found at ${executablePath}. Run desktop:materialize-spring-native-runtime first.`,
     );
   }
-  const smokeRoot = await mkdtemp(join(tmpdir(), 'desktop-spring-native-smoke-'));
+  const smokeRoot = await mkdtemp(
+    join(tmpdir(), 'desktop-spring-native-smoke-'),
+  );
   const databasePath = join(smokeRoot, DATABASE_FILE_NAME);
   const port = await reserveOpenPort();
   const metrics: Record<string, unknown> = {
@@ -51,7 +53,8 @@ async function main() {
     metadataSizeBytes: await pathSize(TAURI_SPRING_METADATA_DIR),
     totalResourceSizeBytes: await pathSize(TAURI_SPRING_RESOURCE_ROOT),
     totalPreparedPayloadSizeBytes:
-      (await pathSize(executablePath)) + (await pathSize(TAURI_SPRING_RESOURCE_ROOT)),
+      (await pathSize(executablePath)) +
+      (await pathSize(TAURI_SPRING_RESOURCE_ROOT)),
     databasePath,
     port,
     success: false,
@@ -71,18 +74,21 @@ async function main() {
   try {
     metrics.healthReadyMs = await waitForUrl(`http://127.0.0.1:${port}/health`);
     const taskId = randomUUID();
-    const created = await fetchJson<TaskResponse>(`http://127.0.0.1:${port}/tasks/create`, {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
+    const created = await fetchJson<TaskResponse>(
+      `http://127.0.0.1:${port}/tasks/create`,
+      {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: taskId,
+          text: 'desktop spring-native smoke',
+          day: '2026-04-23',
+          reminder: true,
+        }),
       },
-      body: JSON.stringify({
-        id: taskId,
-        text: 'desktop spring-native smoke',
-        day: '2026-04-23',
-        reminder: true,
-      }),
-    });
+    );
     const reloaded = await fetchJson<TaskResponse>(
       `http://127.0.0.1:${port}/tasks/${encodeURIComponent(created.id)}`,
     );
@@ -96,11 +102,17 @@ async function main() {
     throw error;
   } finally {
     await writeMetricSnapshot('desktop-spring-native.json', metrics);
-    await terminateChildProcess(backendProcess, 'packaged Spring-native runtime');
+    await terminateChildProcess(
+      backendProcess,
+      'packaged Spring-native runtime',
+    );
   }
 }
 
-function buildLibrarySearchPath(libraryDir: string, existingValue: string | undefined) {
+function buildLibrarySearchPath(
+  libraryDir: string,
+  existingValue: string | undefined,
+) {
   const separator = process.platform === 'win32' ? ';' : ':';
   return [libraryDir, existingValue ?? ''].filter(Boolean).join(separator);
 }
@@ -123,12 +135,17 @@ function buildNativeLibraryEnv(libraryDir: string) {
   }
 
   return {
-    LD_LIBRARY_PATH: buildLibrarySearchPath(libraryDir, process.env.LD_LIBRARY_PATH),
+    LD_LIBRARY_PATH: buildLibrarySearchPath(
+      libraryDir,
+      process.env.LD_LIBRARY_PATH,
+    ),
     PATH: process.env.PATH ?? '',
   };
 }
 
 main().catch((error) => {
-  console.error(error instanceof Error ? error.stack ?? error.message : String(error));
+  console.error(
+    error instanceof Error ? (error.stack ?? error.message) : String(error),
+  );
   process.exitCode = 1;
 });

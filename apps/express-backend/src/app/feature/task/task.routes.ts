@@ -5,6 +5,10 @@ import { CreateTaskDto, PaginationQueryDto } from './task.dto';
 const router = Router();
 const taskService = new TaskService();
 
+function routeParam(value: string | string[]): string {
+  return Array.isArray(value) ? (value[0] ?? '') : value;
+}
+
 // GET /tasks - Get all tasks with pagination
 router.get('/', async (req: Request, res: Response) => {
   try {
@@ -24,7 +28,7 @@ router.get('/', async (req: Request, res: Response) => {
 // GET /tasks/:id - Get a single task by ID
 router.get('/:id', async (req: Request, res: Response) => {
   try {
-    const task = await taskService.findOne(req.params.id);
+    const task = await taskService.findOne(routeParam(req.params.id));
     if (!task) {
       return res.status(404).json({ error: 'Task not found' });
     }
@@ -50,7 +54,7 @@ router.post('/create', async (req: Request, res: Response) => {
 // PUT /tasks/:id - Update a task
 router.put('/:id', async (req: Request, res: Response) => {
   try {
-    const task = await taskService.update(req.params.id, req.body);
+    const task = await taskService.update(routeParam(req.params.id), req.body);
     if (!task) {
       return res.status(404).json({ error: 'Task not found' });
     }
@@ -64,7 +68,7 @@ router.put('/:id', async (req: Request, res: Response) => {
 // DELETE /tasks/:id - Delete a task
 router.delete('/:id', async (req: Request, res: Response) => {
   try {
-    const affected = await taskService.remove(req.params.id);
+    const affected = await taskService.remove(routeParam(req.params.id));
     if (!affected || affected === 0) {
       return res.status(404).json({ error: 'Task not found' });
     }

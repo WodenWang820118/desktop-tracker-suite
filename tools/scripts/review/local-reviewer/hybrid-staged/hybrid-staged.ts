@@ -6,7 +6,10 @@ import {
   planHybridLocalReview,
   type HybridReviewReport,
 } from '../../local-reviewer-support.ts';
-import { runHybridGptWorkerProcess, runHybridLocalWorkerProcess } from '../workers/workers.ts';
+import {
+  runHybridGptWorkerProcess,
+  runHybridLocalWorkerProcess,
+} from '../workers/workers.ts';
 
 export interface HybridStagedWorkerRunners {
   runHybridGptWorkerProcess: typeof runHybridGptWorkerProcess;

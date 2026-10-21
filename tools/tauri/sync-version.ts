@@ -31,7 +31,10 @@ export async function syncDesktopVersionFiles(
   const version = await readWorkspaceVersion(workspaceRoot);
   const changedFiles: string[] = [];
   const tauriConfigPath = join(tauriSrcRoot, 'tauri.conf.json');
-  const pendingConfigWrites: Array<{ path: string; config: Record<string, unknown> }> = [];
+  const pendingConfigWrites: Array<{
+    path: string;
+    config: Record<string, unknown>;
+  }> = [];
 
   const tauriConfig = await readRequiredJson<Record<string, unknown>>(
     tauriConfigPath,
@@ -42,7 +45,9 @@ export async function syncDesktopVersionFiles(
     pendingConfigWrites.push({ path: tauriConfigPath, config: tauriConfig });
   }
 
-  for (const variantConfigPath of await listTauriVariantConfigPaths(tauriSrcRoot)) {
+  for (const variantConfigPath of await listTauriVariantConfigPaths(
+    tauriSrcRoot,
+  )) {
     const variantConfig = await readRequiredJson<Record<string, unknown>>(
       variantConfigPath,
       `Tauri desktop config at ${variantConfigPath}`,
@@ -52,7 +57,10 @@ export async function syncDesktopVersionFiles(
       variantConfig.version !== version
     ) {
       variantConfig.version = version;
-      pendingConfigWrites.push({ path: variantConfigPath, config: variantConfig });
+      pendingConfigWrites.push({
+        path: variantConfigPath,
+        config: variantConfig,
+      });
     }
   }
 
@@ -118,7 +126,9 @@ export function updateCargoPackageVersion(manifest: string, version: string) {
   });
 
   if (!updated) {
-    throw new Error('Cargo.toml is missing a version field inside the [package] section.');
+    throw new Error(
+      'Cargo.toml is missing a version field inside the [package] section.',
+    );
   }
 
   return nextLines.join(newline);
@@ -160,9 +170,12 @@ function wrapMissingFileError(error: unknown, path: string, label: string) {
   }
 
   if (error instanceof SyntaxError) {
-    return new Error(`${label} contains invalid JSON (SyntaxError): ${error.message}`, {
-      cause: error,
-    });
+    return new Error(
+      `${label} contains invalid JSON (SyntaxError): ${error.message}`,
+      {
+        cause: error,
+      },
+    );
   }
 
   return error;
@@ -179,7 +192,9 @@ async function main() {
 
 if (import.meta.url === new URL(process.argv[1] ?? '', 'file://').href) {
   main().catch((error) => {
-    console.error(error instanceof Error ? error.stack ?? error.message : String(error));
+    console.error(
+      error instanceof Error ? (error.stack ?? error.message) : String(error),
+    );
     process.exitCode = 1;
   });
 }

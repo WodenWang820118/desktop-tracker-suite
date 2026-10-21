@@ -9,11 +9,13 @@ import { themes } from './themes';
 // Load the appropriate PrimeReact theme based on initial theme preference
 const loadTheme = () => {
   const saved = localStorage.getItem('theme');
-  const prefersDark = globalThis.matchMedia?.('(prefers-color-scheme: dark)').matches;
+  const prefersDark = globalThis.matchMedia?.(
+    '(prefers-color-scheme: dark)',
+  ).matches;
   const useDark = saved ? saved === 'dark' : prefersDark;
-  
+
   const themeUrl = useDark ? themes.dark : themes.light;
-  
+
   const link = document.createElement('link');
   link.id = 'app-theme';
   link.rel = 'stylesheet';
@@ -24,7 +26,7 @@ const loadTheme = () => {
 loadTheme();
 
 const root = ReactDOM.createRoot(
-  document.getElementById('root') as HTMLElement
+  document.getElementById('root') as HTMLElement,
 );
 
 root.render(
@@ -40,5 +42,5 @@ root.render(
         </BrowserRouter>
       )}
     </PrimeReactProvider>
-  </StrictMode>
+  </StrictMode>,
 );

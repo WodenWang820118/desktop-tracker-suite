@@ -1,4 +1,8 @@
 import assert from 'node:assert/strict';
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { createRequire } from 'node:module';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import test from 'node:test';
 
 import {
@@ -6,13 +10,15 @@ import {
   buildNodeSidecarCacheManifest,
   buildDesktopRuntimeMetadata,
   type NodeSidecarCacheKeyInput,
-  getWorkspaceBinaryPath,
   resolveNodeSidecarRuntimeDefinition,
 } from './materialize-node-sidecar-runtime.ts';
+import { runWorkspacePkg } from './pkg-command.ts';
 import {
   buildNodeSidecarPackageJson,
+  buildNodeSidecarInstallEnvironment,
   buildNodeSidecarPkgConfig,
-  NODE_BACKEND_INSTALL_WORKSPACE_CONFIG,
+  NODE_BACKEND_INSTALL_POLICY,
+  NODE_BACKEND_TRUSTED_DEPENDENCIES,
 } from './node-backend-packaging.ts';
 
 test('buildDesktopRuntimeMetadata records the Nest sidecar manifest fields', () => {
@@ -52,7 +58,10 @@ test('buildDesktopRuntimeMetadata records the Express sidecar manifest fields', 
 });
 
 test('resolveNodeSidecarRuntimeDefinition maps Nest to the default sidecar name', () => {
-  assert.equal(resolveNodeSidecarRuntimeDefinition('nest').sidecarName, 'nest-backend');
+  assert.equal(
+    resolveNodeSidecarRuntimeDefinition('nest').sidecarName,
+    'nest-backend',
+  );
 });
 
 test('resolveNodeSidecarRuntimeDefinition maps Express to the alternate sidecar name', () => {
@@ -69,9 +78,9 @@ test('buildNodeSidecarCacheKey is deterministic for object key order', () => {
     buildNodeSidecarCacheKey({
       ...input,
       installEnvironment: {
-        npm_config_node_linker: 'hoisted',
+        bun_linker: 'hoisted',
         CI: 'true',
-        npm_config_confirm_modules_purge: 'false',
+        bun_production: 'true',
       },
     }),
     buildNodeSidecarCacheKey(input),
@@ -81,7 +90,10 @@ test('buildNodeSidecarCacheKey is deterministic for object key order', () => {
 test('buildNodeSidecarCacheKey is stable for identical inputs', () => {
   const input = buildCacheKeyInput();
 
-  assert.equal(buildNodeSidecarCacheKey(input), buildNodeSidecarCacheKey(input));
+  assert.equal(
+    buildNodeSidecarCacheKey(input),
+    buildNodeSidecarCacheKey(input),
+  );
 });
 
 test('buildNodeSidecarCacheKey changes when lockfile hash changes', () => {
@@ -90,7 +102,7 @@ test('buildNodeSidecarCacheKey changes when lockfile hash changes', () => {
   assert.notEqual(
     buildNodeSidecarCacheKey({
       ...input,
-      pnpmLockHash: 'next-lock-hash',
+      lockfileHash: 'next-lock-hash',
     }),
     buildNodeSidecarCacheKey(input),
   );
@@ -134,7 +146,7 @@ test('buildNodeSidecarCacheKey changes when install environment changes', () => 
       ...input,
       installEnvironment: {
         ...input.installEnvironment,
-        npm_config_node_linker: 'isolated',
+        bun_linker: 'isolated',
       },
     }),
     buildNodeSidecarCacheKey(input),
@@ -162,7 +174,7 @@ test('buildNodeSidecarCacheKey changes when workspace config changes', () => {
   assert.notEqual(
     buildNodeSidecarCacheKey({
       ...input,
-      workspaceConfig: `${input.workspaceConfig}\nallowBuilds:\n  sqlite3: true\n`,
+      workspaceConfig: `${input.workspaceConfig}trustedDependencies:\n  - sqlite3\n`,
     }),
     buildNodeSidecarCacheKey(input),
   );
@@ -193,14 +205,34 @@ test('buildNodeSidecarCacheManifest records the cache key and executable path', 
     {
       cacheKey: 'cache-key',
       packagedSidecarPath: 'stage/sidecar-build/nest-backend.exe',
-      schemaVersion: 2,
+      schemaVersion: 3,
     },
   );
 });
 
-test('getWorkspaceBinaryPath resolves pkg from the workspace root', () => {
-  assert.match(getWorkspaceBinaryPath('pkg', 'win32'), /node_modules[\\\/]\.bin[\\\/]pkg\.cmd$/u);
-  assert.match(getWorkspaceBinaryPath('pkg', 'linux'), /node_modules[\\\/]\.bin[\\\/]pkg$/u);
+test('workspace pkg can launch from a staging directory with spaces', async () => {
+  const stageRoot = mkdtempSync(join(tmpdir(), 'pkg staging '));
+  try {
+    const result = await runWorkspacePkg(['--version'], {
+      cwd: stageRoot,
+      stdio: 'pipe',
+    });
+    const packageJson = JSON.parse(
+      readFileSync(
+        createRequire(import.meta.url).resolve('@yao-pkg/pkg/package.json'),
+        'utf8',
+      ),
+    );
+    assert.equal(result.exitCode, 0);
+    assert.equal(result.stdout.trim(), packageJson.version);
+  } finally {
+    rmSync(stageRoot, {
+      recursive: true,
+      force: true,
+      maxRetries: 5,
+      retryDelay: 100,
+    });
+  }
 });
 
 test('buildNodeSidecarPackageJson adds pkg metadata and sqlite3 to the runtime package', () => {
@@ -212,7 +244,7 @@ test('buildNodeSidecarPackageJson adds pkg metadata and sqlite3 to the runtime p
       main: 'main.js',
       version: '0.0.1',
     },
-    packageManager: 'pnpm@11.0.1',
+    packageManager: 'bun@1.4.3-canary.20261019.1',
     sidecarName: 'nest-backend',
     sqliteVersion: '5.1.7',
   });
@@ -220,11 +252,14 @@ test('buildNodeSidecarPackageJson adds pkg metadata and sqlite3 to the runtime p
   assert.equal(packagedJson.bin, 'main.js');
   assert.equal(packagedJson.name, 'nest-backend');
   assert.equal(packagedJson.private, true);
-  assert.equal(packagedJson.packageManager, 'pnpm@11.0.1');
+  assert.equal(packagedJson.packageManager, 'bun@1.4.3-canary.20261019.1');
   assert.deepEqual(packagedJson.dependencies, {
     sqlite3: '5.1.7',
     typeorm: '0.3.28',
   });
+  assert.deepEqual(packagedJson.trustedDependencies, [
+    ...NODE_BACKEND_TRUSTED_DEPENDENCIES,
+  ]);
   assert.deepEqual(packagedJson.pkg, buildNodeSidecarPkgConfig());
 });
 
@@ -250,17 +285,33 @@ test('buildNodeSidecarPkgConfig includes json assets and native addons', () => {
   });
 });
 
-test('NODE_BACKEND_INSTALL_WORKSPACE_CONFIG uses pnpm 11 workspace settings', () => {
-  assert.match(NODE_BACKEND_INSTALL_WORKSPACE_CONFIG, /packages: \[\]/u);
-  assert.match(NODE_BACKEND_INSTALL_WORKSPACE_CONFIG, /nodeLinker: hoisted/u);
-  assert.match(NODE_BACKEND_INSTALL_WORKSPACE_CONFIG, /allowBuilds:/u);
-  assert.match(NODE_BACKEND_INSTALL_WORKSPACE_CONFIG, /'@nestjs\/core': true/u);
-  assert.match(NODE_BACKEND_INSTALL_WORKSPACE_CONFIG, /'@scarf\/scarf': false/u);
-  assert.match(NODE_BACKEND_INSTALL_WORKSPACE_CONFIG, /sqlite3: true/u);
-  assert.doesNotMatch(NODE_BACKEND_INSTALL_WORKSPACE_CONFIG, /'\s+@/u);
-  assert.doesNotMatch(
-    NODE_BACKEND_INSTALL_WORKSPACE_CONFIG,
-    /node-linker|only-built-dependencies|onlyBuiltDependencies|ignoredBuiltDependencies/u,
+test('Linux sidecar dependencies compile against the host libc', () => {
+  assert.deepEqual(buildNodeSidecarInstallEnvironment('linux'), {
+    npm_config_build_from_source: 'true',
+  });
+  assert.deepEqual(buildNodeSidecarInstallEnvironment('win32'), {});
+  assert.deepEqual(buildNodeSidecarInstallEnvironment('darwin'), {});
+});
+
+test('Nest adapter packaging patch matches the installed loader', () => {
+  const source = readFileSync(
+    createRequire(import.meta.url).resolve('@nestjs/core/nest-factory.js'),
+    'utf8',
+  );
+  const [original] =
+    buildNodeSidecarPkgConfig(true).patches![
+      'node_modules/@nestjs/core/nest-factory.js'
+    ];
+  assert.ok(source.includes(original), 'Nest adapter loader patch is stale');
+});
+
+test('NODE_BACKEND_INSTALL_POLICY trusts the sidecar native build scripts', () => {
+  assert.match(NODE_BACKEND_INSTALL_POLICY, /trustedDependencies:/u);
+  assert.match(NODE_BACKEND_INSTALL_POLICY, /- @nestjs\/core/u);
+  assert.match(NODE_BACKEND_INSTALL_POLICY, /- sqlite3/u);
+  assert.deepEqual(
+    [...NODE_BACKEND_TRUSTED_DEPENDENCIES],
+    ['@nestjs/core', 'sqlite3'],
   );
 });
 
@@ -271,10 +322,10 @@ function buildCacheKeyInput(): NodeSidecarCacheKeyInput {
     cacheSchemaVersion: 1,
     installEnvironment: {
       CI: 'true',
-      npm_config_confirm_modules_purge: 'false',
-      npm_config_node_linker: 'hoisted',
+      bun_linker: 'hoisted',
+      bun_production: 'true',
     },
-    packageManager: 'pnpm@11.0.1',
+    packageManager: 'bun@1.4.3-canary.20261019.1',
     packagedPackageJson: {
       bin: 'main.js',
       dependencies: {
@@ -287,13 +338,13 @@ function buildCacheKeyInput(): NodeSidecarCacheKeyInput {
       CI: 'true',
     },
     pkgVersion: '6.18.2',
-    pnpmLockHash: 'lock-hash',
+    lockfileHash: 'lock-hash',
     processArch: 'x64',
     processPlatform: 'win32',
     processVersion: 'v24.11.1',
     profile: 'windows-x64',
     rustTarget: 'x86_64-pc-windows-msvc',
     sidecarName: 'nest-backend',
-    workspaceConfig: NODE_BACKEND_INSTALL_WORKSPACE_CONFIG,
+    workspaceConfig: NODE_BACKEND_INSTALL_POLICY,
   };
 }

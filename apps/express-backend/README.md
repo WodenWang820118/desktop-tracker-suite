@@ -48,13 +48,13 @@ express-backend/
 
 ```bash
 # Install dependencies
-pnpm install
+bun install
 
 # Run in development mode
-pnpm run dev-express
+bun run dev-express
 
 # Build
-pnpm run build-express
+bun run build-express
 ```
 
 ## Environment Variables

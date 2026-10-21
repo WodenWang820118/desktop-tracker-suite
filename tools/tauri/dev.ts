@@ -1,6 +1,6 @@
 import {
   DEV_FRONTEND_URL,
-  PNPM_COMMAND,
+  BUN_COMMAND,
   TAURI_PROJECT_ROOT,
   logStep,
   spawnLogged,
@@ -10,21 +10,25 @@ import {
 
 async function main() {
   const childProcesses = [
-    spawnLogged(PNPM_COMMAND, [
-      'exec',
+    spawnLogged(BUN_COMMAND, [
+      'x',
       'nx',
       'run',
       'ng-tracker:serve',
       '--host=127.0.0.1',
       '--port=4200',
     ]),
-    spawnLogged(PNPM_COMMAND, ['exec', 'nx', 'run', 'nest-backend:serve:development'], {
-      env: {
-        ...process.env,
-        NODE_ENV: 'dev',
-        PORT: '3000',
+    spawnLogged(
+      BUN_COMMAND,
+      ['x', 'nx', 'run', 'nest-backend:serve:development'],
+      {
+        env: {
+          ...process.env,
+          NODE_ENV: 'dev',
+          PORT: '3000',
+        },
       },
-    }),
+    ),
   ];
 
   const cleanup = async () => {
@@ -47,11 +51,21 @@ async function main() {
 
   try {
     await waitForUrl(DEV_FRONTEND_URL, { attempts: 90, delayMs: 1000 });
-    await waitForUrl('http://127.0.0.1:3000/health', { attempts: 90, delayMs: 1000 });
+    await waitForUrl('http://127.0.0.1:3000/health', {
+      attempts: 90,
+      delayMs: 1000,
+    });
 
     tauriProcess = spawnLogged(
-      PNPM_COMMAND,
-      ['exec', 'tauri', 'dev', '--config', 'src-tauri/tauri.conf.json', '--no-dev-server-wait'],
+      BUN_COMMAND,
+      [
+        'x',
+        'tauri',
+        'dev',
+        '--config',
+        'src-tauri/tauri.conf.json',
+        '--no-dev-server-wait',
+      ],
       {
         cwd: TAURI_PROJECT_ROOT,
       },
@@ -61,10 +75,12 @@ async function main() {
     }
     const runningTauriProcess = tauriProcess;
 
-    const exitCode = await new Promise<number>((resolvePromise, rejectPromise) => {
-      runningTauriProcess.on('error', rejectPromise);
-      runningTauriProcess.on('exit', (code) => resolvePromise(code ?? 0));
-    });
+    const exitCode = await new Promise<number>(
+      (resolvePromise, rejectPromise) => {
+        runningTauriProcess.on('error', rejectPromise);
+        runningTauriProcess.on('exit', (code) => resolvePromise(code ?? 0));
+      },
+    );
 
     process.exitCode = exitCode;
   } finally {
@@ -73,6 +89,8 @@ async function main() {
 }
 
 main().catch((error) => {
-  console.error(error instanceof Error ? error.stack ?? error.message : String(error));
+  console.error(
+    error instanceof Error ? (error.stack ?? error.message) : String(error),
+  );
   process.exitCode = 1;
 });

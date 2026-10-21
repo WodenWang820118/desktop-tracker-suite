@@ -5,8 +5,5 @@
     "types": []
   },
   "include": ["src/**/*.ts", "**/*.d.ts", "../../libs/**/*.d.ts"],
-  "exclude": [
-    "src/**/*.test.ts",
-    "src/**/*.spec.ts",
-  ]
+  "exclude": ["src/**/*.test.ts", "src/**/*.spec.ts"]
 }

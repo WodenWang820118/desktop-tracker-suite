@@ -1,17 +1,9 @@
-import {
-  getModelRateLimitPolicy,
-  normalizeGeminiModel,
-} from './rate-limit.ts';
+import { getModelRateLimitPolicy, normalizeGeminiModel } from './rate-limit.ts';
 
 export type CopilotPolicyOperation =
-  | 'health-version'
-  | 'health-probe'
-  | 'reasoning-help'
-  | 'review';
+  'health-version' | 'health-probe' | 'reasoning-help' | 'review';
 export type GeminiPolicyOperation =
-  | 'health-version'
-  | 'health-probe'
-  | 'review-attempt';
+  'health-version' | 'health-probe' | 'review-attempt';
 
 export const COPILOT_HEALTH_TIMEOUT_MS = 30_000;
 export const COPILOT_REVIEW_TIMEOUT_MS = 3 * 60 * 1000;

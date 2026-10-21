@@ -1,6 +1,6 @@
 {
-    "vitest.disableWorkspaceWarning": true,
-    "java.compile.nullAnalysis.mode": "automatic",
-    "java.configuration.updateBuildConfiguration": "automatic",
-    "postman.settings.dotenv-detection-notification-visibility": false
+  "vitest.disableWorkspaceWarning": true,
+  "java.compile.nullAnalysis.mode": "automatic",
+  "java.configuration.updateBuildConfiguration": "automatic",
+  "postman.settings.dotenv-detection-notification-visibility": false
 }

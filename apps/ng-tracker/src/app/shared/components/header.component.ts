@@ -59,10 +59,10 @@ export class HeaderComponent {
   }
 
   themeLabel = computed(() =>
-    this.theme.mode() === 'dark' ? 'Light' : 'Dark'
+    this.theme.mode() === 'dark' ? 'Light' : 'Dark',
   );
   themeIcon = computed(() =>
-    this.theme.mode() === 'dark' ? 'pi pi-sun' : 'pi pi-moon'
+    this.theme.mode() === 'dark' ? 'pi pi-sun' : 'pi pi-moon',
   );
   toggleTheme() {
     this.theme.toggle();

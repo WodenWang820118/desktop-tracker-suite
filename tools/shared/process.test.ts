@@ -96,7 +96,9 @@ test('terminateChildProcess stops a running child process', async () => {
   });
 
   assert.ok(child.exitCode !== null || child.signalCode !== null);
-  assert.ok(logs.some((message) => /^stopping test process \(pid \d+\)$/.test(message)));
+  assert.ok(
+    logs.some((message) => /^stopping test process \(pid \d+\)$/.test(message)),
+  );
 });
 
 async function onceExit(child: ReturnType<typeof spawnLogged>): Promise<void> {

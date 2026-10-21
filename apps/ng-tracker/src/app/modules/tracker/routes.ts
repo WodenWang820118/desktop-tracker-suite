@@ -5,7 +5,7 @@ export const TRACKER_ROUTES: Routes = [
     path: '',
     loadComponent: () =>
       import('./views/tracker-view.component').then(
-        (m) => m.TrackerViewComponent
+        (m) => m.TrackerViewComponent,
       ),
   },
 ];

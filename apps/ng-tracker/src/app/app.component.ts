@@ -22,36 +22,36 @@ import { ToastModule } from 'primeng/toast';
   ],
   template: `
     @defer {
-    <p-toast position="top-right" />
-    <div
-      class="min-h-screen flex flex-col bg-gray-50 dark:bg-slate-950 app-shell"
-    >
-      <app-header></app-header>
-      <main class="flex-1 py-6">
-        <div class="max-w-5xl mx-auto px-4">
-          <router-outlet></router-outlet>
-        </div>
-      </main>
-      <app-footer></app-footer>
-    </div>
-    <app-confirm-dialog />
-    } @loading(minimum 600) {
-    <div
-      class="flex justify-center items-center min-h-screen opacity-0 animate-fadeIn"
-    >
-      <span
-        role="status"
-        aria-live="polite"
-        [attr.aria-label]="'Loading'"
-        [class]="
-          (theme.mode() === 'dark'
-            ? 'border-slate-700 border-t-blue-400'
-            : 'border-slate-300 border-t-blue-600') +
-          ' inline-block h-16 w-16 md:h-20 md:w-20 rounded-full border-8 animate-spin'
-        "
-      ></span>
-      <span class="sr-only">Loading…</span>
-    </div>
+      <p-toast position="top-right" />
+      <div
+        class="min-h-screen flex flex-col bg-gray-50 dark:bg-slate-950 app-shell"
+      >
+        <app-header></app-header>
+        <main class="flex-1 py-6">
+          <div class="max-w-5xl mx-auto px-4">
+            <router-outlet></router-outlet>
+          </div>
+        </main>
+        <app-footer></app-footer>
+      </div>
+      <app-confirm-dialog />
+    } @loading (minimum 600) {
+      <div
+        class="flex justify-center items-center min-h-screen opacity-0 animate-fadeIn"
+      >
+        <span
+          role="status"
+          aria-live="polite"
+          [attr.aria-label]="'Loading'"
+          [class]="
+            (theme.mode() === 'dark'
+              ? 'border-slate-700 border-t-blue-400'
+              : 'border-slate-300 border-t-blue-600') +
+            ' inline-block h-16 w-16 md:h-20 md:w-20 rounded-full border-8 animate-spin'
+          "
+        ></span>
+        <span class="sr-only">Loading…</span>
+      </div>
     }
   `,
 })

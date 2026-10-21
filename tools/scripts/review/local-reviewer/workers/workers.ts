@@ -152,6 +152,7 @@ export async function runJsonWorker<T>(
       `Worker returned non-JSON output: ${
         error instanceof Error ? error.message : String(error)
       }`,
+      { cause: error },
     );
   }
 }

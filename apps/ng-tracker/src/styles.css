@@ -9,16 +9,19 @@
 
 /* Simple fade-in utility for deferred loading states */
 @keyframes fadeIn {
-	from { opacity: 0; }
-	to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .animate-fadeIn {
-	animation: fadeIn 180ms ease-out forwards;
+  animation: fadeIn 180ms ease-out forwards;
 }
 
 /* Hint browsers about color scheme when dark mode is active */
 .app-dark {
   color-scheme: dark;
 }
-

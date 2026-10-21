@@ -18,12 +18,12 @@ describe('AboutViewComponent', () => {
 
     const element = fixture.nativeElement as HTMLElement;
     const homeLink = element.querySelector(
-      '[data-test-id="home-page-link"]'
+      '[data-test-id="home-page-link"]',
     ) as HTMLAnchorElement | null;
 
     expect(element.textContent).toContain('Version 1.0.0');
     expect(element.textContent).toContain(
-      'A powerful and intuitive task management application'
+      'A powerful and intuitive task management application',
     );
     expect(homeLink).not.toBeNull();
     expect(homeLink?.textContent).toContain('Back to Home');

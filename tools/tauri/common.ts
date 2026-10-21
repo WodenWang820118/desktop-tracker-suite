@@ -1,5 +1,5 @@
 import { type ChildProcess, type SpawnOptions } from 'node:child_process';
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { copyFile, cp, readFile, rm, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 
@@ -28,7 +28,7 @@ import { WORKSPACE_ROOT } from '../shared/workspace.ts';
 export * from './constants.ts';
 // Explicit import for internal use (export * does not provide module-scoped access).
 import {
-  PNPM_COMMAND,
+  BUN_COMMAND,
   SPRING_BACKEND_SIDECAR_NAME,
   TAURI_BINARIES_DIR,
 } from './constants.ts';
@@ -139,8 +139,9 @@ export interface InstallStagedProductionDependenciesOptions {
 
 const STAGED_PRODUCTION_DEPENDENCY_INSTALL_ARGS = [
   'install',
-  '--prod',
-  '--no-lockfile',
+  '--production',
+  '--no-save',
+  '--linker=hoisted',
 ] as const;
 
 export function buildStagedProductionDependencyInstallArgs({
@@ -153,13 +154,36 @@ export function buildStagedProductionDependencyInstallArgs({
     : [...STAGED_PRODUCTION_DEPENDENCY_INSTALL_ARGS];
 }
 
-export function isPnpmOfflineMetadataMiss(error: unknown): boolean {
+export function isBunOfflineCacheMiss(error: unknown): boolean {
   if (!(error instanceof RunCommandError)) {
     return false;
   }
 
   const diagnosticText = [error.stdout, error.stderr, error.message].join('\n');
-  return /\bERR_PNPM_NO_OFFLINE_META\b/u.test(diagnosticText);
+  return /\boffline\b/iu.test(diagnosticText);
+}
+
+function assertStagedPackageTrustsSqlite(cwd: string): void {
+  const packageJsonPath = join(cwd, 'package.json');
+  if (!existsSync(packageJsonPath)) {
+    throw new Error(
+      `Staged package.json is missing at ${packageJsonPath}. ` +
+        'Write package.json with trustedDependencies before installing staged production dependencies.',
+    );
+  }
+
+  const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf8')) as {
+    trustedDependencies?: unknown;
+  };
+  const trustedDependencies = packageJson.trustedDependencies;
+  if (
+    !Array.isArray(trustedDependencies) ||
+    !trustedDependencies.includes('sqlite3')
+  ) {
+    throw new Error(
+      `Staged package.json at ${packageJsonPath} must list sqlite3 in trustedDependencies so Bun can build its native binding.`,
+    );
+  }
 }
 
 export async function installStagedProductionDependencies({
@@ -170,24 +194,12 @@ export async function installStagedProductionDependencies({
   platform = process.platform,
   run = runSharedCommand,
 }: InstallStagedProductionDependenciesOptions): Promise<void> {
-  const workspaceConfigPath = join(cwd, 'pnpm-workspace.yaml');
-  if (!existsSync(workspaceConfigPath)) {
-    throw new Error(
-      `Staged pnpm workspace config is missing at ${workspaceConfigPath}. ` +
-        'Write pnpm-workspace.yaml before installing staged production dependencies.',
-    );
-  }
+  assertStagedPackageTrustsSqlite(cwd);
 
-  // Keep --ignore-workspace off: pnpm 11 must read the staged allowBuilds
-  // policy. Callers anchor the stage with packages: [] in pnpm-workspace.yaml.
   const installEnv = {
     ...process.env,
     ...env,
     CI: 'true',
-    // Defense in depth; the canonical staged pnpm policy lives in
-    // pnpm-workspace.yaml so build-script approvals are versioned together.
-    npm_config_node_linker: 'hoisted',
-    npm_config_confirm_modules_purge: 'false',
   };
   const baseOptions = {
     cwd,
@@ -196,10 +208,10 @@ export async function installStagedProductionDependencies({
   };
   if (isCi && platform === 'win32') {
     logStep(
-      `Using online pnpm production dependency install for ${label} on Windows CI.`,
+      `Using online bun production dependency install for ${label} on Windows CI.`,
     );
     await run(
-      PNPM_COMMAND,
+      BUN_COMMAND,
       buildStagedProductionDependencyInstallArgs({ offline: false }),
       {
         ...baseOptions,
@@ -211,7 +223,7 @@ export async function installStagedProductionDependencies({
 
   try {
     await run(
-      PNPM_COMMAND,
+      BUN_COMMAND,
       buildStagedProductionDependencyInstallArgs({ offline: true }),
       {
         ...baseOptions,
@@ -220,17 +232,17 @@ export async function installStagedProductionDependencies({
     );
     return;
   } catch (error) {
-    if (!isCi || !isPnpmOfflineMetadataMiss(error)) {
+    if (!isCi || !isBunOfflineCacheMiss(error)) {
       throw error;
     }
 
     logStep(
-      `Offline pnpm metadata is unavailable for ${label}; retrying production dependency install online.`,
+      `Offline bun package cache is unavailable for ${label}; retrying production dependency install online.`,
     );
 
     try {
       await run(
-        PNPM_COMMAND,
+        BUN_COMMAND,
         buildStagedProductionDependencyInstallArgs({ offline: false }),
         {
           ...baseOptions,
@@ -239,7 +251,7 @@ export async function installStagedProductionDependencies({
       );
     } catch (fallbackError) {
       throw new Error(
-        `Online pnpm install fallback failed after an offline metadata miss for ${label}.`,
+        `Online bun install fallback failed after an offline cache miss for ${label}.`,
         { cause: fallbackError },
       );
     }

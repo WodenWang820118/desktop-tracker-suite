@@ -102,7 +102,10 @@
       }
     },
     "lint": {
-      "executor": "@nx/eslint:lint"
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun lint --no-script apps/ng-tracker"
+      }
     },
     "test": {
       "executor": "@angular/build:unit-test",

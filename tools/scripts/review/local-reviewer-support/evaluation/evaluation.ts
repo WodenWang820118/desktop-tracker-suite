@@ -18,7 +18,7 @@ import {
 import {
   collectChangedFiles,
   collectDiffText,
-  getPnpmCommand,
+  getPackageManagerCommand,
   runGitCommand,
   runLocalReviewerReview,
 } from '../runtime/runtime.ts';
@@ -335,7 +335,7 @@ export function evaluateSampleWithCheckpointReview(input: {
   });
 
   const result = input.dependencies.runProcess({
-    command: getPnpmCommand(),
+    command: getPackageManagerCommand(),
     args: ['review:implementation', '--', '--focus', 'general'],
     cwd: input.sample.repoRoot,
     input: context,
@@ -487,7 +487,7 @@ function classifySample(
 ): EvaluationSample['kind'] {
   if (
     files.some((file) =>
-      /(package\.json|pnpm-lock\.yaml|pnpm-workspace\.yaml|nx\.json|tsconfig|project\.json|\.ya?ml|\.json|\.toml|README\.md)$/i.test(
+      /(package\.json|pnpm-lock\.yaml|pnpm-workspace\.yaml|bun\.lock|bunfig\.toml|nx\.json|tsconfig|project\.json|\.ya?ml|\.json|\.toml|README\.md)$/i.test(
         file,
       ),
     )

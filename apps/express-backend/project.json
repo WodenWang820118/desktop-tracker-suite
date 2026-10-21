@@ -47,6 +47,12 @@
           "buildTarget": "express-backend:build:production"
         }
       }
+    },
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun lint --no-script apps/express-backend"
+      }
     }
   }
 }

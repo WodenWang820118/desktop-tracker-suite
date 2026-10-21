@@ -112,7 +112,9 @@ export function buildProviderDoctorReport(input: {
   };
 }
 
-export function formatProviderDoctorReport(report: ProviderDoctorReport): string {
+export function formatProviderDoctorReport(
+  report: ProviderDoctorReport,
+): string {
   if (report.buckets.length === 0) {
     return [
       'Provider observability doctor',
@@ -224,7 +226,9 @@ function buildBucketReport(
   };
 
   if (bucket.provider === 'gemini' && bucket.operation === 'review-attempt') {
-    const geminiPolicy = getGeminiCurrentPolicy(bucket.model ?? 'gemini-2.5-pro');
+    const geminiPolicy = getGeminiCurrentPolicy(
+      bucket.model ?? 'gemini-2.5-pro',
+    );
     const sessions = buildGeminiReviewSessionSummaries(bucket.observations);
     report.geminiBackoffRecommendation =
       buildGeminiBackoffRecommendationSummary({
@@ -302,7 +306,9 @@ function formatMs(value: number | null | undefined): string {
   return `${value}ms`;
 }
 
-function formatDelayList(values: ReadonlyArray<number> | null | undefined): string {
+function formatDelayList(
+  values: ReadonlyArray<number> | null | undefined,
+): string {
   if (!values || values.length === 0) {
     return 'n/a';
   }

@@ -36,7 +36,7 @@ function printHelp(exitCode = 0): never {
   console.log(`with-env: run a command with layered env files (via env-cmd)
 
 Usage:
-  pnpm -s run with-env --profile <dev|prod> [--be <nest|express|spring>] [--file <path> ...] -- <command> [args...]
+  bun run --silent with-env --profile <dev|prod> [--be <nest|express|spring>] [--file <path> ...] -- <command> [args...]
 
 Profiles:
   dev          -> envs/.env.dev (+ envs/.env.dev.local if present)
@@ -91,7 +91,7 @@ function resolveEnvCmdBin(): string {
       paths: [process.cwd()],
     });
   } catch {
-    die('Missing dependency "env-cmd". Run: pnpm install');
+    die('Missing dependency "env-cmd". Run: bun install');
   }
 
   const pkgDir = dirname(pkgJsonPath as string);
@@ -197,7 +197,9 @@ if (!parsed.profile) {
 
 const baseFiles = PROFILE_FILES[parsed.profile as string];
 if (!baseFiles) {
-  die(`Unknown profile: ${parsed.profile}. Run: pnpm -s run with-env --help`);
+  die(
+    `Unknown profile: ${parsed.profile}. Run: bun run --silent with-env --help`,
+  );
 }
 
 const envFiles: string[] = [...baseFiles];

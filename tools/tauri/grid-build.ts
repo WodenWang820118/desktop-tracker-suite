@@ -1,7 +1,7 @@
 import { syncDesktopVersionFiles } from './sync-version.ts';
 import {
   logStep,
-  PNPM_COMMAND,
+  BUN_COMMAND,
   runCommand,
   TAURI_PROJECT_ROOT,
   WORKSPACE_ROOT,
@@ -66,7 +66,9 @@ async function runGridSelection({
     ...selection,
     version: await readWorkspaceVersion(),
   });
-  logStep(`Generated Tauri grid config at ${generatedConfig.projectConfigPath}`);
+  logStep(
+    `Generated Tauri grid config at ${generatedConfig.projectConfigPath}`,
+  );
 
   if (mode === 'prepare') {
     return;
@@ -82,7 +84,7 @@ async function runGridSelection({
 async function buildFrontend(selection: GridSelection) {
   const frontend = getFrontendDefinition(selection.frontend);
   logStep(`Building ${selection.frontend} frontend for Tauri grid packaging`);
-  await runCommand(PNPM_COMMAND, frontend.buildArgs, {
+  await runCommand(BUN_COMMAND, frontend.buildArgs, {
     cwd: WORKSPACE_ROOT,
   });
 }
@@ -90,14 +92,16 @@ async function buildFrontend(selection: GridSelection) {
 async function buildBackend(selection: GridSelection) {
   const backend = getBackendDefinition(selection.backend);
   logStep(`Building ${selection.backend} backend for Tauri grid packaging`);
-  await runCommand(PNPM_COMMAND, backend.buildArgs, {
+  await runCommand(BUN_COMMAND, backend.buildArgs, {
     cwd: WORKSPACE_ROOT,
   });
 }
 
 async function materializeBackend(selection: GridSelection) {
   const backend = getBackendDefinition(selection.backend);
-  logStep(`Materializing ${selection.backend} backend runtime for Tauri grid packaging`);
+  logStep(
+    `Materializing ${selection.backend} backend runtime for Tauri grid packaging`,
+  );
   await runCommand('node', backend.materializeArgs, {
     cwd: WORKSPACE_ROOT,
   });
@@ -120,7 +124,7 @@ async function runTauriBuild({
 }) {
   const target = resolveDesktopTargetInfo();
   const tauriArgs = [
-    'exec',
+    'x',
     'tauri',
     'build',
     '--config',
@@ -138,7 +142,7 @@ async function runTauriBuild({
       selection,
     )})`,
   );
-  await runCommand(PNPM_COMMAND, tauriArgs, {
+  await runCommand(BUN_COMMAND, tauriArgs, {
     cwd: TAURI_PROJECT_ROOT,
   });
 }
@@ -152,7 +156,9 @@ function parseGridMode(value: string | undefined): GridMode {
     return value;
   }
 
-  throw new Error('Unsupported grid mode. Expected "build", "package", "prepare", or "verify".');
+  throw new Error(
+    'Unsupported grid mode. Expected "build", "package", "prepare", or "verify".',
+  );
 }
 
 function resolveSelectionFromArgsOrEnv(args: string[]): GridSelection {
@@ -165,6 +171,8 @@ function resolveSelectionFromArgsOrEnv(args: string[]): GridSelection {
 }
 
 main().catch((error) => {
-  console.error(error instanceof Error ? error.stack ?? error.message : String(error));
+  console.error(
+    error instanceof Error ? (error.stack ?? error.message) : String(error),
+  );
   process.exitCode = 1;
 });

@@ -202,7 +202,9 @@ test('buildProviderDoctorReport skips timeout recommendations for unsupported pr
 
     assert.equal(report.buckets.length, 2);
     assert.equal(
-      report.buckets.every((bucket) => bucket.timeoutRecommendation === undefined),
+      report.buckets.every(
+        (bucket) => bucket.timeoutRecommendation === undefined,
+      ),
       true,
     );
   } finally {
@@ -212,7 +214,10 @@ test('buildProviderDoctorReport skips timeout recommendations for unsupported pr
 
 function baseObservation(
   input: Partial<Parameters<typeof recordProviderObservation>[0]> &
-    Pick<Parameters<typeof recordProviderObservation>[0], 'operation' | 'provider'>,
+    Pick<
+      Parameters<typeof recordProviderObservation>[0],
+      'operation' | 'provider'
+    >,
 ) {
   return {
     callsite: 'checkpoint-review' as const,

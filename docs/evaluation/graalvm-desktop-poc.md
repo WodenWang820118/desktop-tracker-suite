@@ -24,7 +24,7 @@ The feasibility result above is still the recommendation, but the repo implement
 - Default packaged desktop runtime: `nest-backend` as a true Tauri sidecar built as a self-contained Node executable.
 - Alternate packaged desktop runtime: `express-backend` as a true Tauri sidecar built the same way.
 - Alternate packaged desktop runtime: `spring-backend` as a true Tauri sidecar using the GraalVM native executable.
-The current maintained desktop packaging model is Tauri `bundle.externalBin` sidecars for Spring, Nest, and Express. The older Nest `bundle.resources` path is now treated as historical evaluation context, not as an exposed package target.
+  The current maintained desktop packaging model is Tauri `bundle.externalBin` sidecars for Spring, Nest, and Express. The older Nest `bundle.resources` path is now treated as historical evaluation context, not as an exposed package target.
 
 ## Packaging Clarification
 
@@ -92,11 +92,11 @@ Metrics snapshots:
 
 ### Comparison Matrix
 
-| Scenario | Runtime payload | Windows installer | Health-ready | CRUD smoke | Result |
-| --- | ---: | ---: | ---: | --- | --- |
-| Nest + Node packaged runtime | 153.41 MB | 35.73 MB | 1043 ms | Pass | Baseline |
-| Spring native standalone | 100.15 MB | n/a | 1068 ms | Pass | Works |
-| Spring native packaged in Tauri | 100.15 MB | 66.20 MB | 1036 ms | Pass | Works, but installer larger |
+| Scenario                        | Runtime payload | Windows installer | Health-ready | CRUD smoke | Result                      |
+| ------------------------------- | --------------: | ----------------: | -----------: | ---------- | --------------------------- |
+| Nest + Node packaged runtime    |       153.41 MB |          35.73 MB |      1043 ms | Pass       | Baseline                    |
+| Spring native standalone        |       100.15 MB |               n/a |      1068 ms | Pass       | Works                       |
+| Spring native packaged in Tauri |       100.15 MB |          66.20 MB |      1036 ms | Pass       | Works, but installer larger |
 
 ### Delta Summary
 
@@ -204,23 +204,23 @@ Implication for CI:
 ## Verification Run List
 
 - `mvn -f pom.xml test`
-- `pnpm run build-spring-native`
-- `pnpm run smoke-spring-native`
-- `pnpm run desktop:measure-baseline`
-- `pnpm run desktop:materialize-spring-native-runtime`
-- `pnpm run desktop:measure-spring-native`
-- `pnpm run desktop:build:spring-native`
-- `pnpm run desktop:measure-package`
-- `pnpm run desktop:package:spring-native`
-- `pnpm run desktop:measure-package:spring-native`
-- `pnpm run desktop:materialize-runtime`
-- `pnpm run desktop:smoke-runtime`
-- `pnpm run desktop:build`
-- `pnpm run desktop:package`
-- `pnpm run desktop:materialize-runtime:express-sidecar`
-- `pnpm run desktop:smoke-runtime:express-sidecar`
-- `pnpm run desktop:build:express-sidecar`
-- `pnpm run desktop:package:express-sidecar`
+- `bun run build-spring-native`
+- `bun run smoke-spring-native`
+- `bun run desktop:measure-baseline`
+- `bun run desktop:materialize-spring-native-runtime`
+- `bun run desktop:measure-spring-native`
+- `bun run desktop:build:spring-native`
+- `bun run desktop:measure-package`
+- `bun run desktop:package:spring-native`
+- `bun run desktop:measure-package:spring-native`
+- `bun run desktop:materialize-runtime`
+- `bun run desktop:smoke-runtime`
+- `bun run desktop:build`
+- `bun run desktop:package`
+- `bun run desktop:materialize-runtime:express-sidecar`
+- `bun run desktop:smoke-runtime:express-sidecar`
+- `bun run desktop:build:express-sidecar`
+- `bun run desktop:package:express-sidecar`
 
 ## References
 

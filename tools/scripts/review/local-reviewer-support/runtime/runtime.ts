@@ -191,7 +191,7 @@ export function ensureLocalReviewerBuild(
   env: NodeJS.ProcessEnv = process.env,
 ): void {
   const result = dependencies.runProcess({
-    command: getPnpmCommand(),
+    command: getPackageManagerCommand(),
     args: ['nx', 'build', 'local-reviewer'],
     cwd: toolRepoRoot,
     env,
@@ -349,6 +349,7 @@ function runLocalReviewerJsonCommand<T>(input: {
       `local-reviewer returned non-JSON output: ${
         error instanceof Error ? error.message : String(error)
       }`,
+      { cause: error },
     );
   }
 }
@@ -395,8 +396,8 @@ export function runGitCommand(
   return result;
 }
 
-export function getPnpmCommand(): string {
-  return process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm';
+export function getPackageManagerCommand(): string {
+  return process.platform === 'win32' ? 'bun.cmd' : 'bun';
 }
 
 function sanitizeEnv(

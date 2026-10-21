@@ -1,10 +1,6 @@
 // Shared data contracts for the local reviewer support modules.
 export type LocalReviewSeverity =
-  | 'critical'
-  | 'high'
-  | 'medium'
-  | 'low'
-  | 'info';
+  'critical' | 'high' | 'medium' | 'low' | 'info';
 
 export type PaidReviewContextMode = 'full-diff' | 'prefilter-summary';
 
@@ -161,25 +157,15 @@ export interface PaidReviewContextSelection {
 }
 
 export type HybridReviewProfileName =
-  | 'angular'
-  | 'nest'
-  | 'typescript'
-  | 'repo-habits'
-  | 'general';
+  'angular' | 'nest' | 'typescript' | 'repo-habits' | 'general';
 
 export type HybridRiskLevel = 'low' | 'medium' | 'high';
 export type HybridConfidenceLevel = 'low' | 'medium' | 'high';
 export type HybridGptReviewStatus =
-  | 'completed'
-  | 'unavailable'
-  | 'invalid-response'
-  | 'runtime-error';
+  'completed' | 'unavailable' | 'invalid-response' | 'runtime-error';
 export type HybridLocalMode = 'skipped' | 'targeted' | 'full';
 export type HybridDecisionBasis =
-  | 'heuristics'
-  | 'gpt'
-  | 'gpt+local'
-  | 'local-fallback';
+  'heuristics' | 'gpt' | 'gpt+local' | 'local-fallback';
 
 export interface HybridGptFinding {
   severity: LocalReviewSeverity;

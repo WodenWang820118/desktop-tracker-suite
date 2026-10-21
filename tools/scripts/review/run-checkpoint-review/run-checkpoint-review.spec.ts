@@ -804,7 +804,10 @@ test('buildReviewPrompt includes the checkpoint, focus, and supplied context', (
 
   assert.match(prompt, /Checkpoint: implementation/);
   assert.match(prompt, /Primary focus: security/);
-  assert.match(prompt, /Changed files: tools\/scripts\/review-gate\/shared\.ts/);
+  assert.match(
+    prompt,
+    /Changed files: tools\/scripts\/review-gate\/shared\.ts/,
+  );
 });
 
 test('buildReviewPrompt includes the shared review contract when present', () => {

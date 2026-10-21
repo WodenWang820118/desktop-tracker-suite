@@ -37,12 +37,18 @@ describe('HeaderComponent', () => {
   it('renders the current navigation and dark theme action label', () => {
     renderHeader();
 
-    expect(screen.getByRole('link', { name: 'Task Tracker' }).getAttribute('href')).toBe('/');
-    expect(screen.getByRole('link', { name: 'Home' }).getAttribute('href')).toBe('/');
-    expect(screen.getByRole('link', { name: 'About' }).getAttribute('href')).toBe('/about');
-    expect(screen.getByRole('button', { name: /light/i }).textContent).toContain(
-      'Light',
-    );
+    expect(
+      screen.getByRole('link', { name: 'Task Tracker' }).getAttribute('href'),
+    ).toBe('/');
+    expect(
+      screen.getByRole('link', { name: 'Home' }).getAttribute('href'),
+    ).toBe('/');
+    expect(
+      screen.getByRole('link', { name: 'About' }).getAttribute('href'),
+    ).toBe('/about');
+    expect(
+      screen.getByRole('button', { name: /light/i }).textContent,
+    ).toContain('Light');
   });
 
   it('renders the inverse theme action label when the current theme is light', () => {

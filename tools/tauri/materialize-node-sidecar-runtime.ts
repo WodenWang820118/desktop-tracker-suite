@@ -24,7 +24,6 @@ import {
   installStagedProductionDependencies,
   logStep,
   readJson,
-  runCommand,
   stopStaleTauriBackendProcesses,
   writeJson,
   writeTextFile,
@@ -32,12 +31,17 @@ import {
 } from './common.ts';
 import {
   buildNodeSidecarPackageJson,
-  NODE_BACKEND_INSTALL_WORKSPACE_CONFIG,
+  buildNodeSidecarInstallEnvironment,
+  NODE_BACKEND_INSTALL_POLICY,
 } from './node-backend-packaging.ts';
 import {
   assertHostCanBuildDesktopTarget,
   resolveDesktopTargetInfo,
 } from './runtime-target.ts';
+import {
+  getWorkspacePkgPackageJsonPath,
+  runWorkspacePkg,
+} from './pkg-command.ts';
 
 type NodeSidecarRuntimeMode = 'express' | 'nest';
 
@@ -79,7 +83,7 @@ export type NodeSidecarCacheKeyInput = {
   packagedPackageJson: unknown;
   pkgEnvironment: Record<string, string>;
   pkgVersion: string;
-  pnpmLockHash: string;
+  lockfileHash: string;
   processArch: string;
   processPlatform: string;
   processVersion: string;
@@ -89,7 +93,7 @@ export type NodeSidecarCacheKeyInput = {
   workspaceConfig: string;
 };
 
-const NODE_SIDECAR_CACHE_SCHEMA_VERSION = 2;
+const NODE_SIDECAR_CACHE_SCHEMA_VERSION = 3;
 const NODE_SIDECAR_CACHE_MANIFEST_NAME = 'materialize-cache.json';
 
 const NODE_SIDECAR_RUNTIME_DEFINITIONS: Record<
@@ -135,7 +139,9 @@ export function resolveNodeSidecarRuntimeDefinition(
   return NODE_SIDECAR_RUNTIME_DEFINITIONS[mode];
 }
 
-export function buildNodeSidecarCacheKey(input: NodeSidecarCacheKeyInput): string {
+export function buildNodeSidecarCacheKey(
+  input: NodeSidecarCacheKeyInput,
+): string {
   return createHash('sha256').update(stableJson(input)).digest('hex');
 }
 
@@ -150,28 +156,21 @@ export function buildNodeSidecarCacheManifest(input: {
   };
 }
 
-export function getWorkspaceBinaryPath(
-  binaryName: string,
-  platform: NodeJS.Platform = process.platform,
-): string {
-  return join(
-    WORKSPACE_ROOT,
-    'node_modules',
-    '.bin',
-    platform === 'win32' ? `${binaryName}.cmd` : binaryName,
-  );
-}
-
 async function main() {
   const runtimeMode = parseRuntimeMode(process.argv[2]);
   const runtimeDefinition = resolveNodeSidecarRuntimeDefinition(runtimeMode);
   const target = resolveDesktopTargetInfo();
   assertHostCanBuildDesktopTarget(target);
-  const rootPackageJson = await readJson<PackageJson>(join(WORKSPACE_ROOT, 'package.json'));
+  const rootPackageJson = await readJson<PackageJson>(
+    join(WORKSPACE_ROOT, 'package.json'),
+  );
   const sqlitePackageJson = await readJson<{ version?: string }>(
     join(WORKSPACE_ROOT, 'node_modules', 'sqlite3', 'package.json'),
   );
-  const distPackageJsonPath = join(runtimeDefinition.backendDistDir, 'package.json');
+  const distPackageJsonPath = join(
+    runtimeDefinition.backendDistDir,
+    'package.json',
+  );
   if (!(await fileExists(distPackageJsonPath))) {
     throw new Error(
       `${runtimeDefinition.label} backend build output is missing at ${distPackageJsonPath}. Run nx build ${
@@ -182,7 +181,9 @@ async function main() {
 
   await stopStaleTauriBackendProcesses();
 
-  logStep(`Preparing ${runtimeDefinition.label} sidecar Tauri runtime resources`);
+  logStep(
+    `Preparing ${runtimeDefinition.label} sidecar Tauri runtime resources`,
+  );
   await ensureCleanDir(runtimeDefinition.tauriDistRoot);
   await ensureDir(TAURI_BINARIES_DIR);
 
@@ -193,7 +194,10 @@ async function main() {
     sidecarName: runtimeDefinition.sidecarName,
     sqliteVersion: sqlitePackageJson.version,
   });
-  const stageRoot = join(NODE_SIDECAR_STAGE_ROOT, runtimeDefinition.sidecarName);
+  const stageRoot = join(
+    NODE_SIDECAR_STAGE_ROOT,
+    runtimeDefinition.sidecarName,
+  );
   const sidecarBuildDir = join(stageRoot, 'sidecar-build');
   const outputBasePath = join(sidecarBuildDir, runtimeDefinition.sidecarName);
   const packagedSidecarPath = `${outputBasePath}${target.hostPlatform === 'win32' ? '.exe' : ''}`;
@@ -206,14 +210,14 @@ async function main() {
     packagedPackageJson,
     pkgEnvironment: buildPkgCacheEnvironment(),
     pkgVersion: await readPkgVersion(),
-    pnpmLockHash: await hashFile(join(WORKSPACE_ROOT, 'pnpm-lock.yaml')),
+    lockfileHash: await hashFile(join(WORKSPACE_ROOT, 'bun.lock')),
     processArch: process.arch,
     processPlatform: process.platform,
     processVersion: process.version,
     profile: target.profile,
     rustTarget: target.rustTarget,
     sidecarName: runtimeDefinition.sidecarName,
-    workspaceConfig: NODE_BACKEND_INSTALL_WORKSPACE_CONFIG,
+    workspaceConfig: NODE_BACKEND_INSTALL_POLICY,
   });
 
   const cachedSidecar = await resolveCachedSidecar({
@@ -237,22 +241,29 @@ async function main() {
   await ensureCleanDir(stageRoot);
   await copyDirectory(runtimeDefinition.backendDistDir, stageRoot);
   await rm(join(stageRoot, 'pnpm-lock.yaml'), { force: true });
-  await writeJson(
-    join(stageRoot, 'package.json'),
-    packagedPackageJson,
-  );
-  await writeTextFile(
-    join(stageRoot, 'pnpm-workspace.yaml'),
-    NODE_BACKEND_INSTALL_WORKSPACE_CONFIG,
-  );
+  await rm(join(stageRoot, 'pnpm-workspace.yaml'), { force: true });
+  await rm(join(stageRoot, 'bun.lock'), { force: true });
+  await writeJson(join(stageRoot, 'package.json'), packagedPackageJson);
 
   logStep(
     `Installing production dependencies for the packaged ${runtimeDefinition.label} sidecar (${target.profile})`,
   );
   await installStagedProductionDependencies({
     cwd: stageRoot,
+    env: buildNodeSidecarInstallEnvironment(),
     label: `packaged ${runtimeDefinition.label} sidecar`,
   });
+
+  for (const [filePath, replacements] of Object.entries(
+    packagedPackageJson.pkg?.patches ?? {},
+  )) {
+    const source = await readFile(join(stageRoot, filePath), 'utf8');
+    for (let index = 0; index < replacements.length; index += 2) {
+      if (!source.includes(replacements[index])) {
+        throw new Error(`Sidecar packaging patch is stale for ${filePath}.`);
+      }
+    }
+  }
 
   const sqliteBindingPath = join(
     stageRoot,
@@ -269,15 +280,18 @@ async function main() {
   }
 
   await ensureCleanDir(sidecarBuildDir);
-  logStep(`Packaging the ${runtimeDefinition.label} backend into a self-contained sidecar executable`);
-  const pkgCommand = getWorkspaceBinaryPath('pkg');
-  if (!(await fileExists(pkgCommand))) {
-    throw new Error(`Workspace pkg binary is missing at ${pkgCommand}. Run pnpm install first.`);
-  }
-
-  await runCommand(
-    pkgCommand,
-    ['.', '--targets', 'host', '--fallback-to-source', '--output', outputBasePath],
+  logStep(
+    `Packaging the ${runtimeDefinition.label} backend into a self-contained sidecar executable`,
+  );
+  await runWorkspacePkg(
+    [
+      '.',
+      '--targets',
+      'host',
+      '--fallback-to-source',
+      '--output',
+      outputBasePath,
+    ],
     {
       cwd: stageRoot,
       env: {
@@ -317,7 +331,10 @@ async function publishNodeSidecarRuntime({
   runtimeDefinition: NodeSidecarRuntimeDefinition;
   target: ReturnType<typeof resolveDesktopTargetInfo>;
 }) {
-  const tauriSidecarPath = getTauriSidecarBinaryPath(runtimeDefinition.sidecarName, target);
+  const tauriSidecarPath = getTauriSidecarBinaryPath(
+    runtimeDefinition.sidecarName,
+    target,
+  );
   await rm(tauriSidecarPath, { force: true });
   await copyFileEnsured(packagedSidecarPath, tauriSidecarPath);
   if (target.hostPlatform !== 'win32') {
@@ -352,11 +369,13 @@ async function resolveCachedSidecar({
   expectedPackagedSidecarPath: string;
   manifestPath: string;
 }): Promise<
-  | { hit: true; packagedSidecarPath: string }
-  | { hit: false; reason: string }
+  { hit: true; packagedSidecarPath: string } | { hit: false; reason: string }
 > {
   if (!(await fileExists(manifestPath))) {
-    return { hit: false, reason: 'No existing node sidecar cache manifest was found.' };
+    return {
+      hit: false,
+      reason: 'No existing node sidecar cache manifest was found.',
+    };
   }
 
   const manifest = await readJson<NodeSidecarCacheManifest>(manifestPath);
@@ -368,7 +387,10 @@ async function resolveCachedSidecar({
   }
 
   if (manifest.packagedSidecarPath !== expectedPackagedSidecarPath) {
-    return { hit: false, reason: 'Cached node sidecar executable path mismatch.' };
+    return {
+      hit: false,
+      reason: 'Cached node sidecar executable path mismatch.',
+    };
   }
 
   if (!(await fileExists(expectedPackagedSidecarPath))) {
@@ -384,8 +406,9 @@ async function resolveCachedSidecar({
 function buildInstallCacheEnvironment(): Record<string, string> {
   return {
     CI: 'true',
-    npm_config_confirm_modules_purge: 'false',
-    npm_config_node_linker: 'hoisted',
+    bun_linker: 'hoisted',
+    bun_production: 'true',
+    ...buildNodeSidecarInstallEnvironment(),
   };
 }
 
@@ -397,11 +420,13 @@ function buildPkgCacheEnvironment(): Record<string, string> {
 
 async function readPkgVersion(): Promise<string> {
   const pkgPackageJson = await readJson<{ version?: string }>(
-    join(WORKSPACE_ROOT, 'node_modules', '@yao-pkg', 'pkg', 'package.json'),
+    getWorkspacePkgPackageJsonPath(),
   );
   const version = pkgPackageJson.version?.trim();
   if (!version) {
-    throw new Error('@yao-pkg/pkg is missing from the installed workspace dependencies.');
+    throw new Error(
+      '@yao-pkg/pkg is missing from the installed workspace dependencies.',
+    );
   }
 
   return version;
@@ -424,10 +449,14 @@ async function listDirectoryFiles(
   root: string,
   relativeRoot = '',
 ): Promise<Array<{ hash: string; relativePath: string }>> {
-  const entries = await readdir(join(root, relativeRoot), { withFileTypes: true });
+  const entries = await readdir(join(root, relativeRoot), {
+    withFileTypes: true,
+  });
   const files: Array<{ hash: string; relativePath: string }> = [];
   for (const entry of entries) {
-    const relativePath = relativeRoot ? join(relativeRoot, entry.name) : entry.name;
+    const relativePath = relativeRoot
+      ? join(relativeRoot, entry.name)
+      : entry.name;
     if (entry.isDirectory()) {
       files.push(...(await listDirectoryFiles(root, relativePath)));
       continue;
@@ -441,7 +470,9 @@ async function listDirectoryFiles(
     }
   }
 
-  return files.sort((left, right) => left.relativePath.localeCompare(right.relativePath));
+  return files.sort((left, right) =>
+    left.relativePath.localeCompare(right.relativePath),
+  );
 }
 
 async function hashFile(path: string): Promise<string> {
@@ -479,7 +510,9 @@ function parseRuntimeMode(value: string | undefined): NodeSidecarRuntimeMode {
     return 'express';
   }
 
-  throw new Error(`Unsupported node sidecar runtime "${value}". Expected "nest" or "express".`);
+  throw new Error(
+    `Unsupported node sidecar runtime "${value}". Expected "nest" or "express".`,
+  );
 }
 
 const isEntryPoint =
@@ -487,7 +520,9 @@ const isEntryPoint =
 
 if (isEntryPoint) {
   main().catch((error) => {
-    console.error(error instanceof Error ? error.stack ?? error.message : String(error));
+    console.error(
+      error instanceof Error ? (error.stack ?? error.message) : String(error),
+    );
     process.exitCode = 1;
   });
 }

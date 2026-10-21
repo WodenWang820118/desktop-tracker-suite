@@ -470,7 +470,9 @@ test('probeCopilotCliHealth keeps the cheap path while runCopilotReview adds hig
 
 test('probeCopilotCliHealth records health-version and health-probe observations with checkpoint telemetry', () => {
   const recorded: Array<Record<string, unknown>> = [];
-  const repoRoot = mkdtempSync(join(tmpdir(), 'copilot-provider-observations-'));
+  const repoRoot = mkdtempSync(
+    join(tmpdir(), 'copilot-provider-observations-'),
+  );
 
   try {
     const health = probeCopilotCliHealth(

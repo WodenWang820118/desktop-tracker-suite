@@ -32,15 +32,15 @@ The workspace also keeps alternative browser and backend implementations for com
 
 ## Prerequisites
 
-- Node.js 24+
-- pnpm 11.0.1 (the workspace is pinned via `packageManager`)
-- Rust toolchain for Tauri desktop builds
+- Node.js >=24.15.0
+- Bun 1.4.3-canary.20261019.1 (the workspace is pinned via `packageManager`; this canary includes `bun lint`, `bun fmt`, and `bun check`)
+- Rust >=1.90 for Tauri desktop builds
 - JDK 25+ and Maven if you work on the Spring backend
 
 ## Install
 
 ```bash
-pnpm install
+bun install
 ```
 
 ## Development
@@ -48,23 +48,23 @@ pnpm install
 ### Browser Frontends
 
 ```bash
-pnpm run dev-ng
-pnpm run dev-vue
-pnpm run dev-react
+bun run dev-ng
+bun run dev-vue
+bun run dev-react
 ```
 
 ### Backends
 
 ```bash
-pnpm run dev-nest
-pnpm run dev-express
-pnpm run dev-spring
+bun run dev-nest
+bun run dev-express
+bun run dev-spring
 ```
 
 ### Desktop Shell
 
 ```bash
-pnpm run desktop:dev
+bun run desktop:dev
 ```
 
 The desktop shell expects the Angular frontend on port `4200` and the Nest backend on port `3000` during development.
@@ -74,61 +74,94 @@ The desktop shell expects the Angular frontend on port `4200` and the Nest backe
 ### Frontends
 
 ```bash
-pnpm run build-ng
-pnpm run build-prod-ng
-pnpm run build-vue
-pnpm run build-prod-vue
-pnpm run build-react
-pnpm run build-prod-react
+bun run build-ng
+bun run build-prod-ng
+bun run build-vue
+bun run build-prod-vue
+bun run build-react
+bun run build-prod-react
 ```
 
 ### Backends
 
 ```bash
-pnpm run build-nest
-pnpm run build-prod-nest
-pnpm run build-express
-pnpm run build-prod-express
-pnpm run build-spring
+bun run build-nest
+bun run build-prod-nest
+bun run build-express
+bun run build-prod-express
+bun run build-spring
 ```
 
 ### Desktop Packaging
 
 ```bash
-pnpm run desktop:materialize-runtime
-pnpm run desktop:build
-pnpm run desktop:package
+bun run desktop:materialize-runtime
+bun run desktop:build
+bun run desktop:package
 ```
 
 Useful desktop verification commands:
 
 ```bash
-pnpm run desktop:test:tooling
-pnpm run desktop:smoke-runtime
+bun run desktop:test:tooling
+bun run desktop:smoke-runtime
 ```
 
 ## Testing
 
 ```bash
-pnpm run test-back:cov
+bun run test-back:cov
 ```
 
 ## Troubleshooting
 
-If native dependencies are blocked during install, run:
+Bun does not run dependency lifecycle scripts unless the package is listed in
+`trustedDependencies` in `package.json`. The workspace trusts `@nestjs/core`,
+`@swc/core`, `esbuild`, `nx`, and `sqlite3`.
+
+Linux sidecar packaging builds SQLite from source against the host libc; install
+Python, Make, and a C++ compiler (CI installs `build-essential`). The SQLite 6
+prebuilt Linux addon requires glibc 2.38 and cannot load on Ubuntu 22.04.
+
+Nest sidecars apply a pkg-only compatibility patch to the Nest 12 adapter loader;
+packaging fails if the staged loader no longer matches. Regenerate and commit the
+tracked Tauri schemas after updating Tauri dependencies with a Windows build.
+
+## Lint, format, and typecheck
 
 ```bash
-pnpm approve-builds
+bun run lint
+bun run lint:vue
+bun nx lint vue-tracker
+bun run format:check
+bun run check
 ```
 
-Approved and blocked dependency build scripts are recorded in
-`pnpm-workspace.yaml` under `allowBuilds`.
+`bun run lint` runs Bun's native JavaScript/TypeScript/JSX checks, then a Vue-only
+pass. The second pass explicitly selects `eslint.vue.config.mjs`; Bun delegates
+the `.vue` files to installed ESLint with `vue-eslint-parser`, TypeScript rules,
+and Vue essential rules. Plain source files retain Bun's built-in defaults.
+The config's nonstandard filename prevents automatic loading by other targets.
+This follows [Bun's custom-parser delegation](https://bun.com/docs/lint/plugins#other-languages).
+
+Use `bun run lint:vue` for SFCs only, or `bun nx lint vue-tracker` for both plain
+source and SFCs in the Vue app. The Vue Nx target tracks the root Vue config,
+manifests, lockfile, and project sources in its cache inputs. Errors fail CI;
+existing unused-code and explicit-`any` warnings keep Bun's warning severity.
+
+`bun fmt` formats from `bunfig.toml` with single quotes and keeps each file's
+existing line endings. Generated Tauri schemas under
+`apps/tauri-shell/src-tauri/gen` are left as Tauri writes them. `bun check`
+type-checks the plain TypeScript projects; the Vue Nx `typecheck` target uses
+`vue-tsc` for SFCs. The root `tsconfig.json` does not include the apps, so the
+`check` script passes `--no-script` and a project path.
 
 ## Project Configuration
 
 - Monorepo: Nx
-- Package manager: pnpm 11
+- Package manager: Bun 1.4.3-canary.20261019.1
 - Desktop shell: Tauri
+- Tauri v2: core/API 2.12.4, CLI 2.12.3, build crate 2.7.3, shell plugin 2.5.0, updater 2.14.0 (Rust and JavaScript)
 - Web build tools: Angular CLI, Vite, Rspack
 - Backend build tools: Nx Node tooling, Maven
 

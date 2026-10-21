@@ -1,0 +1,13 @@
+[install]
+linker = "hoisted"
+
+[fmt]
+singleQuote = true
+endOfLine = "auto"
+ignorePatterns = [
+  "dist",
+  "coverage",
+  ".nx",
+  ".angular",
+  "apps/tauri-shell/src-tauri/gen",
+]

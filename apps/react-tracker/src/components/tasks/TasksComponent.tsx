@@ -62,7 +62,9 @@ export const TasksComponent = () => {
   return (
     <div className="px-1 md:px-2 lg:px-3">
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between py-4">
-        <h2 className="text-xl font-semibold text-gray-800 dark:text-slate-100">Your Tasks</h2>
+        <h2 className="text-xl font-semibold text-gray-800 dark:text-slate-100">
+          Your Tasks
+        </h2>
         <div className="flex items-center gap-2 w-full md:w-auto">
           <span className="relative flex-1 md:flex-none">
             <IconField>
@@ -103,7 +105,9 @@ export const TasksComponent = () => {
       {!loading && !error && tasks.length === 0 && (
         <div className="text-center py-12">
           <p className="text-gray-500 dark:text-slate-400 text-lg">
-            {searchQuery ? 'No tasks found. Try a different search.' : 'No tasks found. Add one to get started!'}
+            {searchQuery
+              ? 'No tasks found. Try a different search.'
+              : 'No tasks found. Add one to get started!'}
           </p>
         </div>
       )}

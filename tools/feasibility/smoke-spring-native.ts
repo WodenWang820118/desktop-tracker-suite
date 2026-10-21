@@ -28,12 +28,16 @@ async function main() {
     .map((entry) => entry.name)
     .find((name) => name.toLowerCase().endsWith('.exe'));
   if (!executable) {
-    throw new Error(`No Spring native executable found under ${distDir}. Run native-build first.`);
+    throw new Error(
+      `No Spring native executable found under ${distDir}. Run native-build first.`,
+    );
   }
 
   const executablePath = join(distDir, executable);
   const dllPaths = entries
-    .filter((entry) => entry.isFile() && entry.name.toLowerCase().endsWith('.dll'))
+    .filter(
+      (entry) => entry.isFile() && entry.name.toLowerCase().endsWith('.dll'),
+    )
     .map((entry) => join(distDir, entry.name));
   const smokeRoot = await mkdtemp(join(tmpdir(), 'spring-native-smoke-'));
   const databasePath = join(smokeRoot, 'database.sqlite3');
@@ -63,18 +67,21 @@ async function main() {
   try {
     metrics.healthReadyMs = await waitForUrl(`http://127.0.0.1:${port}/health`);
     const taskId = randomUUID();
-    const created = await fetchJson<TaskResponse>(`http://127.0.0.1:${port}/tasks/create`, {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
+    const created = await fetchJson<TaskResponse>(
+      `http://127.0.0.1:${port}/tasks/create`,
+      {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: taskId,
+          text: 'native feasibility smoke',
+          day: '2026-04-23',
+          reminder: true,
+        }),
       },
-      body: JSON.stringify({
-        id: taskId,
-        text: 'native feasibility smoke',
-        day: '2026-04-23',
-        reminder: true,
-      }),
-    });
+    );
     const reloaded = await fetchJson<TaskResponse>(
       `http://127.0.0.1:${port}/tasks/${encodeURIComponent(created.id)}`,
     );
@@ -93,6 +100,8 @@ async function main() {
 }
 
 main().catch((error) => {
-  console.error(error instanceof Error ? error.stack ?? error.message : String(error));
+  console.error(
+    error instanceof Error ? (error.stack ?? error.message) : String(error),
+  );
   process.exitCode = 1;
 });

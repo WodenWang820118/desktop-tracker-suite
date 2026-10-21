@@ -1,7 +1,7 @@
 import { syncDesktopVersionFiles } from './sync-version.ts';
 import {
   logStep,
-  PNPM_COMMAND,
+  BUN_COMMAND,
   runCommand,
   TAURI_PROJECT_ROOT,
 } from './common.ts';
@@ -27,7 +27,7 @@ async function main() {
   );
 
   const tauriArgs = [
-    'exec',
+    'x',
     'tauri',
     'build',
     '--config',
@@ -42,7 +42,7 @@ async function main() {
   logStep(
     `Running Tauri ${mode} for ${target.profile} (${target.rustTarget}, runtime=${runtimeMode})`,
   );
-  await runCommand(PNPM_COMMAND, tauriArgs, {
+  await runCommand(BUN_COMMAND, tauriArgs, {
     cwd: TAURI_PROJECT_ROOT,
   });
 }

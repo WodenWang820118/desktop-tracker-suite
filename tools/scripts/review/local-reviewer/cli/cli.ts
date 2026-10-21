@@ -13,7 +13,8 @@ import {
 } from '../../local-reviewer-support.ts';
 
 // CLI helpers own user-facing flags and key=value prefilter output formatting.
-export type LocalReviewerCommand = 'doctor' | 'evaluate' | 'prefilter' | 'staged';
+export type LocalReviewerCommand =
+  'doctor' | 'evaluate' | 'prefilter' | 'staged';
 
 export interface ParsedLocalReviewerCliArgs {
   abSamples: number;
@@ -153,7 +154,11 @@ export function parseCommand(rawValue?: string): LocalReviewerCommand {
   throw new Error(getUsageText(resolveUsageScriptName()));
 }
 
-export function readIntegerFlag(argv: string[], index: number, flag: string): number {
+export function readIntegerFlag(
+  argv: string[],
+  index: number,
+  flag: string,
+): number {
   const rawValue = argv[index + 1];
   if (!rawValue) {
     throw new Error(`${getUsageText()}\n\nMissing value for ${flag}.`);
@@ -166,7 +171,11 @@ export function readIntegerFlag(argv: string[], index: number, flag: string): nu
   return Number.parseInt(rawValue, 10);
 }
 
-export function readStringFlag(argv: string[], index: number, flag: string): string {
+export function readStringFlag(
+  argv: string[],
+  index: number,
+  flag: string,
+): string {
   const value = argv[index + 1];
   if (!value) {
     throw new Error(`${getUsageText()}\n\nMissing value for ${flag}.`);

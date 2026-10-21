@@ -6,7 +6,10 @@
   "tags": ["domain", "shared"],
   "targets": {
     "lint": {
-      "executor": "@nx/eslint:lint"
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun lint --no-script libs/task-domain"
+      }
     }
   }
 }

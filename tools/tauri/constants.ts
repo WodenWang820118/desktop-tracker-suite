@@ -78,7 +78,7 @@ export const LEGACY_TAURI_DATABASE_FILE_NAME = 'tasks.sqlite';
 export const SPRING_BACKEND_SIDECAR_NAME = 'spring-backend';
 export const NEST_BACKEND_SIDECAR_NAME = 'nest-backend';
 export const EXPRESS_BACKEND_SIDECAR_NAME = 'express-backend';
-export const PNPM_COMMAND = process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm';
+export const BUN_COMMAND = process.platform === 'win32' ? 'bun.cmd' : 'bun';
 export const DEV_FRONTEND_URL = 'http://127.0.0.1:4200/';
 export const DEV_TASK_API_URL = 'http://localhost:3000/tasks';
 export const PROD_TASK_API_URL = 'http://localhost:5000/tasks';

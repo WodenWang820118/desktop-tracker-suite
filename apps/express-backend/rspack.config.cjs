@@ -5,19 +5,19 @@ const { composePlugins } = require('@nx/rspack');
 const config = composePlugins(
   withNx({
     optimization: true,
-    statsJson: true
+    statsJson: true,
   }),
   (config) => {
     config.node = {
       __dirname: false,
-      __filename: false
+      __filename: false,
     };
 
     // Ensure we have proper source maps
     config.devtool = 'source-map';
 
     return config;
-  }
+  },
 );
 
 module.exports = config;

@@ -106,24 +106,17 @@ export type TauriConfig = {
 
 const FRONTEND_DEFINITIONS: Record<GridFrontend, GridFrontendDefinition> = {
   ng: {
-    buildArgs: [
-      'exec',
-      'nx',
-      'build',
-      'ng-tracker',
-      '--configuration',
-      'tauri',
-    ],
+    buildArgs: ['x', 'nx', 'build', 'ng-tracker', '--configuration', 'tauri'],
     distPathFromGeneratedConfig: `${GENERATED_CONFIG_ROOT_PREFIX}/dist/ng-tracker/browser`,
     label: 'Angular',
   },
   react: {
-    buildArgs: ['exec', 'nx', 'build', 'react-tracker'],
+    buildArgs: ['x', 'nx', 'build', 'react-tracker'],
     distPathFromGeneratedConfig: `${GENERATED_CONFIG_ROOT_PREFIX}/dist/react-tracker`,
     label: 'React',
   },
   vue: {
-    buildArgs: ['exec', 'nx', 'build', 'vue-tracker'],
+    buildArgs: ['x', 'nx', 'build', 'vue-tracker'],
     distPathFromGeneratedConfig: `${GENERATED_CONFIG_ROOT_PREFIX}/dist/vue-tracker`,
     label: 'Vue',
   },
@@ -132,7 +125,7 @@ const FRONTEND_DEFINITIONS: Record<GridFrontend, GridFrontendDefinition> = {
 const BACKEND_DEFINITIONS: Record<GridBackend, GridBackendDefinition> = {
   express: {
     buildArgs: [
-      'exec',
+      'x',
       'nx',
       'build',
       'express-backend',
@@ -153,7 +146,7 @@ const BACKEND_DEFINITIONS: Record<GridBackend, GridBackendDefinition> = {
   },
   nest: {
     buildArgs: [
-      'exec',
+      'x',
       'nx',
       'build',
       'nest-backend',
@@ -173,7 +166,7 @@ const BACKEND_DEFINITIONS: Record<GridBackend, GridBackendDefinition> = {
     smokeArgs: ['tools/tauri/smoke-node-sidecar-runtime.ts', 'nest'],
   },
   'spring-native': {
-    buildArgs: ['exec', 'nx', 'run', 'spring-backend:native-build'],
+    buildArgs: ['x', 'nx', 'run', 'spring-backend:native-build'],
     externalBin: ['binaries/spring-backend'],
     label: 'Spring Native',
     materializeArgs: ['tools/tauri/materialize-spring-native-runtime.ts'],

@@ -9,6 +9,8 @@ describe('FooterComponent', () => {
     const currentYear = new Date().getFullYear().toString();
 
     expect(wrapper.text()).toContain(currentYear);
-    expect(wrapper.text()).toContain('Task Tracker. Built with Vue 3 and PrimeVue.');
+    expect(wrapper.text()).toContain(
+      'Task Tracker. Built with Vue 3 and PrimeVue.',
+    );
   });
 });

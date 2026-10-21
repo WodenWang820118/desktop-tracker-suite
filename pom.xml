@@ -12,7 +12,7 @@
 
     <properties>
         <java.version>25</java.version>
-        <spring.boot.version>4.0.2</spring.boot.version>
+        <spring.boot.version>4.1.1</spring.boot.version>
         <maven.compiler.release>${java.version}</maven.compiler.release>
         <lombok.version>edge-SNAPSHOT</lombok.version>
         <sqlite.jdbc.version>3.53.0.0</sqlite.jdbc.version>

@@ -46,7 +46,7 @@ vue-tracker/
 ### Prerequisites
 
 - Node.js 18+
-- pnpm (workspace package manager)
+- Bun (workspace package manager)
 - Running backend server (nest-backend on port 5000)
 
 ### Development
@@ -54,13 +54,13 @@ vue-tracker/
 1. **Start the backend server** (in another terminal):
 
    ```bash
-   pnpm dev-back
+   bun run dev-nest
    ```
 
 2. **Start the Vue development server**:
 
    ```bash
-   pnpm dev-vue
+   bun run dev-vue
    ```
 
 3. Open your browser to `http://localhost:4200`

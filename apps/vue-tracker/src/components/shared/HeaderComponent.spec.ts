@@ -68,7 +68,10 @@ describe('HeaderComponent', () => {
     expect(wrapper.text()).toContain('Home');
     expect(wrapper.text()).toContain('About');
     expect(wrapper.text()).toContain('Light');
-    expect(links.map((link) => link.attributes('href'))).toEqual(['/', '/about']);
+    expect(links.map((link) => link.attributes('href'))).toEqual([
+      '/',
+      '/about',
+    ]);
   });
 
   it('renders the inverse theme label when the current theme is light', async () => {
