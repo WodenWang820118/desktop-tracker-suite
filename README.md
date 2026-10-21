@@ -131,11 +131,30 @@ tracked Tauri schemas after updating Tauri dependencies with a Windows build.
 
 ```bash
 bun run lint
+bun run lint:vue
+bun nx lint vue-tracker
 bun run format:check
 bun run check
 ```
 
-`bun lint` uses Bun's built-in rules and does not load an ESLint config. `bun fmt` formats from `bunfig.toml` with single quotes and keeps each file's existing line endings. Generated Tauri schemas under `apps/tauri-shell/src-tauri/gen` are left as Tauri writes them. `bun check` type-checks each TypeScript project. The root `tsconfig.json` does not include the apps, so the `check` script passes `--no-script` and a project path. Nx `typecheck` targets use the same command.
+`bun run lint` runs Bun's native JavaScript/TypeScript/JSX checks, then a Vue-only
+pass. The second pass explicitly selects `eslint.vue.config.mjs`; Bun delegates
+the `.vue` files to installed ESLint with `vue-eslint-parser`, TypeScript rules,
+and Vue essential rules. Plain source files retain Bun's built-in defaults.
+The config's nonstandard filename prevents automatic loading by other targets.
+This follows [Bun's custom-parser delegation](https://bun.com/docs/lint/plugins#other-languages).
+
+Use `bun run lint:vue` for SFCs only, or `bun nx lint vue-tracker` for both plain
+source and SFCs in the Vue app. The Vue Nx target tracks the root Vue config,
+manifests, lockfile, and project sources in its cache inputs. Errors fail CI;
+existing unused-code and explicit-`any` warnings keep Bun's warning severity.
+
+`bun fmt` formats from `bunfig.toml` with single quotes and keeps each file's
+existing line endings. Generated Tauri schemas under
+`apps/tauri-shell/src-tauri/gen` are left as Tauri writes them. `bun check`
+type-checks the plain TypeScript projects; the Vue Nx `typecheck` target uses
+`vue-tsc` for SFCs. The root `tsconfig.json` does not include the apps, so the
+`check` script passes `--no-script` and a project path.
 
 ## Project Configuration
 

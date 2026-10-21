@@ -81,7 +81,8 @@
     "review:evaluate:local": "node tools/scripts/review/local-reviewer.ts evaluate",
     "review:copilot": "node tools/scripts/review/run-checkpoint-review.ts --provider copilot",
     "review:gemini": "node tools/scripts/review/run-checkpoint-review.ts --provider gemini",
-    "lint": "bun lint",
+    "lint": "bun lint --no-script && bun run lint:vue",
+    "lint:vue": "bun lint --no-script --config eslint.vue.config.mjs \"apps/vue-tracker/**/*.vue\"",
     "format": "bun fmt",
     "format:check": "bun fmt --check",
     "check": "bun check --no-script -b -p apps/ng-tracker --no-pretty && bun check --no-script -b -p apps/react-tracker --no-pretty && bun check --no-script -b -p apps/vue-tracker --no-pretty && bun check --no-script -b -p apps/nest-backend --no-pretty && bun check --no-script -b -p apps/express-backend --no-pretty && bun check --no-script -b -p libs/task-domain --no-pretty && bun check --no-script -p tools/tsconfig.json --no-pretty && bun check --no-script -p tools/scripts/tsconfig.json --no-pretty && bun check --no-script -p tools/scripts/tsconfig.spec.json --no-pretty"
@@ -101,6 +102,7 @@
     "@angular/language-service": "22.2.3",
     "@angular/platform-browser": "22.2.3",
     "@angular/router": "22.2.3",
+    "@eslint/js": "10.0.1",
     "@nestjs/schematics": "12.0.10",
     "@nestjs/testing": "^12.2.0",
     "@nx/angular": "23.3.0",
@@ -137,6 +139,9 @@
     "@vue/test-utils": "^2.4.6",
     "@yao-pkg/pkg": "6.23.0",
     "env-cmd": "^11.0.0",
+    "eslint": "10.13.0",
+    "eslint-plugin-vue": "10.11.1",
+    "globals": "17.13.0",
     "jiti": "2.7.0",
     "jsdom": "^30.1.3",
     "nx": "23.3.0",
@@ -145,8 +150,10 @@
     "tailwindcss": "^4.3.3",
     "ts-node": "10.9.2",
     "typescript": "6.0.3",
+    "typescript-eslint": "8.72.0",
     "vite": "8.3.4",
     "vitest": "^5.0.5",
+    "vue-eslint-parser": "10.4.1",
     "vue-tsc": "^3.3.13"
   },
   "dependencies": {

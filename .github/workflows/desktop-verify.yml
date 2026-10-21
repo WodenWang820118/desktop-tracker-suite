@@ -41,6 +41,9 @@ jobs:
       - name: Assert lockfile unchanged
         run: git diff --exit-code -- bun.lock
 
+      - name: Lint workspace and Vue single-file components
+        run: bun run lint
+
       - name: Run desktop tooling tests
         run: bun run desktop:test:tooling
 

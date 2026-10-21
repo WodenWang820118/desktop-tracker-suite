@@ -46,8 +46,16 @@
     },
     "lint": {
       "executor": "nx:run-commands",
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/bunfig.toml",
+        "{workspaceRoot}/eslint.vue.config.mjs",
+        "{workspaceRoot}/package.json",
+        "{workspaceRoot}/bun.lock"
+      ],
       "options": {
-        "command": "bun lint --no-script apps/vue-tracker"
+        "command": "bun lint --no-script apps/vue-tracker && bun run lint:vue"
       }
     }
   }
