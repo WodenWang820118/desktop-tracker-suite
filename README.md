@@ -34,7 +34,7 @@ The workspace also keeps alternative browser and backend implementations for com
 
 - Node.js >=24.15.0
 - Bun 1.4.3-canary.20261019.1 (the workspace is pinned via `packageManager`; this canary includes `bun lint`, `bun fmt`, and `bun check`)
-- Rust toolchain for Tauri desktop builds
+- Rust >=1.90 for Tauri desktop builds
 - JDK 25+ and Maven if you work on the Spring backend
 
 ## Install
@@ -119,6 +119,14 @@ Bun does not run dependency lifecycle scripts unless the package is listed in
 `trustedDependencies` in `package.json`. The workspace trusts `@nestjs/core`,
 `@swc/core`, `esbuild`, `nx`, and `sqlite3`.
 
+Linux sidecar packaging builds SQLite from source against the host libc; install
+Python, Make, and a C++ compiler (CI installs `build-essential`). The SQLite 6
+prebuilt Linux addon requires glibc 2.38 and cannot load on Ubuntu 22.04.
+
+Nest sidecars apply a pkg-only compatibility patch to the Nest 12 adapter loader;
+packaging fails if the staged loader no longer matches. Regenerate and commit the
+tracked Tauri schemas after updating Tauri dependencies with a Windows build.
+
 ## Lint, format, and typecheck
 
 ```bash
@@ -134,6 +142,7 @@ bun run check
 - Monorepo: Nx
 - Package manager: Bun 1.4.3-canary.20261019.1
 - Desktop shell: Tauri
+- Tauri v2: core/API 2.12.4, CLI 2.12.3, build crate 2.7.3, shell plugin 2.5.0, updater 2.14.0 (Rust and JavaScript)
 - Web build tools: Angular CLI, Vite, Rspack
 - Backend build tools: Nx Node tooling, Maven
 

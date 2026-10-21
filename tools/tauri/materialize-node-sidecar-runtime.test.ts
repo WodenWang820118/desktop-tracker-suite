@@ -1,4 +1,8 @@
 import assert from 'node:assert/strict';
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { createRequire } from 'node:module';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import test from 'node:test';
 
 import {
@@ -6,11 +10,12 @@ import {
   buildNodeSidecarCacheManifest,
   buildDesktopRuntimeMetadata,
   type NodeSidecarCacheKeyInput,
-  getWorkspaceBinaryPath,
   resolveNodeSidecarRuntimeDefinition,
 } from './materialize-node-sidecar-runtime.ts';
+import { runWorkspacePkg } from './pkg-command.ts';
 import {
   buildNodeSidecarPackageJson,
+  buildNodeSidecarInstallEnvironment,
   buildNodeSidecarPkgConfig,
   NODE_BACKEND_INSTALL_POLICY,
   NODE_BACKEND_TRUSTED_DEPENDENCIES,
@@ -205,15 +210,29 @@ test('buildNodeSidecarCacheManifest records the cache key and executable path', 
   );
 });
 
-test('getWorkspaceBinaryPath resolves pkg from the workspace root', () => {
-  assert.match(
-    getWorkspaceBinaryPath('pkg', 'win32'),
-    /node_modules[\\/]\.bin[\\/]pkg\.cmd$/u,
-  );
-  assert.match(
-    getWorkspaceBinaryPath('pkg', 'linux'),
-    /node_modules[\\/]\.bin[\\/]pkg$/u,
-  );
+test('workspace pkg can launch from a staging directory with spaces', async () => {
+  const stageRoot = mkdtempSync(join(tmpdir(), 'pkg staging '));
+  try {
+    const result = await runWorkspacePkg(['--version'], {
+      cwd: stageRoot,
+      stdio: 'pipe',
+    });
+    const packageJson = JSON.parse(
+      readFileSync(
+        createRequire(import.meta.url).resolve('@yao-pkg/pkg/package.json'),
+        'utf8',
+      ),
+    );
+    assert.equal(result.exitCode, 0);
+    assert.equal(result.stdout.trim(), packageJson.version);
+  } finally {
+    rmSync(stageRoot, {
+      recursive: true,
+      force: true,
+      maxRetries: 5,
+      retryDelay: 100,
+    });
+  }
 });
 
 test('buildNodeSidecarPackageJson adds pkg metadata and sqlite3 to the runtime package', () => {
@@ -264,6 +283,26 @@ test('buildNodeSidecarPkgConfig includes json assets and native addons', () => {
       'sidecar-build/**/*',
     ],
   });
+});
+
+test('Linux sidecar dependencies compile against the host libc', () => {
+  assert.deepEqual(buildNodeSidecarInstallEnvironment('linux'), {
+    npm_config_build_from_source: 'true',
+  });
+  assert.deepEqual(buildNodeSidecarInstallEnvironment('win32'), {});
+  assert.deepEqual(buildNodeSidecarInstallEnvironment('darwin'), {});
+});
+
+test('Nest adapter packaging patch matches the installed loader', () => {
+  const source = readFileSync(
+    createRequire(import.meta.url).resolve('@nestjs/core/nest-factory.js'),
+    'utf8',
+  );
+  const [original] =
+    buildNodeSidecarPkgConfig(true).patches![
+      'node_modules/@nestjs/core/nest-factory.js'
+    ];
+  assert.ok(source.includes(original), 'Nest adapter loader patch is stale');
 });
 
 test('NODE_BACKEND_INSTALL_POLICY trusts the sidecar native build scripts', () => {

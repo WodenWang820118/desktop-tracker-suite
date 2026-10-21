@@ -12,7 +12,11 @@ permissions:
 jobs:
   tooling-tests:
     name: Desktop tooling tests
-    runs-on: ubuntu-22.04
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-22.04, windows-latest]
 
     steps:
       - name: Checkout
@@ -133,6 +137,10 @@ jobs:
 
       - name: Assert lockfile unchanged
         run: git diff --exit-code -- bun.lock
+
+      - name: Verify Cargo dependency lockfile
+        # Check the committed dependency graph before grid-build syncs the app version.
+        run: cargo tree --locked --depth 0 --manifest-path apps/tauri-shell/src-tauri/Cargo.toml
 
       - name: Verify desktop grid variant
         run: bun run desktop:grid:verify:one

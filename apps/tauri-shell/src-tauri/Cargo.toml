@@ -5,10 +5,10 @@ description = "Tauri shell for ng-tracker and nest-backend"
 authors = ["Guan Xin Wang"]
 license = "MIT"
 edition = "2021"
-rust-version = "1.77"
+rust-version = "1.90"
 
 [build-dependencies]
-tauri-build = { version = "2.5.6", features = [] }
+tauri-build = { version = "2.7.3", features = [] }
 
 [dependencies]
 anyhow = "1"
@@ -17,9 +17,9 @@ reqwest = { version = "0.12", default-features = false, features = [
 ] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-tauri = { version = "2.10.3", features = [] }
-tauri-plugin-shell = "2.3.5"
-tauri-plugin-updater = "2.10.1"
+tauri = { version = "2.12.4", features = [] }
+tauri-plugin-shell = "2.5.0"
+tauri-plugin-updater = "2.14.0"
 tokio = { version = "1", features = ["time"] }
 url = "2.5"
 

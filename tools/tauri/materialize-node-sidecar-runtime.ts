@@ -24,7 +24,6 @@ import {
   installStagedProductionDependencies,
   logStep,
   readJson,
-  runCommand,
   stopStaleTauriBackendProcesses,
   writeJson,
   writeTextFile,
@@ -32,12 +31,17 @@ import {
 } from './common.ts';
 import {
   buildNodeSidecarPackageJson,
+  buildNodeSidecarInstallEnvironment,
   NODE_BACKEND_INSTALL_POLICY,
 } from './node-backend-packaging.ts';
 import {
   assertHostCanBuildDesktopTarget,
   resolveDesktopTargetInfo,
 } from './runtime-target.ts';
+import {
+  getWorkspacePkgPackageJsonPath,
+  runWorkspacePkg,
+} from './pkg-command.ts';
 
 type NodeSidecarRuntimeMode = 'express' | 'nest';
 
@@ -152,18 +156,6 @@ export function buildNodeSidecarCacheManifest(input: {
   };
 }
 
-export function getWorkspaceBinaryPath(
-  binaryName: string,
-  platform: NodeJS.Platform = process.platform,
-): string {
-  return join(
-    WORKSPACE_ROOT,
-    'node_modules',
-    '.bin',
-    platform === 'win32' ? `${binaryName}.cmd` : binaryName,
-  );
-}
-
 async function main() {
   const runtimeMode = parseRuntimeMode(process.argv[2]);
   const runtimeDefinition = resolveNodeSidecarRuntimeDefinition(runtimeMode);
@@ -258,8 +250,20 @@ async function main() {
   );
   await installStagedProductionDependencies({
     cwd: stageRoot,
+    env: buildNodeSidecarInstallEnvironment(),
     label: `packaged ${runtimeDefinition.label} sidecar`,
   });
+
+  for (const [filePath, replacements] of Object.entries(
+    packagedPackageJson.pkg?.patches ?? {},
+  )) {
+    const source = await readFile(join(stageRoot, filePath), 'utf8');
+    for (let index = 0; index < replacements.length; index += 2) {
+      if (!source.includes(replacements[index])) {
+        throw new Error(`Sidecar packaging patch is stale for ${filePath}.`);
+      }
+    }
+  }
 
   const sqliteBindingPath = join(
     stageRoot,
@@ -279,15 +283,7 @@ async function main() {
   logStep(
     `Packaging the ${runtimeDefinition.label} backend into a self-contained sidecar executable`,
   );
-  const pkgCommand = getWorkspaceBinaryPath('pkg');
-  if (!(await fileExists(pkgCommand))) {
-    throw new Error(
-      `Workspace pkg binary is missing at ${pkgCommand}. Run bun install first.`,
-    );
-  }
-
-  await runCommand(
-    pkgCommand,
+  await runWorkspacePkg(
     [
       '.',
       '--targets',
@@ -412,6 +408,7 @@ function buildInstallCacheEnvironment(): Record<string, string> {
     CI: 'true',
     bun_linker: 'hoisted',
     bun_production: 'true',
+    ...buildNodeSidecarInstallEnvironment(),
   };
 }
 
@@ -423,7 +420,7 @@ function buildPkgCacheEnvironment(): Record<string, string> {
 
 async function readPkgVersion(): Promise<string> {
   const pkgPackageJson = await readJson<{ version?: string }>(
-    join(WORKSPACE_ROOT, 'node_modules', '@yao-pkg', 'pkg', 'package.json'),
+    getWorkspacePkgPackageJsonPath(),
   );
   const version = pkgPackageJson.version?.trim();
   if (!version) {

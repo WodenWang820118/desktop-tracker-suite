@@ -13,6 +13,7 @@ type PackageJson = {
 export type NodeSidecarPkgConfig = {
   assets?: string[];
   ignore?: string[];
+  patches?: Record<string, string[]>;
 };
 
 export const NODE_BACKEND_TRUSTED_DEPENDENCIES = [
@@ -22,6 +23,14 @@ export const NODE_BACKEND_TRUSTED_DEPENDENCIES = [
 
 export const NODE_BACKEND_INSTALL_POLICY =
   ['trustedDependencies:', '  - @nestjs/core', '  - sqlite3'].join('\n') + '\n';
+
+export function buildNodeSidecarInstallEnvironment(
+  platform: NodeJS.Platform = process.platform,
+): Record<string, string> {
+  // sqlite3 6's Linux prebuild needs glibc 2.38; compile against the host
+  // instead so Ubuntu 22.04 and other supported older hosts remain usable.
+  return platform === 'linux' ? { npm_config_build_from_source: 'true' } : {};
+}
 
 export function buildPackagedNodeBackendPackageJson(input: {
   backendPackageJson: PackageJson;
@@ -48,9 +57,23 @@ export function buildPackagedNodeBackendPackageJson(input: {
   };
 }
 
-export function buildNodeSidecarPkgConfig(): NodeSidecarPkgConfig {
+export function buildNodeSidecarPkgConfig(
+  includeNestAdapterPatch = false,
+): NodeSidecarPkgConfig {
   return {
     assets: ['assets/**/*', 'node_modules/**/*.json', 'node_modules/**/*.node'],
+    // pkg's VM cannot execute Nest 12's dynamic import. Preserve the async
+    // adapter load using the snapshot-aware CommonJS loader in the executable.
+    ...(includeNestAdapterPatch
+      ? {
+          patches: {
+            'node_modules/@nestjs/core/nest-factory.js': [
+              "() => import('@nestjs/platform-express')",
+              "() => Promise.resolve().then(() => require('@nestjs/platform-express'))",
+            ],
+          },
+        }
+      : {}),
     ignore: [
       'node_modules/.bin/**/*',
       'node_modules/**/.eslintrc*',
@@ -83,7 +106,9 @@ export function buildNodeSidecarPackageJson(input: {
     overrides: {
       bin: 'main.js',
       name: input.sidecarName,
-      pkg: buildNodeSidecarPkgConfig(),
+      pkg: buildNodeSidecarPkgConfig(
+        Boolean(input.backendPackageJson.dependencies?.['@nestjs/core']),
+      ),
       private: true,
     },
   });
